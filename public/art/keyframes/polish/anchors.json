@@ -1,0 +1,54 @@
+{
+  "player-ready": {
+    "foot": [
+      9,
+      34
+    ],
+    "grip": [
+      18,
+      22
+    ]
+  },
+  "player-windup": {
+    "foot": [
+      10,
+      35
+    ],
+    "grip": [
+      3,
+      5
+    ]
+  },
+  "player-impact": {
+    "foot": [
+      8,
+      33
+    ],
+    "grip": [
+      19,
+      21
+    ]
+  },
+  "player-followthrough": {
+    "foot": [
+      9,
+      32
+    ],
+    "grip": [
+      16,
+      23
+    ]
+  },
+  "hatchet": {
+    "grip": [
+      8,
+      13
+    ]
+  },
+  "pickaxe": {
+    "grip": [
+      8,
+      13
+    ]
+  }
+}

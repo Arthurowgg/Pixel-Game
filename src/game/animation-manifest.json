@@ -1,0 +1,1116 @@
+{
+  "version": 1,
+  "pixelScale": 1,
+  "sheets": {
+    "survivor": {
+      "width": 384,
+      "height": 1296
+    },
+    "forest": {
+      "width": 512,
+      "height": 160
+    },
+    "falling-tree": {
+      "width": 768,
+      "height": 96
+    },
+    "resources": {
+      "width": 320,
+      "height": 440
+    },
+    "effects": {
+      "width": 384,
+      "height": 384
+    },
+    "camp": {
+      "width": 768,
+      "height": 128
+    },
+    "held": {
+      "width": 192,
+      "height": 32
+    },
+    "survivor-axe-right": {
+      "width": 256,
+      "height": 160
+    },
+    "survivor-mine-right": {
+      "width": 256,
+      "height": 160
+    },
+    "survivor-axe-down": {
+      "width": 256,
+      "height": 160
+    },
+    "survivor-mine-down": {
+      "width": 256,
+      "height": 160
+    },
+    "survivor-axe-up": {
+      "width": 256,
+      "height": 160
+    },
+    "survivor-mine-up": {
+      "width": 256,
+      "height": 160
+    },
+    "wolf-run": {
+      "width": 256,
+      "height": 96
+    },
+    "wolf-idle": {
+      "width": 256,
+      "height": 96
+    },
+    "leaf-drift": {
+      "width": 96,
+      "height": 48
+    },
+    "pond-ring": {
+      "width": 128,
+      "height": 48
+    }
+  },
+  "clips": {
+    "idle-down": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 2,
+      "loop": true,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 12],
+        [33, 29, 12],
+        [33, 29, 12],
+        [33, 28, 12],
+        [33, 28, 12],
+        [33, 29, 12],
+        [33, 29, 12],
+        [33, 29, 12]
+      ]
+    },
+    "walk-down": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 48,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 12],
+        [33, 27, 15],
+        [34, 26, 18],
+        [33, 28, 15],
+        [33, 29, 12],
+        [33, 29, 9],
+        [32, 30, 6],
+        [33, 30, 9]
+      ]
+    },
+    "run-down": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 96,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 15,
+      "loop": true,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 12],
+        [33, 27, 15],
+        [34, 26, 18],
+        [33, 28, 15],
+        [33, 29, 12],
+        [33, 29, 9],
+        [32, 30, 6],
+        [33, 30, 9]
+      ]
+    },
+    "axe-down": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 144,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [30, 30, 63],
+        [29, 24, 33],
+        [30, 17, -17],
+        [31, 16, -32],
+        [34, 36, 123],
+        [33, 42, 173],
+        [31, 32, 103],
+        [30, 30, 63]
+      ]
+    },
+    "mine-down": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 192,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [30, 30, 53],
+        [30, 23, 18],
+        [30, 16, -7],
+        [30, 15, -22],
+        [33, 38, 138],
+        [33, 43, 173],
+        [31, 33, 98],
+        [30, 30, 53]
+      ]
+    },
+    "forage-down": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 240,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 0],
+        [34, 32, 5],
+        [35, 36, 15],
+        [36, 39, 20],
+        [36, 39, 15],
+        [35, 36, 5],
+        [34, 32, 0],
+        [33, 29, 0]
+      ]
+    },
+    "use-down": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 288,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 0],
+        [32, 25, -10],
+        [30, 20, -20],
+        [28, 19, -35],
+        [28, 19, -35],
+        [30, 21, -15],
+        [32, 25, 0],
+        [33, 29, 0]
+      ]
+    },
+    "build-down": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 336,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 0],
+        [34, 33, 10],
+        [35, 37, 15],
+        [37, 39, 10],
+        [35, 36, -10],
+        [37, 39, 10],
+        [34, 33, 0],
+        [33, 29, 0]
+      ]
+    },
+    "attack-down": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 384,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [30, 30, 48],
+        [29, 27, 28],
+        [29, 26, 18],
+        [34, 27, 68],
+        [35, 35, 98],
+        [32, 37, 78],
+        [30, 30, 58],
+        [30, 30, 48]
+      ]
+    },
+    "idle-right": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 432,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 2,
+      "loop": true,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 12],
+        [33, 29, 12],
+        [33, 29, 12],
+        [33, 28, 12],
+        [33, 28, 12],
+        [33, 29, 12],
+        [33, 29, 12],
+        [33, 29, 12]
+      ]
+    },
+    "walk-right": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 480,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 12],
+        [33, 27, 15],
+        [34, 26, 18],
+        [33, 28, 15],
+        [33, 29, 12],
+        [33, 29, 9],
+        [32, 30, 6],
+        [33, 30, 9]
+      ]
+    },
+    "run-right": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 528,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 15,
+      "loop": true,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 12],
+        [33, 27, 15],
+        [34, 26, 18],
+        [33, 28, 15],
+        [33, 29, 12],
+        [33, 29, 9],
+        [32, 30, 6],
+        [33, 30, 9]
+      ]
+    },
+    "axe-right": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 576,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 15],
+        [32, 23, -15],
+        [34, 19, -65],
+        [34, 19, -80],
+        [39, 28, 75],
+        [38, 34, 125],
+        [35, 31, 55],
+        [33, 29, 15]
+      ]
+    },
+    "mine-right": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 624,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 5],
+        [33, 22, -30],
+        [34, 19, -55],
+        [34, 19, -70],
+        [38, 30, 90],
+        [38, 35, 125],
+        [35, 32, 50],
+        [33, 29, 5]
+      ]
+    },
+    "forage-right": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 672,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 0],
+        [34, 32, 5],
+        [35, 36, 15],
+        [36, 39, 20],
+        [36, 39, 15],
+        [35, 36, 5],
+        [34, 32, 0],
+        [33, 29, 0]
+      ]
+    },
+    "use-right": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 720,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 0],
+        [32, 25, -10],
+        [30, 20, -20],
+        [28, 19, -35],
+        [28, 19, -35],
+        [30, 21, -15],
+        [32, 25, 0],
+        [33, 29, 0]
+      ]
+    },
+    "build-right": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 768,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 0],
+        [34, 33, 10],
+        [35, 37, 15],
+        [37, 39, 10],
+        [35, 36, -10],
+        [37, 39, 10],
+        [34, 33, 0],
+        [33, 29, 0]
+      ]
+    },
+    "attack-right": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 816,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 0],
+        [31, 26, -20],
+        [31, 25, -30],
+        [39, 26, 20],
+        [41, 27, 50],
+        [37, 29, 30],
+        [34, 29, 10],
+        [33, 29, 0]
+      ]
+    },
+    "idle-up": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 864,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 2,
+      "loop": true,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 12],
+        [33, 29, 12],
+        [33, 29, 12],
+        [33, 28, 12],
+        [33, 28, 12],
+        [33, 29, 12],
+        [33, 29, 12],
+        [33, 29, 12]
+      ]
+    },
+    "walk-up": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 912,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 12],
+        [33, 27, 15],
+        [34, 26, 18],
+        [33, 28, 15],
+        [33, 29, 12],
+        [33, 29, 9],
+        [32, 30, 6],
+        [33, 30, 9]
+      ]
+    },
+    "run-up": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 960,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 15,
+      "loop": true,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 12],
+        [33, 27, 15],
+        [34, 26, 18],
+        [33, 28, 15],
+        [33, 29, 12],
+        [33, 29, 9],
+        [32, 30, 6],
+        [33, 30, 9]
+      ]
+    },
+    "axe-up": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 1008,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [28, 21, 3.0],
+        [28, 15, -3.0],
+        [28, 8, -13.0],
+        [29, 7, -16.0],
+        [31, 20, 15.0],
+        [30, 26, 25.0],
+        [29, 23, 11.0],
+        [28, 21, 3.0]
+      ]
+    },
+    "mine-up": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 1056,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [28, 21, 1.0],
+        [28, 14, -6.0],
+        [28, 7, -11.0],
+        [28, 6, -14.0],
+        [30, 22, 18.0],
+        [30, 27, 25.0],
+        [29, 24, 10.0],
+        [28, 21, 1.0]
+      ]
+    },
+    "forage-up": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 1104,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 0],
+        [34, 32, 5],
+        [35, 36, 15],
+        [36, 39, 20],
+        [36, 39, 15],
+        [35, 36, 5],
+        [34, 32, 0],
+        [33, 29, 0]
+      ]
+    },
+    "use-up": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 1152,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 0],
+        [32, 25, -10],
+        [30, 20, -20],
+        [28, 19, -35],
+        [28, 19, -35],
+        [30, 21, -15],
+        [32, 25, 0],
+        [33, 29, 0]
+      ]
+    },
+    "build-up": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 1200,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [33, 29, 0],
+        [34, 33, 10],
+        [35, 37, 15],
+        [37, 39, 10],
+        [35, 36, -10],
+        [37, 39, 10],
+        [34, 33, 0],
+        [33, 29, 0]
+      ]
+    },
+    "attack-up": {
+      "sheet": "survivor",
+      "x": 0,
+      "y": 1248,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 42],
+      "hands": [
+        [28, 21, 0.0],
+        [27, 18, -4.0],
+        [27, 17, -6.0],
+        [31, 18, 4.0],
+        [32, 19, 10.0],
+        [30, 21, 6.0],
+        [28, 21, 2.0],
+        [28, 21, 0.0]
+      ]
+    },
+    "pine-sway": {
+      "sheet": "forest",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 80,
+      "frames": 6,
+      "fps": 3,
+      "loop": true,
+      "anchor": [32, 74]
+    },
+    "pine-hit": {
+      "sheet": "forest",
+      "x": 0,
+      "y": 80,
+      "w": 64,
+      "h": 80,
+      "frames": 6,
+      "fps": 14,
+      "loop": false,
+      "anchor": [32, 74]
+    },
+    "pine-fall": {
+      "sheet": "falling-tree",
+      "x": 0,
+      "y": 0,
+      "w": 96,
+      "h": 96,
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "anchor": [28, 85]
+    },
+    "rock-idle": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 0,
+      "w": 40,
+      "h": 40,
+      "frames": 1,
+      "fps": 1,
+      "loop": true,
+      "anchor": [20, 34]
+    },
+    "rock-cracked": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 40,
+      "w": 40,
+      "h": 40,
+      "frames": 1,
+      "fps": 1,
+      "loop": true,
+      "anchor": [20, 34]
+    },
+    "rock-hit": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 80,
+      "w": 40,
+      "h": 40,
+      "frames": 6,
+      "fps": 14,
+      "loop": false,
+      "anchor": [20, 34]
+    },
+    "rock-break": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 120,
+      "w": 40,
+      "h": 40,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [20, 34]
+    },
+    "berry-sway": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 160,
+      "w": 40,
+      "h": 40,
+      "frames": 6,
+      "fps": 3,
+      "loop": true,
+      "anchor": [20, 34]
+    },
+    "berry-empty": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 200,
+      "w": 40,
+      "h": 40,
+      "frames": 1,
+      "fps": 1,
+      "loop": true,
+      "anchor": [20, 34]
+    },
+    "berry-harvest": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 240,
+      "w": 40,
+      "h": 40,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [20, 34]
+    },
+    "fiber-idle": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 280,
+      "w": 40,
+      "h": 40,
+      "frames": 6,
+      "fps": 3,
+      "loop": true,
+      "anchor": [20, 34]
+    },
+    "fiber-harvest": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 320,
+      "w": 40,
+      "h": 40,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [20, 34]
+    },
+    "mushroom-idle": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 360,
+      "w": 40,
+      "h": 40,
+      "frames": 6,
+      "fps": 3,
+      "loop": true,
+      "anchor": [20, 34]
+    },
+    "mushroom-harvest": {
+      "sheet": "resources",
+      "x": 0,
+      "y": 400,
+      "w": 40,
+      "h": 40,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [20, 34]
+    },
+    "fire-burn": {
+      "sheet": "effects",
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 9,
+      "loop": true,
+      "anchor": [24, 44]
+    },
+    "wood-chips": {
+      "sheet": "effects",
+      "x": 0,
+      "y": 48,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "anchor": [24, 38]
+    },
+    "stone-dust": {
+      "sheet": "effects",
+      "x": 0,
+      "y": 96,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "anchor": [24, 38]
+    },
+    "leaf-burst": {
+      "sheet": "effects",
+      "x": 0,
+      "y": 144,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "anchor": [24, 38]
+    },
+    "build-dust": {
+      "sheet": "effects",
+      "x": 0,
+      "y": 192,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "anchor": [24, 38]
+    },
+    "tool-swipe": {
+      "sheet": "effects",
+      "x": 0,
+      "y": 240,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "anchor": [24, 38]
+    },
+    "water-drops": {
+      "sheet": "effects",
+      "x": 0,
+      "y": 288,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 14,
+      "loop": false,
+      "anchor": [24, 38]
+    },
+    "recovery": {
+      "sheet": "effects",
+      "x": 0,
+      "y": 336,
+      "w": 48,
+      "h": 48,
+      "frames": 8,
+      "fps": 12,
+      "loop": false,
+      "anchor": [24, 38]
+    },
+    "wolf-idle": {
+      "sheet": "wolf-idle",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 48,
+      "frames": 8,
+      "columns": 4,
+      "fps": 4,
+      "loop": true,
+      "anchor": [32, 38]
+    },
+    "wolf-run": {
+      "sheet": "wolf-run",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 48,
+      "frames": 8,
+      "columns": 4,
+      "fps": 11,
+      "loop": true,
+      "anchor": [32, 38]
+    },
+    "wolf-alert": {
+      "sheet": "wolf-idle",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 48,
+      "frames": 8,
+      "columns": 4,
+      "fps": 4,
+      "loop": true,
+      "anchor": [32, 38]
+    },
+    "shelter-idle": {
+      "sheet": "camp",
+      "x": 0,
+      "y": 0,
+      "w": 96,
+      "h": 64,
+      "frames": 6,
+      "fps": 3,
+      "loop": true,
+      "anchor": [42, 56]
+    },
+    "shelter-build": {
+      "sheet": "camp",
+      "x": 0,
+      "y": 64,
+      "w": 96,
+      "h": 64,
+      "frames": 8,
+      "fps": 10,
+      "loop": false,
+      "anchor": [42, 56]
+    },
+    "torch-burn": {
+      "sheet": "held",
+      "x": 0,
+      "y": 0,
+      "w": 24,
+      "h": 32,
+      "frames": 8,
+      "fps": 10,
+      "loop": true,
+      "anchor": [12, 25]
+    },
+    "survivor-axe-right": {
+      "sheet": "survivor-axe-right",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 80,
+      "frames": 8,
+      "columns": 4,
+      "fps": 12,
+      "loop": false,
+      "anchor": [32, 58],
+      "hands": [
+        [41, 46, 35],
+        [41, 45, 18],
+        [25, 28, -35],
+        [25, 27, -55],
+        [43, 46, 112],
+        [39, 49, 145],
+        [41, 46, 45],
+        [41, 45, 32]
+      ],
+      "impactFrame": 4
+    },
+    "survivor-mine-right": {
+      "sheet": "survivor-mine-right",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 80,
+      "frames": 8,
+      "columns": 4,
+      "fps": 12,
+      "loop": false,
+      "anchor": [32, 58],
+      "hands": [
+        [41, 46, 28],
+        [41, 45, 10],
+        [25, 28, -20],
+        [25, 27, -40],
+        [43, 46, 105],
+        [39, 49, 137],
+        [41, 46, 38],
+        [41, 45, 25]
+      ],
+      "impactFrame": 4
+    },
+    "survivor-axe-down": {
+      "sheet": "survivor-axe-down",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 80,
+      "frames": 8,
+      "columns": 4,
+      "fps": 12,
+      "loop": false,
+      "anchor": [32, 58],
+      "hands": [
+        [38, 46, 63],
+        [37, 40, 33],
+        [38, 33, -17],
+        [39, 32, -32],
+        [42, 52, 123],
+        [41, 58, 173],
+        [39, 48, 103],
+        [38, 46, 63]
+      ],
+      "impactFrame": 4
+    },
+    "survivor-mine-down": {
+      "sheet": "survivor-mine-down",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 80,
+      "frames": 8,
+      "columns": 4,
+      "fps": 12,
+      "loop": false,
+      "anchor": [32, 58],
+      "hands": [
+        [38, 46, 53],
+        [38, 39, 18],
+        [38, 32, -7],
+        [38, 31, -22],
+        [41, 54, 138],
+        [41, 59, 173],
+        [39, 49, 98],
+        [38, 46, 53]
+      ],
+      "impactFrame": 4
+    },
+    "survivor-axe-up": {
+      "sheet": "survivor-axe-up",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 80,
+      "frames": 8,
+      "columns": 4,
+      "fps": 12,
+      "loop": false,
+      "anchor": [32, 58],
+      "hands": [
+        [36, 37, 3.0],
+        [36, 31, -3.0],
+        [36, 24, -13.0],
+        [37, 23, -16.0],
+        [39, 36, 15.0],
+        [38, 42, 25.0],
+        [37, 39, 11.0],
+        [36, 37, 3.0]
+      ],
+      "impactFrame": 4
+    },
+    "survivor-mine-up": {
+      "sheet": "survivor-mine-up",
+      "x": 0,
+      "y": 0,
+      "w": 64,
+      "h": 80,
+      "frames": 8,
+      "columns": 4,
+      "fps": 12,
+      "loop": false,
+      "anchor": [32, 58],
+      "hands": [
+        [36, 37, 1.0],
+        [36, 30, -6.0],
+        [36, 23, -11.0],
+        [36, 22, -14.0],
+        [38, 38, 18.0],
+        [38, 43, 25.0],
+        [37, 40, 10.0],
+        [36, 37, 1.0]
+      ],
+      "impactFrame": 4
+    },
+    "leaf-drift": {
+      "sheet": "leaf-drift",
+      "x": 0,
+      "y": 0,
+      "w": 24,
+      "h": 24,
+      "frames": 8,
+      "columns": 4,
+      "fps": 5,
+      "loop": true,
+      "anchor": [12, 12]
+    },
+    "pond-ring": {
+      "sheet": "pond-ring",
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 24,
+      "frames": 8,
+      "columns": 4,
+      "fps": 7,
+      "loop": true,
+      "anchor": [16, 12]
+    }
+  }
+}

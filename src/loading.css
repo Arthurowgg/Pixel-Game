@@ -1,0 +1,466 @@
+/* Two purpose-built loading scenes. Their progress is driven by decoded assets. */
+.loading-screen,
+.game-shell .loading-screen.forest-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  width: 100%;
+  height: 100svh;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  overflow-y: auto;
+  overflow-x: hidden;
+  isolation: isolate;
+  padding: 32px 4.5vw 22px;
+  background: #0b1b17;
+  color: #eee4bd;
+  outline: none;
+  font-family: var(--pixel);
+}
+.loading-landscape,
+.loading-shade,
+.loading-motes {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+}
+.loading-landscape {
+  background: url('/art/loading/forest-arrival.png') center 43% / cover no-repeat;
+  image-rendering: pixelated;
+}
+.loading-world .loading-landscape {
+  background-image: url('/art/loading/camp-arrival.png');
+  background-position: 65% center;
+}
+.loading-shade {
+  z-index: -2;
+  background: linear-gradient(180deg, #0b191d2b, #0b191d05 25%, #071510a8 65%, #071510f5 100%);
+}
+.loading-world .loading-shade {
+  background:
+    linear-gradient(90deg, #071710bd, #07171066 43%, #07171005 85%),
+    linear-gradient(0deg, #071710fa, transparent 60%);
+}
+.loading-motes {
+  z-index: -1;
+  overflow: hidden;
+}
+.loading-motes i {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: #f2d894;
+  opacity: 0.3;
+  animation: trail-ember 7s steps(16) infinite;
+  box-shadow: 0 0 8px #f2d83b30;
+}
+@keyframes trail-ember {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 12px);
+  }
+  35%,
+  60% {
+    opacity: 0.65;
+  }
+  90% {
+    opacity: 0;
+    transform: translate(12px, -26px);
+  }
+}
+.loading-topline,
+.loading-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  font: 10px var(--pixel);
+  letter-spacing: 1.8px;
+  color: #c7cba5;
+}
+.loading-topline > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.loading-topline i {
+  font-style: normal;
+  opacity: 0.5;
+}
+.loading-chapter {
+  white-space: nowrap;
+}
+.loading-story {
+  text-align: center;
+  padding: clamp(20px, 5svh, 50px) 0 30px;
+  margin: auto 0;
+  text-shadow: 1px 2px #0a2019;
+}
+.loading-emblem {
+  image-rendering: pixelated;
+  object-fit: contain;
+  width: 64px;
+  height: 64px;
+  filter: drop-shadow(3px 4px #11241b88);
+}
+.loading-kicker {
+  display: block;
+  color: #ddc78e;
+  font: 10px var(--pixel);
+  letter-spacing: 3px;
+  margin: 22px 0 13px;
+}
+.loading-story h1 {
+  font: 700 clamp(52px, 8vw, 110px)/0.92 var(--pixel);
+  letter-spacing: -2px;
+  color: #f1e6b9;
+}
+.loading-story h1 > span {
+  color: #d39d65;
+}
+.loading-subtitle {
+  font: 18px var(--pixel);
+  margin-top: 16px;
+  color: #d1d3a9;
+}
+.loading-world .loading-story {
+  text-align: left;
+  padding-left: 2vw;
+  max-width: 600px;
+}
+.loading-world .loading-story h1 {
+  font-size: clamp(56px, 7.2vw, 94px);
+}
+.loading-world .loading-emblem {
+  width: 48px;
+  height: 48px;
+}
+.loading-world .loading-kicker {
+  margin-top: 18px;
+}
+.loading-camp-details {
+  margin-top: 25px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  text-transform: capitalize;
+  font-size: 14px;
+  color: #bac79f;
+}
+.loading-camp-details > span {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.loading-bottom {
+  width: 100%;
+  margin: 0 auto;
+}
+.loading-progress-area {
+  max-width: 550px;
+  margin: 0 auto;
+}
+.loading-phase {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+  font: 20px var(--pixel);
+}
+.loading-phase > b {
+  font-weight: 500;
+  font-size: 30px;
+  color: #e4c087;
+  font-variant-numeric: tabular-nums;
+}
+.loading-phase small {
+  font-size: 14px;
+  margin-left: 2px;
+}
+.loading-track {
+  height: 13px;
+  position: relative;
+  border: 2px solid #bba574;
+  background: #18281d;
+  padding: 2px;
+  box-shadow:
+    2px 3px #0006,
+    inset 0 0 0 1px #0a180e;
+}
+.loading-track::before,
+.loading-track::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  width: 4px;
+  height: 17px;
+  background: #d9bb7f;
+  border-top: 2px solid #806643;
+  border-bottom: 2px solid #806643;
+}
+.loading-track::before {
+  left: -4px;
+}
+.loading-track::after {
+  right: -4px;
+}
+.loading-track-fill {
+  height: 100%;
+  max-width: 100%;
+  background: repeating-linear-gradient(90deg, #c8c18d 0 9px, #899966 9px 11px);
+  box-shadow: inset 0 2px #ecdcab66;
+  transition: width 0.18s steps(6);
+}
+.loading-trail-marker {
+  position: absolute;
+  bottom: 13px;
+  transform: translateX(-50%);
+  color: #f3deb3;
+  transition: left 0.18s steps(6);
+  filter: drop-shadow(1px 2px #0a1b10);
+}
+.loading-count {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 12px;
+  font: 10px var(--pixel);
+  letter-spacing: 1px;
+  color: #8d9e7c;
+  min-height: 15px;
+}
+.loading-count > span:first-child {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.loading-tip {
+  max-width: 550px;
+  margin: 26px auto 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 16px 0;
+  border-top: 1px solid #a4ae7338;
+}
+.loading-tip > .icon {
+  flex: none;
+}
+.loading-tip strong {
+  font: 16px var(--pixel);
+  color: #d2d0a3;
+}
+.loading-tip p {
+  font: 12px/1.65 var(--body);
+  color: #a4b094;
+  margin-top: 5px;
+}
+.loading-footer {
+  font-size: 9px;
+  letter-spacing: 1.1px;
+  color: #7e9174;
+}
+.loading-footer button {
+  padding: 9px 0 9px 16px;
+  font: 13px var(--pixel);
+  color: #c7c69d;
+  letter-spacing: 0.4px;
+}
+.loading-footer button span {
+  margin-left: 10px;
+}
+.loading-recovery {
+  max-width: 660px;
+  margin: 18px auto;
+  padding: 16px;
+  border: 1px solid #c7926766;
+  background: #16251ced;
+}
+.loading-recovery p {
+  font: 13px/1.6 var(--body);
+  color: #e7ccb0;
+}
+.loading-recovery > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.loading-recovery .button {
+  font-size: 15px;
+  min-height: 40px;
+  padding: 12px 16px;
+}
+.loading-screen.loading-error .loading-story {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.game-canvas:focus {
+  outline: none;
+}
+.game-shell[data-loading='true'] .game-hud {
+  visibility: hidden;
+}
+@media (max-width: 650px) {
+  .loading-screen,
+  .game-shell .loading-screen.forest-loading {
+    padding: 24px 24px 16px;
+  }
+  .loading-topline {
+    font-size: 9px;
+    letter-spacing: 0.8px;
+  }
+  .loading-topline > span:first-child {
+    font-size: 0;
+    gap: 0;
+  }
+  .loading-topline > span:first-child i {
+    display: none;
+  }
+  .loading-topline > span:first-child .icon {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  .loading-story {
+    padding: 28px 0;
+  }
+  .loading-story h1 {
+    font-size: clamp(48px, 13vw, 72px);
+  }
+  .loading-story .loading-kicker {
+    font-size: 8px;
+    letter-spacing: 1.7px;
+  }
+  .loading-emblem {
+    width: 56px;
+    height: 56px;
+  }
+  .loading-world .loading-story {
+    padding-left: 0;
+  }
+  .loading-world .loading-story h1 {
+    font-size: 62px;
+  }
+  .loading-world .loading-landscape {
+    background-position: 67% center;
+  }
+  .loading-world .loading-shade {
+    background: linear-gradient(0deg, #071710fa, #07171065 55%, #07171055);
+  }
+  .loading-camp-details {
+    gap: 12px;
+    font-size: 12px;
+    margin-top: 18px;
+  }
+  .loading-subtitle {
+    font-size: 17px;
+  }
+  .loading-phase {
+    font-size: 17px;
+  }
+  .loading-phase > b {
+    font-size: 25px;
+  }
+  .loading-tip {
+    margin: 20px 0 12px;
+    gap: 11px;
+    padding: 14px 0;
+  }
+  .loading-tip p {
+    font-size: 11px;
+  }
+  .loading-tip strong {
+    font-size: 15px;
+  }
+  .loading-footer {
+    font-size: 8px;
+    letter-spacing: 0.5px;
+  }
+  .loading-footer > span:first-child {
+    max-width: 145px;
+    line-height: 1.7;
+  }
+}
+@media (max-height: 560px) and (min-width: 651px) {
+  .loading-screen,
+  .game-shell .loading-screen.forest-loading {
+    padding: 16px 4vw 12px;
+  }
+  .loading-story {
+    padding: 10px 0;
+    margin: auto 0;
+  }
+  .loading-emblem,
+  .loading-world .loading-emblem {
+    display: none;
+  }
+  .loading-kicker,
+  .loading-world .loading-kicker {
+    margin: 8px 0;
+    font-size: 9px;
+  }
+  .loading-story h1,
+  .loading-world .loading-story h1 {
+    font-size: 58px;
+  }
+  .loading-subtitle {
+    font-size: 15px;
+    margin-top: 8px;
+  }
+  .loading-camp-details {
+    margin-top: 10px;
+  }
+  .loading-progress-area {
+    max-width: 470px;
+  }
+  .loading-phase {
+    font-size: 17px;
+    margin-bottom: 8px;
+  }
+  .loading-phase > b {
+    font-size: 24px;
+  }
+  .loading-tip {
+    display: none;
+  }
+  .loading-footer {
+    margin-top: 14px;
+  }
+  .loading-recovery {
+    margin: 12px auto;
+    padding: 10px;
+  }
+  .loading-error .loading-story {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-screen *,
+  .loading-screen *::before,
+  .loading-screen *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+html[data-reduced-motion='true'] .loading-screen *,
+html[data-reduced-motion='true'] .loading-screen *::before,
+html[data-reduced-motion='true'] .loading-screen *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+.loading-story h1 {
+  text-shadow: 3px 4px #0a2019;
+}
+.loading-topline {
+  text-shadow: 1px 2px #0a2019;
+}
+.loading-shade {
+  background: linear-gradient(180deg, #0717106b, #0b191d05 25%, #071510a8 65%, #071510f5 100%);
+}

@@ -1,0 +1,125 @@
+{
+  "sheet": "art/item-sprites.png",
+  "width": 128,
+  "height": 32,
+  "items": {
+    "hatchet": {
+      "x": 0,
+      "y": 0,
+      "w": 16,
+      "h": 16,
+      "source": "generated"
+    },
+    "pickaxe": {
+      "x": 16,
+      "y": 0,
+      "w": 16,
+      "h": 16,
+      "source": "generated"
+    },
+    "wood": {
+      "x": 32,
+      "y": 0,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/forager-batch/wood.png"
+    },
+    "stone": {
+      "x": 48,
+      "y": 0,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/forager-batch/stone.png"
+    },
+    "fiber": {
+      "x": 64,
+      "y": 0,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/forager-batch/fiber.png"
+    },
+    "berries": {
+      "x": 80,
+      "y": 0,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/forager-batch/berries.png"
+    },
+    "water": {
+      "x": 96,
+      "y": 0,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/forager-batch/water.png"
+    },
+    "mushroom": {
+      "x": 112,
+      "y": 0,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/forager-batch/mushroom.png"
+    },
+    "bandage": {
+      "x": 0,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/camp-ui/bandage.png"
+    },
+    "torch": {
+      "x": 16,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/camp-ui/torch.png"
+    },
+    "meal": {
+      "x": 32,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/camp-ui/meal.png"
+    },
+    "campfire": {
+      "x": 48,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/camp-ui/campfire.png"
+    },
+    "shelter": {
+      "x": 64,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/camp-ui/shelter.png"
+    },
+    "nuts": {
+      "x": 80,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/forager-batch/nuts.png"
+    },
+    "tea": {
+      "x": 96,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/forager-batch/tea.png"
+    }
+  }
+}

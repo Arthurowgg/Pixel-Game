@@ -1,0 +1,838 @@
+/* Trail & Camp: a small frame vocabulary, readable vitals, and quieter chrome. */
+:root {
+  --body: 'DM Sans', sans-serif;
+  --status-frame: url('/art/ui/status-frame.png');
+  --dialog-frame: url('/art/ui/dialog-frame.png');
+  --slot-frame: url('/art/ui/slot-frame.png');
+}
+.app .modal-panel {
+  border-image: var(--dialog-frame) 20 fill / 23px / 0 stretch;
+  color: #eee6c8;
+}
+.app .modal-header h2 {
+  color: #f1e3b9;
+}
+.game-shell .survivor-panel.vitals-panel {
+  width: 282px;
+  padding: 7px 9px;
+  border: 12px solid transparent;
+  border-image: var(--status-frame) 14 fill / 16px / 0 stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scale: 1;
+  transform: none;
+  box-shadow: 2px 3px #0c1c16a3;
+}
+.vitals-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vitals-portrait {
+  width: 30px;
+  height: 42px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex: none;
+}
+.game-shell .vitals-panel .survivor-heading {
+  height: 22px;
+  justify-content: space-between;
+}
+.game-shell .vitals-panel .survivor-heading h2 {
+  font: 500 18px var(--pixel);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vitals-details {
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  min-height: 0;
+  background: none;
+  color: #bcc89f;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.vitals-details:hover {
+  color: #ffe2a4;
+  background: #65735455;
+}
+.game-shell .vitals-panel .health-row {
+  margin: 2px 0 0;
+  gap: 4px;
+  align-items: center;
+}
+.game-shell .vitals-panel .health-pips {
+  gap: 1px;
+}
+.game-shell .vitals-panel .health-pip,
+.game-shell .vitals-panel .health-pip .icon {
+  width: 13px;
+  height: 13px;
+}
+.health-pip > .icon {
+  filter: grayscale(1) brightness(0.4);
+  opacity: 0.65;
+}
+.game-shell .vitals-panel .health-row b {
+  font: 12px var(--pixel);
+  white-space: nowrap;
+}
+.game-shell .vitals-panel .health-row b small {
+  font-size: 7px;
+  color: #a9b399;
+}
+.vital-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.vital-row {
+  display: grid;
+  grid-template-columns: 16px 49px 1fr 23px 5px;
+  gap: 6px;
+  align-items: center;
+  min-height: 18px;
+  font: 13px var(--pixel);
+  color: #dedec0;
+}
+.vital-row > .icon {
+  width: 16px;
+  height: 16px;
+}
+.vital-row b {
+  font-size: 12px;
+  font-weight: 400;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.vital-track {
+  height: 7px;
+  background: #13251c;
+  border: 1px solid #87946c44;
+  box-shadow: inset 0 1px #07180f;
+  overflow: hidden;
+}
+.vital-track > i {
+  display: block;
+  height: 100%;
+  background: #b7c783;
+  box-shadow: inset 0 1px #fff3;
+}
+.vital-row.low {
+  color: #edcf93;
+}
+.vital-row.critical {
+  color: #f0ac8b;
+}
+.vital-row.critical .vital-track {
+  border-color: #b9825e;
+}
+.vital-warning {
+  color: #ffd29b;
+  font-size: 14px;
+  font-weight: 700;
+}
+.vital-stamina {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font: 8px var(--pixel);
+  color: #a9b692;
+}
+.vital-stamina .vital-track {
+  flex: 1;
+  height: 4px;
+}
+.vital-stamina > .icon {
+  height: 12px;
+  width: 12px;
+}
+.game-shell[data-hud='compact'] .minimap-panel,
+.game-shell[data-hud='compact'] .hud-save:not(.save-warning),
+.game-shell[data-hud='compact'] .quickbar-hints,
+.game-shell[data-hud='compact'] .held-item-status > div > span {
+  display: none;
+}
+.game-shell[data-hud='compact'] .game-toast:not(:last-child) {
+  display: none;
+}
+.game-shell[data-hud='compact'] .quickbar-wrap {
+  bottom: 22px;
+}
+.game-shell[data-hud='compact'] .interaction-prompt {
+  bottom: 156px;
+}
+.game-shell[data-hud='compact'] .held-item-status {
+  bottom: 116px;
+}
+.game-shell .inventory-slot,
+.game-shell .quick-slot {
+  border: 4px solid transparent;
+  border-image: var(--slot-frame) 8 fill / 8px / 0 stretch;
+  box-shadow: none;
+  image-rendering: pixelated;
+}
+.game-shell .inventory-slot.selected,
+.game-shell .quick-slot.active {
+  outline: 1px solid #eed09b;
+  outline-offset: -3px;
+  filter: brightness(1.17);
+}
+.game-shell .inventory-slot:hover,
+.game-shell .quick-slot:hover {
+  filter: brightness(1.2);
+}
+.game-shell .slot-number {
+  left: 5px;
+  top: 4px;
+}
+.game-shell .slot-count {
+  right: 5px;
+  bottom: 3px;
+}
+.game-shell .inventory-slot > b {
+  right: 7px;
+  bottom: 5px;
+}
+.game-shell .inventory-held {
+  top: 4px;
+  left: 6px;
+}
+.game-shell .touch-s {
+  grid-row: 3;
+  grid-column: 2;
+}
+.touch-wa {
+  grid-row: 1;
+  grid-column: 1;
+}
+.touch-wd {
+  grid-row: 1;
+  grid-column: 3;
+}
+.touch-sa {
+  grid-row: 3;
+  grid-column: 1;
+}
+.touch-sd {
+  grid-row: 3;
+  grid-column: 3;
+}
+.touch-wa .icon {
+  transform: rotate(-135deg);
+}
+.touch-wd .icon {
+  transform: rotate(-45deg);
+}
+.touch-sa .icon {
+  transform: rotate(135deg);
+}
+.touch-sd .icon {
+  transform: rotate(45deg);
+}
+.touch-center {
+  grid-row: 2;
+  grid-column: 2;
+  display: grid;
+  place-items: center;
+  opacity: 0.65;
+}
+.game-shell .touch-wa,
+.game-shell .touch-wd,
+.game-shell .touch-sa,
+.game-shell .touch-sd {
+  background: #213a26ba;
+  border-color: #76835c;
+}
+.game-shell .touch-wa > .icon,
+.game-shell .touch-wd > .icon,
+.game-shell .touch-sa > .icon,
+.game-shell .touch-sd > .icon {
+  width: 16px;
+  height: 16px;
+}
+.camp-save-summary {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #13291cbf;
+  border-left: 2px solid #acaa6e;
+  margin-top: 14px;
+  padding: 8px 10px;
+  width: 288px;
+  color: #d6d9b4;
+  text-align: left;
+}
+.camp-save-summary > span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.camp-save-summary strong {
+  font: 15px var(--pixel);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.camp-save-summary small {
+  font: 10px var(--pixel);
+  color: #a9b895;
+  text-transform: capitalize;
+}
+.camp-save-summary:hover {
+  background: #354b2d;
+}
+.camp-save-summary + .save-caption {
+  display: none;
+}
+.pause-dialog .pause-secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.pause-dialog .pause-art {
+  padding: 12px 0;
+}
+.pause-dialog .pause-art .pixel-preview {
+  height: 76px;
+}
+.trail-intro {
+  font: 17px/1.5 var(--pixel);
+  color: #e5d6ad;
+  margin: 0 0 18px;
+}
+.condition-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.condition-entry {
+  padding: 0 0 12px;
+  border-bottom: 1px solid #cebc7c36;
+}
+.condition-entry > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 7px;
+}
+.condition-entry h3 {
+  font: 18px var(--pixel);
+  color: #f1dfb9;
+  margin: 0;
+}
+.condition-entry b {
+  margin-left: auto;
+  font: 17px var(--pixel);
+  white-space: nowrap;
+}
+.condition-entry b small {
+  font: 10px var(--pixel);
+  opacity: 0.65;
+}
+.condition-tag {
+  margin-left: auto;
+  font: 10px var(--pixel);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #bfcf9c;
+}
+.condition-entry.low .condition-tag {
+  color: #f0cb84;
+}
+.condition-entry.critical .condition-tag {
+  color: #ffb094;
+}
+.condition-entry .vital-track {
+  height: 8px;
+}
+.condition-entry p {
+  font: 12px/1.6 var(--body);
+  color: #ddd7b9;
+  margin: 8px 0 0;
+}
+.trail-run-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 17px 0;
+}
+.trail-run-stats > span {
+  text-align: center;
+  border: 1px solid #bba77144;
+  background: #25351f8f;
+  padding: 9px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font: 12px var(--pixel);
+  color: #c4c9a3;
+}
+.trail-run-stats b {
+  font: 21px var(--pixel);
+  color: #eed5a0;
+}
+.trail-footnote {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  margin: 18px 0 0;
+  font: 12px/1.5 var(--pixel);
+  color: #c1c99f;
+}
+.trail-footnote .icon {
+  flex-shrink: 0;
+}
+.fieldcraft-search {
+  margin: 18px 0 16px;
+  border: 1px solid #a8a36a88;
+  background: #24361ed9;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+}
+.fieldcraft-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: #efe4bc;
+  padding: 3px 0;
+  outline: none;
+  font: 16px var(--pixel);
+}
+.fieldcraft-search:focus-within {
+  outline: 2px solid #d9c289;
+  outline-offset: 2px;
+}
+.fieldcraft-search input::placeholder {
+  color: #c2c49e;
+}
+.fieldcraft-search > span {
+  color: #b9c096;
+  font: 11px var(--pixel);
+  white-space: nowrap;
+}
+.fieldcraft-supplies {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.fieldcraft-items {
+  display: flex;
+  flex-direction: column;
+  max-height: 350px;
+  overflow-y: auto;
+  gap: 5px;
+  padding-right: 6px;
+}
+.fieldcraft-items > button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #a6a16a44;
+  background: #27351f;
+  padding: 7px;
+  color: #dedbbb;
+  font: 15px var(--pixel);
+}
+.fieldcraft-items > button .item-icon {
+  flex-shrink: 0;
+}
+.fieldcraft-items > button.selected {
+  border-color: #ead19d;
+  background: #485230;
+  color: #fff0c3;
+}
+.fieldcraft-detail {
+  border: 1px solid #bbab6f55;
+  background: #253820a6;
+  min-height: 350px;
+  padding: 20px;
+}
+.fieldcraft-detail > .item-icon {
+  display: block;
+  float: right;
+  margin: 0 0 10px 12px;
+}
+.fieldcraft-detail h3 {
+  font: 27px/1.1 var(--pixel);
+  margin: 7px 0 18px;
+  color: #f5dcac;
+}
+.fieldcraft-detail h4 {
+  font: 16px var(--pixel);
+  margin: 20px 0 8px;
+  color: #e0cb97;
+}
+.fieldcraft-detail p {
+  font: 13px/1.65 var(--body);
+  color: #e2d9b8;
+}
+.fieldcraft-tip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid #adab6855;
+  font: 11px var(--pixel);
+  color: #c6d0a0;
+}
+.fieldcraft-recipes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+.fieldcraft-recipes > article {
+  background: #26361fd1;
+  border: 1px solid #c0aa6b66;
+  padding: 14px;
+}
+.fieldcraft-recipe-title {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.fieldcraft-recipe-title .item-icon {
+  flex-shrink: 0;
+}
+.fieldcraft-recipe-title h3 {
+  font: 20px var(--pixel);
+  color: #efdab0;
+  margin: 0 0 5px;
+}
+.fieldcraft-recipe-title span {
+  font: 10px var(--pixel);
+  color: #cdc891;
+}
+.fieldcraft-recipes p {
+  font: 12px/1.5 var(--body);
+  color: #dbd6b8;
+}
+.fieldcraft-recipes ul {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  gap: 7px;
+  flex-direction: column;
+}
+.fieldcraft-recipes li {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  color: #f1deaf;
+  font: 14px var(--pixel);
+}
+.trail-empty {
+  font: 14px/1.5 var(--pixel);
+  padding: 8px;
+  color: #ddd2aa;
+}
+@media (max-width: 650px) {
+  .game-shell .survivor-panel.vitals-panel {
+    width: 217px;
+    left: 10px;
+    top: 10px;
+    padding: 6px;
+    border-width: 10px;
+    border-image-width: 14px;
+    gap: 5px;
+  }
+  .game-shell .vitals-panel .survivor-heading {
+    height: 20px;
+  }
+  .game-shell .vitals-panel .survivor-heading h2 {
+    font-size: 16px;
+    max-width: 122px;
+  }
+  .vitals-portrait {
+    width: 23px;
+    height: 33px;
+  }
+  .vitals-top {
+    gap: 5px;
+  }
+  .game-shell .vitals-panel .health-pips {
+    gap: 0;
+  }
+  .game-shell .vitals-panel .health-pip,
+  .game-shell .vitals-panel .health-pip .icon {
+    width: 12px;
+    height: 12px;
+  }
+  .game-shell .vitals-panel .health-row b {
+    font-size: 10px;
+  }
+  .game-shell .vitals-panel .health-row b small {
+    display: none;
+  }
+  .vital-row {
+    grid-template-columns: 14px 43px 1fr 20px 4px;
+    gap: 4px;
+    font-size: 12px;
+    min-height: 16px;
+  }
+  .vital-row > .icon {
+    width: 14px;
+    height: 14px;
+  }
+  .vital-row b {
+    font-size: 11px;
+  }
+  .vital-stamina {
+    font-size: 7px;
+  }
+  .game-shell[data-hud='compact'] .quickbar-wrap {
+    bottom: 15px;
+  }
+  .game-shell[data-hud='compact'] .held-item-status {
+    bottom: 94px;
+  }
+  .game-shell[data-hud='compact'] .interaction-prompt {
+    bottom: 132px;
+  }
+  .game-shell .inventory-slot,
+  .game-shell .quick-slot {
+    border-width: 3px;
+    border-image-width: 6px;
+  }
+  .game-shell .slot-number {
+    left: 4px;
+    top: 3px;
+  }
+  .game-shell .slot-count {
+    right: 4px;
+    bottom: 2px;
+  }
+  .app .modal-panel {
+    border-image-width: 18px;
+    padding: 16px;
+  }
+  .camp-save-summary {
+    max-width: 310px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 7px 10px;
+  }
+  .fieldcraft-supplies {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .fieldcraft-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    max-height: 170px;
+    gap: 5px;
+    padding-right: 4px;
+  }
+  .fieldcraft-items > button {
+    font-size: 12px;
+    padding: 5px;
+    gap: 5px;
+  }
+  .fieldcraft-items > button .item-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .fieldcraft-detail {
+    padding: 14px;
+    min-height: 0;
+  }
+  .fieldcraft-detail h3 {
+    font-size: 24px;
+  }
+  .fieldcraft-detail > .item-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .fieldcraft-detail p {
+    font-size: 12px;
+  }
+  .fieldcraft-recipes {
+    grid-template-columns: 1fr;
+  }
+  .fieldcraft-dialog .dialog-tabs button {
+    font-size: 15px;
+  }
+  .fieldcraft-dialog .modal-header h2 {
+    font-size: 25px;
+  }
+  .trail-footnote {
+    font-size: 11px;
+    flex-wrap: wrap;
+  }
+  .condition-tag {
+    font-size: 8px;
+  }
+  .condition-entry h3 {
+    font-size: 17px;
+  }
+  .condition-entry p {
+    font-size: 11px;
+  }
+  .pause-dialog .pause-secondary .button {
+    font-size: 14px;
+    padding: 8px;
+    min-height: 40px;
+  }
+}
+@media (max-width: 360px) {
+  .game-shell .survivor-panel.vitals-panel {
+    width: 193px;
+    left: 7px;
+  }
+  .game-shell .vitals-panel .health-pip,
+  .game-shell .vitals-panel .health-pip .icon {
+    width: 10px;
+    height: 10px;
+  }
+  .vitals-portrait {
+    width: 20px;
+  }
+  .vital-row {
+    grid-template-columns: 13px 41px 1fr 18px 3px;
+    gap: 3px;
+  }
+}
+@media (max-height: 600px) and (min-width: 651px) {
+  .camp-title-screen {
+    min-height: 100svh;
+  }
+  .camp-title-screen .menu-inner {
+    padding: 55px 0 40px;
+  }
+  .camp-title-screen .hero-eyebrow {
+    display: none;
+  }
+  .camp-title-screen .hero-description {
+    font-size: 14px;
+    margin: 8px 0 10px;
+  }
+  .camp-title-screen .hero-copy h1 {
+    font-size: 60px;
+  }
+  .title-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 340px;
+    gap: 5px;
+  }
+  .title-actions .title-menu-button {
+    font-size: 15px;
+    padding: 3px 5px;
+    gap: 7px;
+    min-height: 36px;
+  }
+  .title-menu-button > .icon {
+    width: 16px;
+    height: 16px;
+  }
+  .title-menu-button .menu-pointer {
+    display: none;
+  }
+  .camp-title-screen .biome-section {
+    margin-bottom: 2px;
+  }
+  .camp-save-summary {
+    margin-top: 10px;
+    padding: 5px 8px;
+  }
+  .game-shell .survivor-panel.vitals-panel {
+    top: 8px;
+    left: 8px;
+    width: 228px;
+    border-width: 10px;
+    padding: 5px 6px;
+    gap: 4px;
+  }
+  .game-shell .vitals-panel .survivor-heading h2 {
+    font-size: 16px;
+  }
+  .vitals-portrait {
+    width: 24px;
+    height: 34px;
+  }
+  .vitals-top {
+    gap: 5px;
+  }
+  .game-shell .vitals-panel .health-pip,
+  .game-shell .vitals-panel .health-pip .icon {
+    width: 11px;
+    height: 11px;
+  }
+  .game-shell .vitals-panel .health-row b {
+    font-size: 10px;
+  }
+  .game-shell .vitals-panel .health-row b small {
+    display: none;
+  }
+  .vital-row {
+    min-height: 15px;
+    grid-template-columns: 14px 44px 1fr 20px 4px;
+    gap: 4px;
+    font-size: 12px;
+  }
+  .vital-row > .icon {
+    width: 14px;
+    height: 14px;
+  }
+  .vital-row b {
+    font-size: 11px;
+  }
+  .game-shell .toast-stack {
+    top: 150px;
+  }
+  .game-shell[data-hud='compact'] .quickbar-wrap {
+    bottom: 8px;
+  }
+  .game-shell[data-hud='compact'] .held-item-status {
+    bottom: 77px;
+  }
+  .game-shell[data-hud='compact'] .interaction-prompt {
+    bottom: 115px;
+  }
+  .game-shell .inventory-slot,
+  .game-shell .quick-slot {
+    border-width: 3px;
+    border-image-width: 6px;
+  }
+}
+
+.game-shell .hud-icon > [data-generated-icon='settings'] {
+  width: 20px;
+  height: 20px;
+}
+
+.title-actions .title-menu-button > span {
+  white-space: nowrap;
+}
+.title-actions .new-adventure > span {
+  margin-right: 0;
+}
+.fieldcraft-dialog .dialog-tabs button {
+  font: 17px var(--pixel);
+}
+.fieldcraft-recipes {
+  max-height: min(410px, 52svh);
+  overflow-y: auto;
+  padding-right: 6px;
+}
+.game-shell .vitals-panel .health-pips.critical + b {
+  color: #ffb195;
+}

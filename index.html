@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111c19" />
+    <meta
+      name="description"
+      content="A small camp. A big unknown. Explore, gather, craft, and survive in Wildpine, a little pixel-art wilderness adventure."
+    />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <title>Wildpine — A little world. A wild life.</title>
+    <style>
+      /* Paint a self-contained arrival screen even before the app bundle arrives. */
+      html,
+      body {
+        margin: 0;
+        background: #0b1b17;
+        color: #ece3bd;
+      }
+      .boot-fallback {
+        min-height: 100svh;
+        display: grid;
+        place-content: center;
+        gap: 14px;
+        padding: 24px;
+        box-sizing: border-box;
+        text-align: center;
+        font-family: monospace;
+        background:
+          linear-gradient(#0b1b1744, #0b1b17c9),
+          url('/art/loading/forest-arrival.png') center / cover;
+        image-rendering: pixelated;
+      }
+      .boot-fallback h1 {
+        font-size: clamp(35px, 9vw, 76px);
+        margin: 0;
+        letter-spacing: 3px;
+        text-shadow: 3px 4px #081b14;
+      }
+      .boot-fallback p {
+        margin: 0;
+        font-size: 12px;
+        color: #c2cca5;
+      }
+      .boot-fallback a {
+        margin-top: 18px;
+        font-size: 11px;
+        color: #c2cca5;
+        text-underline-offset: 4px;
+      }
+      .boot-fallback noscript {
+        max-width: 300px;
+        line-height: 1.7;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <section class="boot-fallback" aria-label="Opening Wildpine">
+        <h1>WILDPINE.</h1>
+        <p role="status">Opening the trail…</p>
+        <a href="">Reload if loading stops</a>
+        <noscript>Enable JavaScript to enter the forest. Your saved camp stays in this browser.</noscript>
+      </section>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

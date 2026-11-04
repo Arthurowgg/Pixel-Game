@@ -1,0 +1,177 @@
+{
+  "icons": {
+    "pack": {
+      "file": "art/ui/backpack.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated"
+    },
+    "map": {
+      "file": "art/ui/map.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated"
+    },
+    "journal": {
+      "file": "art/ui/journal.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated"
+    },
+    "hammer": {
+      "file": "art/ui/hammer.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated"
+    },
+    "heart": {
+      "file": "art/ui/heart.png",
+      "width": 16,
+      "height": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/trail-ui/heart.png"
+    },
+    "food": {
+      "file": "art/ui/food.png",
+      "width": 16,
+      "height": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/trail-ui/food.png"
+    },
+    "water": {
+      "file": "art/ui/water.png",
+      "width": 16,
+      "height": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/trail-ui/water.png"
+    },
+    "thermometer": {
+      "file": "art/ui/thermometer.png",
+      "width": 16,
+      "height": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/trail-ui/thermometer.png"
+    },
+    "stamina": {
+      "file": "art/ui/stamina.png",
+      "width": 16,
+      "height": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/trail-ui/stamina.png"
+    },
+    "settings": {
+      "file": "art/ui/settings.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated",
+      "sourceAsset": "art/generated/trail-ui/settings.png"
+    },
+    "compass": {
+      "file": "art/ui/compass.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated",
+      "sourceAsset": "art/generated/trail-ui/compass.png"
+    },
+    "pineEmblem": {
+      "file": "art/ui/pine-emblem.png",
+      "width": 40,
+      "height": 40,
+      "source": "generated",
+      "sourceAsset": "art/generated/hearth-workshop/pine-emblem.png"
+    },
+    "workbench": {
+      "file": "art/ui/workbench-icon.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated",
+      "sourceAsset": "art/generated/hearth-workshop/workbench-icon.png"
+    }
+  },
+  "textures": {
+    "forestFloor": {
+      "file": "art/textures/forest-floor.png",
+      "width": 64,
+      "height": 64,
+      "source": "generated"
+    }
+  },
+  "frames": {
+    "hud": {
+      "file": "art/ui/panel.png",
+      "width": 128,
+      "height": 80,
+      "slice": 18,
+      "source": "generated"
+    },
+    "status": {
+      "file": "art/ui/status-frame.png",
+      "width": 160,
+      "height": 80,
+      "source": "generated",
+      "sourceAsset": "art/generated/trail-ui/status-frame.png",
+      "slice": 14
+    },
+    "dialog": {
+      "file": "art/ui/dialog-frame.png",
+      "width": 160,
+      "height": 120,
+      "source": "generated",
+      "sourceAsset": "art/generated/trail-ui/dialog-frame.png",
+      "slice": 20
+    },
+    "slot": {
+      "file": "art/ui/slot-frame.png",
+      "width": 40,
+      "height": 40,
+      "source": "generated",
+      "sourceAsset": "art/generated/trail-ui/slot-frame.png",
+      "slice": 8
+    },
+    "workshop": {
+      "file": "art/ui/workshop-frame.png",
+      "width": 192,
+      "height": 128,
+      "source": "generated",
+      "sourceAsset": "art/generated/hearth-workshop/workshop-frame.png",
+      "slice": 26
+    }
+  },
+  "effects": {
+    "impactStar": {
+      "file": "art/effects/impact-star.png",
+      "width": 16,
+      "height": 16,
+      "source": "generated"
+    }
+  },
+  "scenes": {
+    "arrival": {
+      "file": "art/loading/forest-arrival.png",
+      "width": 640,
+      "height": 360,
+      "source": "generated",
+      "sourceAsset": "art/generated/hearth-workshop/forest-arrival.png"
+    },
+    "camp": {
+      "file": "art/loading/camp-arrival.png",
+      "width": 640,
+      "height": 360,
+      "source": "generated",
+      "sourceAsset": "art/generated/hearth-workshop/camp-arrival.png"
+    }
+  },
+  "objects": {
+    "workbench": {
+      "file": "art/objects/workbench.png",
+      "width": 64,
+      "height": 44,
+      "source": "generated",
+      "sourceAsset": "art/generated/hearth-workshop/workbench.png",
+      "anchor": [
+        32,
+        39
+      ]
+    }
+  }
+}

@@ -1,0 +1,220 @@
+import type { ItemId, Recipe, Weather } from './types';
+
+export const WORLD = { width: 1800, height: 1400 };
+export const CAMP = { x: 900, y: 740 };
+/** Permanent campsite furniture; present in new worlds and existing saves. */
+export const WORKBENCH = { x: 940, y: 738 };
+export const POND = { x: 1220, y: 660, rx: 110, ry: 76 };
+export const SPRING = { x: 1098, y: 660 };
+export const DAY_LENGTH = 180;
+export const SAVE_KEY = 'wildpine.save.v2';
+export const LEGACY_SAVE_KEY = 'wildpine.save.v1';
+export const SETTINGS_KEY = 'wildpine.settings.v1';
+export const RECORDS_KEY = 'wildpine.records.v1';
+export const ITEMS: Record<ItemId, { name: string; description: string; action?: string; category: string }> =
+  {
+    hatchet: {
+      name: 'Old hatchet',
+      description:
+        'A little worn, but still sharp. Chop trees with E or F and keep wolves at bay with Space.',
+      action: 'Ready hatchet',
+      category: 'TOOL',
+    },
+    pickaxe: {
+      name: 'Stone pickaxe',
+      description: 'A sturdy little pick. Mine boulders with E or F. Every strike lands on the downswing.',
+      action: 'Ready pickaxe',
+      category: 'TOOL',
+    },
+    wood: {
+      name: 'Pine wood',
+      description: 'Dry, fragrant pine. Build something that lasts, or burn it to last another night.',
+      category: 'RESOURCE',
+    },
+    stone: {
+      name: 'River stone',
+      description: 'Smoothed by the seasons. A sturdy foundation for a campfire.',
+      category: 'RESOURCE',
+    },
+    fiber: {
+      name: 'Wild fiber',
+      description: 'Tough forest grasses. Useful for shelter, bandages, and a little ingenuity.',
+      category: 'RESOURCE',
+    },
+    berries: {
+      name: 'Wild berries',
+      description: 'A tart handful of forest berries. Restores 22 hunger and 5 thirst.',
+      action: 'Eat berries',
+      category: 'FOOD',
+    },
+    water: {
+      name: 'Spring water',
+      description: 'Cool, clean spring water. Restores 35 thirst. Refill at the spring east of camp.',
+      action: 'Drink water',
+      category: 'SUPPLY',
+    },
+    mushroom: {
+      name: 'Golden mushroom',
+      description: 'A familiar edible mushroom. Restores 12 hunger, or cook it into a much better meal.',
+      action: 'Eat mushroom',
+      category: 'FOOD',
+    },
+    nuts: {
+      name: 'Pine nuts',
+      description:
+        'A little food hidden in the pines. Felling a tree yields one portion. Restores 14 hunger.',
+      action: 'Eat pine nuts',
+      category: 'FOOD',
+    },
+    tea: {
+      name: 'Berry tea',
+      description:
+        'A steaming campfire brew. Restores 25 thirst and 24 warmth. Brew with two berries and one water beside a burning fire.',
+      action: 'Drink berry tea',
+      category: 'SUPPLY',
+    },
+    bandage: {
+      name: 'Herbal bandage',
+      description: 'Soft fibers and crushed berries. Restores 35 health.',
+      action: 'Apply bandage',
+      category: 'MEDICINE',
+    },
+    torch: {
+      name: 'Pine torch',
+      description: 'A small light in a big forest. Keeps you warm and frightens wolves for 90 seconds.',
+      action: 'Light torch',
+      category: 'SURVIVAL',
+    },
+    meal: {
+      name: 'Forest stew',
+      description: 'A proper campfire meal. Restores 55 hunger, 10 thirst, and 8 health.',
+      action: 'Eat stew',
+      category: 'FOOD',
+    },
+    campfire: {
+      name: 'Campfire kit',
+      description: 'A home wherever you need one. Place a fire nearby, then feed it pine wood with E.',
+      action: 'Place campfire',
+      category: 'CAMP',
+    },
+    shelter: {
+      name: 'Forest shelter',
+      description: 'A roof against the rain and cold. Place it nearby, then stay close for protection.',
+      action: 'Build shelter',
+      category: 'CAMP',
+    },
+  };
+export const RECIPES: Recipe[] = [
+  {
+    id: 'pickaxe',
+    needsWorkbench: true,
+    name: 'Stone pickaxe',
+    description: 'A wooden grip. A stone head. A little leverage.',
+    cost: { wood: 3, stone: 3, fiber: 1 },
+    category: 'survival',
+  },
+  {
+    id: 'campfire',
+    name: 'Campfire',
+    description: 'Warm hands. Safe nights. A place to start.',
+    cost: { wood: 5, stone: 3 },
+    category: 'camp',
+  },
+  {
+    id: 'shelter',
+    needsWorkbench: true,
+    name: 'Forest shelter',
+    description: 'A little cover from a very big sky.',
+    cost: { wood: 10, fiber: 6 },
+    category: 'camp',
+  },
+  {
+    id: 'torch',
+    name: 'Pine torch',
+    description: 'Keep the dark—and the wolves—at a distance.',
+    cost: { wood: 3, fiber: 2 },
+    category: 'survival',
+  },
+  {
+    id: 'bandage',
+    name: 'Herbal bandage',
+    description: 'Patch yourself up and keep moving.',
+    cost: { fiber: 3, berries: 1 },
+    category: 'survival',
+  },
+  {
+    id: 'meal',
+    name: 'Forest stew',
+    description: 'A warm meal makes all the difference.',
+    cost: { berries: 3, mushroom: 1 },
+    category: 'survival',
+    needsFire: true,
+  },
+  {
+    id: 'tea',
+    name: 'Berry tea',
+    description: 'A little warmth to carry into the cold.',
+    cost: { berries: 2, water: 1 },
+    category: 'survival',
+    needsFire: true,
+  },
+];
+export const WEATHER: Record<Weather, { name: string; description: string; icon: string; color: string }> = {
+  clear: {
+    name: 'Clear skies',
+    description: 'A little breathing room. Make it count.',
+    icon: 'sun',
+    color: '#e6c589',
+  },
+  rain: {
+    name: 'Passing rain',
+    description: 'The rain is cooling you down. Find a fire or shelter.',
+    icon: 'rain',
+    color: '#98bec2',
+  },
+  storm: {
+    name: 'Thunderstorm',
+    description: 'A storm is rolling through. Stay under cover.',
+    icon: 'storm',
+    color: '#acb4d3',
+  },
+  cold: {
+    name: 'Cold snap',
+    description: 'The temperature is falling. Keep your fire burning.',
+    icon: 'snow',
+    color: '#b4ced0',
+  },
+  wolves: {
+    name: 'Wolves nearby',
+    description: 'You hear something in the pines. Fire keeps it away.',
+    icon: 'paw',
+    color: '#dba080',
+  },
+};
+export const QUICK_ITEMS: ItemId[] = ['hatchet', 'pickaxe', 'berries', 'water', 'bandage', 'torch'];
+export const DEFAULT_SETTINGS = {
+  sound: true,
+  effects: 0.35,
+  ambience: 0.2,
+  reducedMotion: false,
+  atmosphere: true,
+  showHints: true,
+  compactHud: true,
+};
+export const distance = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+  Math.hypot(a.x - b.x, a.y - b.y);
+export const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
+export const clock = (time: number) => {
+  const hours = (8 + ((time % DAY_LENGTH) / DAY_LENGTH) * 24) % 24;
+  return `${String(Math.floor(hours)).padStart(2, '0')}:${String(Math.floor(((hours % 1) * 60) / 5) * 5).padStart(2, '0')}`;
+};
+export function random(seed: number) {
+  let value = seed >>> 0;
+  return () => {
+    value += 0x6d2b79f5;
+    let t = value;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}

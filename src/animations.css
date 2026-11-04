@@ -1,0 +1,489 @@
+/* The living forest: equipment, action feedback, and sheet-driven previews. */
+.pixel-preview {
+  display: inline-block;
+  flex-shrink: 0;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  animation: sprite-preview-loop 1s steps(8) infinite;
+}
+@keyframes sprite-preview-loop {
+  to {
+    background-position-x: var(--sprite-end);
+  }
+}
+.setup-character .pixel-preview {
+  position: relative;
+  z-index: 1;
+}
+.pause-art .pixel-preview {
+  margin-top: -12px;
+  margin-bottom: -5px;
+}
+.empty-journey .pixel-preview {
+  margin-bottom: 12px;
+}
+.held-item-status {
+  position: absolute;
+  bottom: 146px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 249px;
+  max-width: 350px;
+  padding: 9px 11px;
+  background: #1b2b21f2;
+  border: 1px solid #c4bc8861;
+  color: #d5daba;
+  box-shadow: 3px 3px 0 #0d1c144a;
+  pointer-events: auto;
+}
+.held-item-status > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-right: auto;
+}
+.held-item-status > div > span {
+  font: 6px var(--mono);
+  letter-spacing: 1px;
+  color: #97ac80;
+}
+.held-item-status strong {
+  font: 500 15px var(--pixel);
+  white-space: nowrap;
+}
+.held-item-status > .icon {
+  color: #a6b68b;
+  margin-inline: 3px;
+}
+.held-use {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  color: #dece9d;
+  font: 6px var(--mono);
+}
+.held-use kbd {
+  font: 11px var(--pixel);
+  min-width: 20px;
+  min-height: 22px;
+  color: #dfc993;
+  border-color: #c6b68170;
+}
+.held-use:hover:not(:disabled) {
+  background: #b9bc7c1a;
+}
+.held-use:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.held-stow {
+  width: 19px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #94aa7a;
+}
+.held-stow:hover {
+  color: #ead3a7;
+}
+.held-stow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+.action-progress {
+  position: absolute;
+  height: 2px;
+  left: 0;
+  bottom: 0;
+  background: #e3b67b;
+  pointer-events: none;
+}
+.interaction-prompt {
+  bottom: 211px;
+}
+.empty-slot-mark {
+  font: 20px var(--pixel);
+  color: #647b55;
+}
+.quick-slot[draggable='true'] {
+  cursor: grab;
+}
+.quick-slot[draggable='true']:active {
+  cursor: grabbing;
+}
+.quick-slot.active.empty .item-icon {
+  opacity: 0.85;
+  filter: none;
+}
+.inventory-held {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font: 4px var(--mono);
+  color: #dec28e;
+  letter-spacing: 0.5px;
+}
+.inventory-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  max-height: 271px;
+  overflow-y: auto;
+  align-content: start;
+  padding-right: 3px;
+  scrollbar-gutter: stable;
+}
+.inventory-slot {
+  min-height: 76px;
+  height: 76px;
+}
+.inventory-slot > span {
+  font-size: 8px;
+}
+.inventory-filter {
+  gap: 5px;
+}
+.inventory-filter button {
+  padding-inline: 7px;
+}
+.inventory-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.inventory-item-actions .button {
+  min-height: 40px;
+  font-size: 13px;
+  padding-inline: 13px;
+}
+.inventory-item-actions .button-primary {
+  justify-content: center;
+}
+.inventory-item-actions .button-primary > span:first-of-type {
+  margin-right: 0;
+}
+.slot-assignment {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 16px;
+}
+.slot-assignment > span {
+  color: #8da27a;
+  font: 6px var(--mono);
+  letter-spacing: 0.6px;
+}
+.slot-assignment > div {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+.slot-assignment button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 33px;
+  border: 1px solid #a7ba823b;
+  background: #13241b;
+  color: #a6bc87;
+  font: 13px var(--pixel);
+}
+.slot-assignment button.assigned {
+  color: #f0d09c;
+  border-color: #d0b47b;
+  background: #c4b3721b;
+}
+.slot-assignment button:hover {
+  border-color: #d0b47b;
+}
+.recipes-list {
+  max-height: 337px;
+  overflow-y: auto;
+  padding-right: 3px;
+  scrollbar-gutter: stable;
+}
+.touch-f {
+  width: 40px;
+  height: 40px;
+  background: #545f347d;
+  color: #e3cc95;
+}
+@media (max-height: 820px) and (min-width: 901px) {
+  .held-item-status {
+    bottom: 137px;
+    padding-block: 7px;
+  }
+  .interaction-prompt {
+    bottom: 193px;
+  }
+  .inventory-grid {
+    max-height: 228px;
+  }
+  .recipes-list {
+    max-height: 278px;
+  }
+}
+@media (max-width: 900px) {
+  .held-item-status {
+    bottom: 144px;
+    min-width: 220px;
+    padding: 7px 10px;
+    gap: 7px;
+  }
+  .game-hud .interaction-prompt {
+    bottom: 201px;
+  }
+  .touch-f {
+    width: 36px;
+    height: 36px;
+  }
+  .touch-actions {
+    flex-wrap: wrap;
+    max-width: 100px;
+    justify-content: flex-end;
+  }
+  .touch-e {
+    margin-left: 40px;
+  }
+  .touch-attack {
+    order: -1;
+  }
+}
+@media (max-width: 650px) {
+  .held-item-status {
+    bottom: 111px;
+    left: 14px;
+    transform: none;
+    min-width: 0;
+    width: calc(100% - 137px);
+    padding: 5px 6px;
+    gap: 5px;
+    box-shadow: 2px 2px 0 #0d1c144a;
+  }
+  .held-item-status > .item-icon {
+    width: 22px;
+    height: 22px;
+  }
+  .held-item-status > div > span {
+    font-size: 5px;
+    letter-spacing: 0.4px;
+  }
+  .held-item-status strong {
+    font-size: 12px;
+  }
+  .held-use {
+    padding: 0 1px;
+    gap: 0;
+  }
+  .held-use > span {
+    display: none;
+  }
+  .held-use kbd {
+    min-width: 18px;
+    min-height: 20px;
+    font-size: 10px;
+  }
+  .held-stow {
+    width: 13px;
+  }
+  .game-hud .interaction-prompt {
+    bottom: 269px;
+  }
+  .inventory-grid {
+    max-height: 225px;
+  }
+  .inventory-slot {
+    min-height: 70px;
+    height: 70px;
+  }
+  .inventory-slot > span {
+    font-size: 6.5px;
+  }
+  .inventory-filter button {
+    padding-inline: 6px;
+    font-size: 8px;
+  }
+  .inventory-item-actions .button {
+    font-size: 12px;
+    min-height: 38px;
+  }
+  .inventory-item-actions {
+    gap: 7px;
+  }
+  .slot-assignment {
+    margin-top: 12px;
+    gap: 6px;
+  }
+  .slot-assignment > span {
+    font-size: 6px;
+    letter-spacing: 0.3px;
+  }
+  .slot-assignment > div {
+    gap: 4px;
+  }
+  .slot-assignment button {
+    width: 24px;
+    height: 33px;
+    font-size: 11px;
+  }
+  .recipes-list {
+    max-height: 300px;
+  }
+  .touch-actions {
+    max-width: 92px;
+    gap: 7px;
+  }
+  .touch-f {
+    width: 36px;
+    height: 36px;
+  }
+  .touch-e {
+    margin-left: 40px;
+  }
+}
+@media (pointer: coarse) and (min-width: 901px) {
+  .touch-controls {
+    position: absolute;
+    left: 22px;
+    right: 22px;
+    bottom: 155px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+  }
+  .touch-dpad {
+    display: grid;
+    grid-template-columns: 40px 40px 40px;
+    grid-template-rows: 40px 40px;
+    gap: 5px;
+  }
+  .touch-key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1c301fbd;
+    border: 1px solid #b4c7946e;
+    color: #d4deb5;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+  }
+  .touch-w {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .touch-w > .icon {
+    transform: rotate(-90deg);
+  }
+  .touch-a {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .touch-a > .icon {
+    transform: rotate(180deg);
+  }
+  .touch-s {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .touch-s > .icon {
+    transform: rotate(90deg);
+  }
+  .touch-d {
+    grid-column: 3;
+    grid-row: 2;
+  }
+  .touch-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .touch-attack,
+  .touch-f {
+    width: 40px;
+    height: 40px;
+  }
+  .touch-e {
+    width: 52px;
+    height: 52px;
+    font: 24px var(--pixel);
+  }
+  .tasks-panel {
+    display: none;
+  }
+}
+@media (max-height: 550px) and (min-width: 651px) {
+  .held-item-status {
+    bottom: 101px;
+    padding: 5px 8px;
+  }
+  .game-hud .interaction-prompt {
+    bottom: 158px;
+  }
+  .inventory-grid {
+    max-height: 180px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pixel-preview {
+    animation: none;
+  }
+}
+html[data-reduced-motion='true'] .pixel-preview {
+  animation: none !important;
+}
+
+.tool-use-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font: 8px var(--mono);
+  color: #a6b88c;
+  margin: 5px 0;
+}
+.tool-use-hint kbd {
+  font: 10px var(--pixel);
+}
+.tool-use-hint > span {
+  color: #526d47;
+}
+
+/* A literal 4-column sheet continues on the second row; no off-sheet CSS frames. */
+@keyframes sprite-grid-loop {
+  0%,
+  100% {
+    background-position: 0 var(--sprite-row-one);
+  }
+  12.5% {
+    background-position: calc(var(--sprite-step) * -1) var(--sprite-row-one);
+  }
+  25% {
+    background-position: calc(var(--sprite-step) * -2) var(--sprite-row-one);
+  }
+  37.5% {
+    background-position: calc(var(--sprite-step) * -3) var(--sprite-row-one);
+  }
+  50% {
+    background-position: 0 var(--sprite-row-two);
+  }
+  62.5% {
+    background-position: calc(var(--sprite-step) * -1) var(--sprite-row-two);
+  }
+  75% {
+    background-position: calc(var(--sprite-step) * -2) var(--sprite-row-two);
+  }
+  87.5% {
+    background-position: calc(var(--sprite-step) * -3) var(--sprite-row-two);
+  }
+}
+.threat-icon {
+  overflow: hidden;
+}
