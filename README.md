@@ -16,6 +16,18 @@ npm run build     # Strict TypeScript checks + a root-path production build
 npm run preview   # Serve that build
 ```
 
+## Four-direction controls · v0.7.1
+
+Diagonal player movement has been removed at the user's request. Only **up, down, left, and right** remain:
+
+- WASD and arrow keys use the **most recently pressed held direction**. Releasing it restores the previous held direction. Key repeat, modifiers, and overlapping fingers cannot combine movement axes or increase speed.
+- The touch pad has four cardinal buttons. Thumb dragging still works, but always chooses one axis; the center rests and dragging outside releases movement. Empty corners do not click through to the world.
+- Click/tap navigation completes one straight leg before turning onto the other axis. It does not alternate axes every frame to approximate a diagonal. Obstacles stop the route; this is not automatic pathfinding.
+- Older v2 saves with diagonal facing migrate to their existing up/down pose without resetting location, inventory, equipment, or progress. New saves contain only cardinal facing.
+- The corrected walking/idle cells and all axe/pickaxe animation PNGs are unchanged. **No image generation or animation rebuilding was needed.**
+
+The eight-way control descriptions in the historical release notes below are superseded by this update.
+
 ## Hearth & Hand · v0.7 · art batch 5
 
 - **A custom opening screen and a separate world-entry scene.** New pixel-art panoramas, a brass pine emblem, trail tips, a stepped progress track, and saved-camp details. A small HTML arrival screen also paints before JavaScript downloads, so a slow bundle no longer leaves a blank page.
@@ -23,10 +35,10 @@ npm run preview   # Serve that build
 - **A real crafting table at the starting camp**, just east of the first fire. Walk up and press **E**, or open **C** nearby. It is rendered from a generated prop, blocks movement/building, appears on the map, and is automatically present in old saves. Old positions inside its new footprint are moved to the nearest free edge.
 - **The camp workshop replaces the old crafting list.** Search, keyboard category tabs, ready-only filtering, item previews, exact have/need counts, station requirements, quantity controls, and atomic batch crafting up to 99 items. A successful result can be held immediately without being consumed.
 - **Crafting stations matter:** pickaxes and shelters require the camp table; stew and tea require a burning fire; bandages, torches, and campfire kits can be made by hand anywhere. All seven recipes keep their previous ingredient costs.
-- **Diagonal movement corrections:** try the actual diagonal before sliding around an obstacle, use short collision substeps, face the direction actually travelled, and stop precisely at nearby click targets. One captured thumb can slide between all eight directions, rest in the pad’s center, or release by dragging away.
+- **Diagonal movement corrections (removed in v0.7.1):** try the actual diagonal before sliding around an obstacle, use short collision substeps, face the direction actually travelled, and stop precisely at nearby click targets. One captured thumb can slide between all eight directions, rest in the pad’s center, or release by dragging away.
 - **Face/leg playback corrections:** walk cells **0, 3, 4, 7** keep the original head/torso registered and avoid the coat-lift/boot mismatch. Idle holds its neutral cell rather than replaying the malformed painted blink/bob. Upward diagonals now use back art; downward diagonals use front art, with whole-frame westward mirroring. Foreground pines become more transparent over the survivor. The liked axe/pickaxe sheets and contact timing are unchanged.
 
-**Six standalone generated assets** were integrated: two loading landscapes, a table prop, a workshop frame, and two glyphs. Seven image-tool calls were used (one unsuccessful padding edit), below the ten-call cap. No new actor poses or animation frames were constructed. **True crouching and newly drawn eight-direction animation sheets remain pending.**
+**Six standalone generated assets** were integrated: two loading landscapes, a table prop, a workshop frame, and two glyphs. Seven image-tool calls were used (one unsuccessful padding edit), below the ten-call cap. No new actor poses or animation frames were constructed. **True crouching remains pending. Eight-direction movement is no longer part of the current controls.**
 
 ## Trail & Camp · v0.6 · art batch 4
 
@@ -34,7 +46,7 @@ npm run preview   # Serve that build
 - **Readable vitals:** generated health, hunger, thirst, warmth, and stamina symbols; clearly labelled bars, numbers, and non-flashing low-need indicators. Click the info button or press **H** for a paused condition screen with practical recovery advice.
 - **A quieter HUD by default.** The persisted Compact HUD preference hides the minimap, repeated control hints, and older notices without hiding survival gauges, warnings, pockets, or access to the map/journal.
 - **More menus:** a searchable fifteen-item fieldcraft book, all seven recipe references, extra pause-menu destinations, a saved-camp resume card, and a compact landscape title layout. Settings and compass glyphs also use generated bitmaps.
-- **Eight-way movement and facing:** keyboard combinations and dedicated one-finger diagonal touch buttons, normalized speed, combined-position collision checks, multi-pointer/keyboard input ownership, and saved diagonal directions. Diagonal facing reuses the existing cardinal art; these are not new eight-direction animation sheets.
+- **Eight-way movement and facing (removed in v0.7.1):** keyboard combinations and dedicated one-finger diagonal touch buttons, normalized speed, combined-position collision checks, multi-pointer/keyboard input ownership, and saved diagonal directions. Diagonal facing reuses the existing cardinal art; these are not new eight-direction animation sheets.
 - **Movement playback fixes:** gait advances with distance actually travelled, skips the worst legacy leg cells, and stops when blocked/paused. Sprint uses the same intact walk cells at a faster distance-driven cadence. Carried axes/pickaxes are mirrored at the grip so the blade faces outward; complete strike sheets and their contact timing are untouched.
 - **Collection cleanup:** plant gathering holds the feet still during the short action and avoids the two overextended reach poses. **A genuine crouching collection cycle is still pending**—the current sheet does not contain one, and no replacement poses were rigged or invented.
 
@@ -59,7 +71,7 @@ npm run preview   # Serve that build
 - A real generated terrain bitmap adds forest-floor texture, and the backpack glyph uses the generated image throughout the interface.
 - Earlier v1/v2 saves keep their progress and receive empty new-item slots. Contact-frame consumption and cancellation still apply.
 
-The user approved individual assets after the generator limitation was explained. **Character/wolf animation generation remains on hold:** no new rigged poses or synthetic character frames were created in the forager or campfire-interface batches, and the existing animation PNGs are unchanged. The complete AI-drawn/omnidirectional animation-sheet request remains pending.
+The user approved individual assets after the generator limitation was explained. **Character/wolf animation generation remains on hold:** no new rigged poses or synthetic character frames were created in the forager or campfire-interface batches, and the existing animation PNGs are unchanged. Complete AI-drawn animation sheets remain pending; current player movement is four-directional.
 
 See **[ART_ROADMAP.md](ART_ROADMAP.md)** for provenance and remaining work. Each subsequent batch is capped at ten generations.
 
@@ -103,7 +115,7 @@ Start a new adventure, choose a name and difficulty, and survive **three nights*
 
 | Key / input        | Action                                                                         |
 | ------------------ | ------------------------------------------------------------------------------ |
-| WASD / arrow keys  | Move; combine two directions for diagonals                                     |
+| WASD / arrow keys  | Move in four directions; the last pressed direction wins                       |
 | Shift + movement   | Sprint                                                                         |
 | E (hold to repeat) | Interact / gather / use the crafting table; readies the appropriate owned tool |
 | 1–6                | Hold the item assigned to that pocket, without consuming it                    |
@@ -119,7 +131,7 @@ Start a new adventure, choose a name and difficulty, and survive **three nights*
 
 Default pockets: **1 axe, 2 pickaxe, 3 berries, 4 water, 5 bandage, 6 torch**. A pocket may stay assigned after its item runs out. A lit torch remains holdable after its inventory item is consumed; it keeps burning while stowed, but only supplies warmth and protection while held.
 
-Click or tap the ground to walk toward it. Movement is direct, not pathfinding: steer around trunks and the pond. Touch screens have an eight-way directional pad with drag-to-steer, a center dead zone, and separate gather, use, and defense buttons.
+Click or tap the ground to walk toward it along one axis, then the other. Movement is not pathfinding: steer around trunks and the pond. Touch screens have a four-way directional pad with drag-to-steer, a center dead zone, and separate gather, use, and defense buttons.
 
 ### A good first day
 
@@ -136,7 +148,7 @@ Adventures save every five seconds, on opening a panel, on leaving the page, and
 
 Saves, preferences, and history live only in this browser's `localStorage`. They do not sync between devices, profiles, or origins; the development preview and GitHub Pages have separate storage. Invalid saves are rejected safely. Storage failures appear in the HUD instead of crashing the game.
 
-The current format is **`wildpine.save.v2`**, including held equipment, facing direction, and pocket assignments. Valid **v1** expeditions upgrade automatically, keeping progress and receiving a pickaxe. Earlier v2 inventories also upgrade safely with empty nuts/tea slots; existing quantities and pocket assignments are preserved. The legacy copy is removed only after a successful v2 write. Pending actions are not serialized: reloading never replays a hit or spends an item whose use had not reached its contact frame.
+The current format is **`wildpine.save.v2`**, including held equipment, facing direction, and pocket assignments. Valid **v1** expeditions upgrade automatically, keeping progress and receiving a pickaxe. Earlier v2 inventories also upgrade safely with empty nuts/tea slots; existing quantities and pocket assignments are preserved. Old diagonal facings also migrate to up/down now that movement is cardinal-only. The legacy copy is removed only after a successful v2 write. Pending actions are not serialized: reloading never replays a hit or spends an item whose use had not reached its contact frame.
 
 ## GitHub Pages
 
@@ -184,7 +196,7 @@ src/
     feedback.ts              Contact sparks, smoke, trails, splashes, light
     hud.ts                   Safe heart-fill and day-dial presentation helpers
     vitals.ts                Meter states and recovery advice
-    movement.ts              Eight-way facing, substep collision, thumb input, safe gait
+    movement.ts              Cardinal input priority, substep collision, thumb input, safe gait
     loading.ts               Shared decoded-image cache, real progress, timeout/retry
     crafting.ts              Station requirements and safe batch-crafting limits
     item-atlas.json          Shared held-item / HUD atlas rectangles
@@ -222,7 +234,7 @@ scripts/
   build_camp_ui_assets.py     Camp-interface art stage
   build_trail_ui_assets.py    Trail frame / status icon stage
   build_hearth_assets.py      Latest loading / workshop stage (run last)
-  browser-test.mjs           Thirty gameplay / UI end-to-end scenarios
+  browser-test.mjs           Thirty-two gameplay / UI end-to-end scenarios
   workshop-browser-test.mjs  Thirteen loading / workshop / touch regression scenarios
   browser-helpers.mjs       Shared headless Chromium launcher
   check-pages-build.mjs      Production subpath/asset validation
@@ -252,16 +264,16 @@ For a full **static-only** rebuild, run `build_inventory_assets.py --normalized-
 ## Checks
 
 ```sh
-npm test               # 138 unit tests
+npm test               # 172 unit tests
 npm run build          # Strict TypeScript + Vite production build
 npm run build:pages    # Build /Pixel-Game/ and verify asset paths
-npm run test:browser   # 43 browser scenarios; start the dev server first
+npm run test:browser   # 45 browser scenarios; start the dev server first
 npm audit
 ```
 
-The unit suite covers deterministic worlds, survival balance, the complete three-night loop, contact-frame rewards, cancellation/range checks, equipment, pockets, crafting, construction, wolf defense, migration, malformed saves, PNG/clip bounds, row-major slicing, tool-sheet selection, atlas provenance, settings migration, weather-aware lighting, pine-nut rewards, tea crafting/consumption, old-v2 new-item migration, heart/dial calculations, effect lifetimes, immutable generated-source pixels, eight-way speed/collision/facing, blocked movement, clean gait selection, input ownership, outward tool carrying, and planted collection.
+The unit suite covers deterministic worlds, survival balance, the complete three-night loop, contact-frame rewards, cancellation/range checks, equipment, pockets, crafting, construction, wolf defense, migration, malformed saves, PNG/clip bounds, row-major slicing, tool-sheet selection, atlas provenance, settings migration, weather-aware lighting, pine-nut rewards, tea crafting/consumption, old-v2 new-item migration, heart/dial calculations, effect lifetimes, immutable generated-source pixels, cardinal speed/collision/facing, chronological input priority, straight-leg click paths, old diagonal-save migration, blocked movement, clean gait selection, input ownership, outward tool carrying, and planted collection.
 
-The browser suite checks desktop and mobile layouts, dialogs, navigation, real gathering/crafting/consumption, every holdable item, pocket pinning, actual axe/pickaxe frame changes, paused animations, two-row wolf previews, actual sun-shaft pixels and the atmosphere toggle, generated terrain/UI images, new food and tea, migration, weather, victory/retry, menu keyboard navigation, centered equipment UI, effects preferences, contact sparks, and portrait/landscape touch use, one-finger diagonals, saved facing, fieldcraft search/recipes, condition details, and compact/full HUD preferences. It reports uncaught browser errors and failed asset requests, and writes screenshots to `.cache/screenshots/`. The same suite can run against the production Pages path.
+The browser suite checks desktop and mobile layouts, dialogs, navigation, real gathering/crafting/consumption, every holdable item, pocket pinning, actual axe/pickaxe frame changes, paused animations, two-row wolf previews, actual sun-shaft pixels and the atmosphere toggle, generated terrain/UI images, new food and tea, migration, weather, victory/retry, menu keyboard navigation, centered equipment UI, effects preferences, contact sparks, and portrait/landscape touch use, four-button touch controls, cardinal thumb dragging, click-to-move turns, migrated saved facing, fieldcraft search/recipes, condition details, and compact/full HUD preferences. It reports uncaught browser errors and failed asset requests, and writes screenshots to `.cache/screenshots/`. The same suite can run against the production Pages path.
 
 The runner uses the Chromium dependency on Linux, or an existing Chrome installation through `CHROME_EXECUTABLE=/path/to/chrome`. It extracts the bundled NSS libraries when needed in small sandboxes.
 

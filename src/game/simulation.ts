@@ -1,4 +1,4 @@
-import { facingDirection, moveWithCollision } from './movement';
+import { facingDirection, movementVector, moveWithCollision } from './movement';
 import { atWorkbench, blocksWorkbench, maxCraftable, validCraftQuantity } from './crafting';
 import {
   CAMP,
@@ -170,7 +170,15 @@ export class Simulation {
   resourceAnimations = new Map<number, ResourceAnimation>();
   effects: WorldEffect[] = [];
   private pendingImpact: (() => void) | null = null;
-  target: Point | null = null;
+  private destination: Point | null = null;
+  private targetAxis: 'x' | 'y' | null = null;
+  get target(): Point | null {
+    return this.destination;
+  }
+  set target(point: Point | null) {
+    this.destination = point && Number.isFinite(point.x) && Number.isFinite(point.y) ? { ...point } : null;
+    this.targetAxis = null;
+  }
   onSound?: (
     sound: 'gather' | 'craft' | 'hit' | 'eat' | 'step' | 'notice' | 'chop' | 'mine' | 'swish',
   ) => void;
@@ -718,21 +726,21 @@ export class Simulation {
     for (const [id, animation] of this.resourceAnimations)
       if (s.time - animation.startedAt > 1.2) this.resourceAnimations.delete(id);
     const factor = s.difficulty === 'explorer' ? 0.55 : s.difficulty === 'wild' ? 1.35 : 0.9;
-    let dx =
-      Number(this.keys.has('d') || this.keys.has('arrowright')) -
-      Number(this.keys.has('a') || this.keys.has('arrowleft'));
-    let dy =
-      Number(this.keys.has('s') || this.keys.has('arrowdown')) -
-      Number(this.keys.has('w') || this.keys.has('arrowup'));
+    let { x: dx, y: dy } = movementVector(this.keys);
     let targetDistance = Infinity;
     if (dx || dy) this.target = null;
     else if (this.target) {
-      const dist = distance(this.target, s.player);
-      if (dist < 0.5) this.target = null;
+      const remaining = { x: this.target.x - s.player.x, y: this.target.y - s.player.y };
+      if (Math.max(Math.abs(remaining.x), Math.abs(remaining.y)) < 0.000001) this.target = null;
       else {
-        targetDistance = dist;
-        dx = (this.target.x - s.player.x) / dist;
-        dy = (this.target.y - s.player.y) / dist;
+        // Finish one straight leg before turning. Re-selecting the dominant axis
+        // each frame would form a staircase that still looks like diagonal travel.
+        this.targetAxis ??= Math.abs(remaining.x) > Math.abs(remaining.y) ? 'x' : 'y';
+        if (Math.abs(remaining[this.targetAxis]) < 0.000001)
+          this.targetAxis = this.targetAxis === 'x' ? 'y' : 'x';
+        targetDistance = Math.abs(remaining[this.targetAxis]);
+        dx = this.targetAxis === 'x' ? Math.sign(remaining.x) : 0;
+        dy = this.targetAxis === 'y' ? Math.sign(remaining.y) : 0;
       }
     }
     // Plant gathering occupies both hands and keeps the feet planted for its short action.
@@ -745,10 +753,9 @@ export class Simulation {
     const intent = Boolean(dx || dy);
     const sprint = intent && this.keys.has('shift') && n.stamina > 2 && !this.action;
     if (intent) {
-      const norm = Math.hypot(dx, dy);
       const speed = Math.min((sprint ? 87 : 58) * dt * (this.action ? 0.38 : 1), targetDistance);
-      dx = (dx / norm) * speed;
-      dy = (dy / norm) * speed;
+      dx *= speed;
+      dy *= speed;
       const next = moveWithCollision(s.player, dx, dy, (point) => this.collision(point));
       Object.assign(s.player, next);
       const actualX = s.player.x - before.x,
@@ -759,6 +766,7 @@ export class Simulation {
       }
     }
     const travelled = distance(before, s.player);
+    if (this.target && intent && dt > 0 && travelled < 0.000001) this.target = null;
     this.moving = travelled > 0.0001;
     this.sprinting = this.moving && sprint;
     if (this.moving) {

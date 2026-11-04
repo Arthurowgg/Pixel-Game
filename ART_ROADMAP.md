@@ -4,7 +4,15 @@
 
 After the whole-sheet-generation limitation was explained, the user approved **separate AI-generated item, texture, and UI images**, up to ten per batch, with **animation-sheet generation on hold**.
 
-Do not create more rigged poses or synthetic animation frames. Complete AI-drawn animation sheets can be cropped and integrated if supplied. The requested fluid/omnidirectional animation overhaul is **not complete**. Existing animation sheets from earlier work remain in the game; the latest static-art batches do not redraw or reconstruct them. Batches 4 and 5 correct runtime playback, carrying, collision, and input without constructing frames.
+Do not create more rigged poses or synthetic animation frames. Complete AI-drawn animation sheets can be cropped and integrated if supplied. The requested whole-sheet animation overhaul is **not complete**. Player movement is now cardinal-only: the user explicitly removed diagonal movement in v0.7.1. Eight-direction movement/art is no longer a pending feature for the current controls. Existing animation sheets from earlier work remain in the game; the latest static-art batches do not redraw or reconstruct them. Batches 4 and 5 correct runtime playback, carrying, collision, and input without constructing frames.
+
+## Control revision · v0.7.1 · no image generations
+
+- Removed diagonal player movement from keyboard combinations, thumb dragging, and click-to-move. Four cardinal directions remain, with most-recent-held input priority and no diagonal/staircase shortcuts.
+- Removed the four diagonal touch buttons and their styles. The neutral center/empty corners cannot click through into the ground; captured thumb dragging still supports the four remaining directions.
+- Old v2 diagonal-facing saves migrate without resetting supplies or progress. Existing face/leg playback corrections and all tool animation PNGs remain intact.
+- Added 34 unit regressions for single-axis movement, input ownership/order, straight-leg target travel, and save migration. Current suite: **172 unit tests and 45 browser scenarios**.
+- No generated assets were created or rebuilt. Historical eight-way descriptions below document v0.6/v0.7, not current behavior.
 
 ## Batch 5 · Hearth & Hand · v0.7 · six accepted images
 
@@ -29,7 +37,7 @@ Raw sources: `.art-originals/hearth-workshop/` (ignored). Reproducible normalize
 - Walk frames **0, 3, 4, 7** replace the still-misaligned 1/5 cells from v0.6. Idle/portrait playback holds cell 0, avoiding a painted-over face and detached torso bob. The original animation PNGs and tool timing remain unchanged; no new rigging or pose assembly.
 - **Not delivered:** newly drawn omnidirectional sheets or a true crouching collection cycle. Existing shorter gathering cells remain in use.
 
-The suite now includes **138 unit tests and 43 browser scenarios**. New browser checks compare decoded head pixels, simulate delayed/failed/cancelled loading, exercise table interactions and batch crafting, and send real native touch-drag events in portrait and landscape layouts.
+The v0.7 suite included **138 unit tests and 43 browser scenarios**. New browser checks compare decoded head pixels, simulate delayed/failed/cancelled loading, exercise table interactions and batch crafting, and send real native touch-drag events in portrait and landscape layouts.
 
 ## Batch 4 · Trail & Camp · v0.6 · 10/10 generations
 
@@ -139,7 +147,7 @@ The wider all-assets request is **not finished**:
 - **Forest props and decorations:** remaining camp furniture, shelter details, trail/spring artwork, additional ground cover and world props. Existing generated pines, bushes, rocks, and fire provide references.
 - **Remaining general UI glyphs:** weather, combat/actions, sound, pause, and miscellaneous interface symbols. Backpack, map, journal, crafting, workbench, pine medallion, compass, settings, and the five vital symbols are generated; not every UI glyph is.
 - **More generated textures:** the forest floor is integrated; other surfaces still include procedural detail.
-- **Complete AI-drawn directional animation sequences:** especially a true crouching berry-collection cycle and intact eight-direction walk/run art. Pending supplied sheets or a supported whole-sheet workflow. Do not silently substitute assembled poses.
+- **Complete AI-drawn directional animation sequences:** especially a true crouching berry-collection cycle and intact four-direction walk/run art. Pending supplied sheets or a supported whole-sheet workflow. Do not silently substitute assembled poses.
 
 Suggested next batch: forest props/ground cover and remaining weather/action glyphs, within the ten-generation cap. No further images should be generated until the user says “continue.”
 

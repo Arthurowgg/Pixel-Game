@@ -363,25 +363,30 @@ try {
     });
   await touch('touchStart', 0, -0.7);
   await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-facing', 'up');
-  await touch('touchMove', 0.7, -0.7);
-  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-facing', 'up-right');
-  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-animation', 'walk-up');
-  await touch('touchMove', -0.7, 0.7);
-  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-facing', 'down-left');
+  await touch('touchMove', 0.85, -0.6);
+  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-facing', 'right');
+  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-animation', 'walk-right');
+  await touch('touchMove', -0.6, 0.85);
+  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-facing', 'down');
   await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-animation', 'walk-down');
   await touch('touchMove', 0, 0);
   await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-animation', 'idle-down');
-  await touch('touchMove', 0.7, 0.7);
-  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-facing', 'down-right');
+  await touch('touchMove', 0.85, 0.6);
+  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-facing', 'right');
   await touch('touchMove', 1.9, 0);
-  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-animation', 'idle-down');
+  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-animation', 'idle-right');
   await touch('touchEnd');
   const stoppedGait = await mobile.locator('.game-canvas').getAttribute('data-gait-distance');
   await mobile.waitForTimeout(200);
   await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-gait-distance', stoppedGait);
-  await screenshot(mobile, 'diagonal-touch');
+  // Removed diagonal buttons leave neutral corners, not click-through ground targets.
+  await touch('touchStart', -0.7, -0.7);
+  await touch('touchEnd');
+  await mobile.waitForTimeout(200);
+  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-gait-distance', stoppedGait);
+  await screenshot(mobile, 'cardinal-touch');
   passed(
-    'One real touch can drag between cardinal/diagonal sectors, rest in the dead zone, and leave the pad without sticking',
+    'One real touch steers only four ways; the center, outside edge, and empty corners never cause diagonal or stuck movement',
   );
 
   await mobile.getByRole('button', { name: 'Crafting', exact: true }).click();

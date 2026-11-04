@@ -14,8 +14,7 @@ export type ItemId =
   | 'shelter'
   | 'nuts'
   | 'tea';
-export type Direction =
-  'down' | 'right' | 'up' | 'left' | 'up-right' | 'down-right' | 'down-left' | 'up-left';
+export type Direction = 'down' | 'right' | 'up' | 'left';
 export type ActionKind =
   'chop' | 'mine' | 'forage' | 'eat' | 'drink' | 'bandage' | 'build' | 'light' | 'feed' | 'refill' | 'attack';
 export interface PlayerAction {

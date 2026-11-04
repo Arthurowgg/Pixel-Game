@@ -332,7 +332,7 @@ export function GuideDialog({ onClose }: { onClose: () => void }) {
               [
                 ['W', 'A', 'S', 'D'],
                 'Find your way',
-                'Move in eight directions. Hold two movement keys for a diagonal; arrow keys work too.',
+                'Move up, down, left, or right. The last held direction takes priority; arrow keys work too.',
               ],
               [['SHIFT'], 'Pick up the pace', 'Hold while moving to sprint. Keep an eye on your stamina.'],
               [['H'], 'Check your condition', 'Health, survival needs, and practical advice.'],

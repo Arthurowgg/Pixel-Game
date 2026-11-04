@@ -131,7 +131,7 @@ describe('a real campsite crafting table', () => {
   });
 });
 
-describe('stable faces, connected strides, and diagonal control', () => {
+describe('stable faces, connected strides, and cardinal control', () => {
   it('holds the neutral idle pose instead of repainting the face or detaching boots', () => {
     const sim = fresh();
     for (const direction of DIRECTIONS) {
@@ -145,9 +145,9 @@ describe('stable faces, connected strides, and diagonal control', () => {
       }
     }
   });
-  it('tries a clear diagonal before a blocked intermediate horizontal probe', () => {
+  it('never turns a mixed displacement into a diagonal or a collision bypass', () => {
     expect(moveWithCollision({ x: 0, y: 0 }, 1, 1, (point) => point.x > 0 && point.y === 0)).toEqual({
-      x: 1,
+      x: 0,
       y: 1,
     });
   });
@@ -161,33 +161,40 @@ describe('stable faces, connected strides, and diagonal control', () => {
     expect(position.x).toBeLessThanOrEqual(8);
     expect(position.y).toBe(0);
   });
-  it('faces actual travel while sliding at the boundary, not the blocked diagonal intent', () => {
+  it('stays still at a boundary until the blocked direction is released', () => {
     const sim = fresh();
     sim.state.resources = [];
     sim.state.player = { x: 16, y: 500 };
     sim.keys.add('w');
     sim.keys.add('a');
     sim.update(0.05);
+    expect(sim.state.player).toEqual({ x: 16, y: 500 });
+    expect(sim.state.direction).toBe('down');
+    sim.keys.delete('a');
+    sim.update(0.05);
     expect(sim.state.player.x).toBe(16);
     expect(sim.state.player.y).toBeLessThan(500);
     expect(sim.state.direction).toBe('up');
   });
-  it('arrives at nearby diagonal click targets without overshooting or facing jitter', () => {
+  it('reaches off-axis click targets in two straight legs without overshooting', () => {
     const sim = fresh();
     sim.state.resources = [];
     sim.state.player = { x: 500, y: 500 };
     sim.target = { x: 501, y: 501 };
     sim.update(0.05);
+    expect(sim.state.player).toEqual({ x: 500, y: 501 });
+    expect(sim.state.direction).toBe('down');
+    sim.update(0.05);
     expect(sim.state.player).toEqual({ x: 501, y: 501 });
-    expect(sim.state.direction).toBe('down-right');
+    expect(sim.state.direction).toBe('right');
     sim.update(0.05);
     expect(sim.target).toBeNull();
     expect(sim.moving).toBe(false);
-    expect(sim.state.direction).toBe('down-right');
+    expect(sim.state.direction).toBe('right');
   });
   it('lets one captured thumb change sector, rest centrally, or leave the pad', () => {
-    expect(touchMovementKeys(0.8, -0.8)).toEqual(['w', 'd']);
-    expect(touchMovementKeys(-0.8, 0.8)).toEqual(['s', 'a']);
+    expect(touchMovementKeys(0.8, -0.8)).toEqual(['w']);
+    expect(touchMovementKeys(-0.8, 0.8)).toEqual(['s']);
     expect(touchMovementKeys(0, 0)).toEqual([]);
     expect(touchMovementKeys(2, 0)).toEqual([]);
     const keys = new Set<string>(),
@@ -196,7 +203,7 @@ describe('stable faces, connected strides, and diagonal control', () => {
     input.press(7, ['d']);
     input.press(7, touchMovementKeys(-0.8, 0.8));
     expect(input.owns(7)).toBe(true);
-    expect([...keys].sort()).toEqual(['a', 's', 'w']);
+    expect([...keys].sort()).toEqual(['s', 'w']);
     input.release(7);
     expect([...keys]).toEqual(['w']);
     expect(input.owns(7)).toBe(false);

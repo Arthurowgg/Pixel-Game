@@ -1,6 +1,6 @@
 # Wildpine animation sheets
 
-**Animation generation is currently on hold.** This document describes the previously assembled sheets retained in the project; the latest standalone-asset batch does not change them or claim to fulfill the whole-sheet/omnidirectional request.
+**Animation generation is currently on hold.** This document describes the previously assembled sheets retained in the project; the latest standalone-asset batch does not change them or claim to fulfill the whole-sheet request.
 
 The active manifest contains **63 clips across 17 transparent PNG sheets**. New weapon and wolf animations are literal **four-column, two-row** sheets. Each cell is a complete frame; the game slices both rows, rather than stretching or moving a single picture.
 
@@ -37,14 +37,14 @@ All of these sheets use **4 columns × 2 rows**. Left-facing player poses mirror
 
 `wildlife.png` is retained as an original build-stage artifact, but the runtime no longer loads it. The new wolf sheets replace its clips. The inventory has its own **`../item-sprites.png`** atlas with all 15 items, described by `../item-sprites.json`. Both the Canvas held-item renderer and the SVG-backed HUD icons crop that shared bitmap. All fifteen item icons now come from generated artwork. The inventory/UI pipelines are `scripts/build_camp_ui_assets.py` and `scripts/build_trail_ui_assets.py`, and the final `scripts/build_hearth_assets.py`, independent of animation generation.
 
-## Runtime corrections · v0.7
+## Runtime corrections · v0.7.1
 
 All existing animation PNGs—including the axe and pickaxe sheets the user likes—remain unchanged. The animation overhaul is still on hold.
 
-- Eight-way movement/facing is implemented in the simulation and touch controls. Upward diagonals use existing rear-facing cells and downward diagonals use front-facing cells; westward travel mirrors the whole frame. These are not newly drawn diagonal poses.
+- Player movement/facing is **four-directional only**, following the request to remove diagonals in v0.7.1. Up/down use the existing rear/front cells; left mirrors the complete right-facing frame. Old diagonal save directions migrate to up/down, preserving the camp. No diagonal poses are needed or planned for the current controls.
 - Locomotion uses the existing complete walk cells **0, 3, 4, 7**. The 1/5 coat-lift cells used in v0.6 still misaligned the torso and supporting boot, so those are now skipped too. The selected cells have byte-identical head pixels, checked in the browser. Sprint uses those same cells at a faster distance-driven cadence instead of the more exaggerated legacy run row.
 - Idle and menu portraits hold their intact neutral cell. The old painted blink and torso-only bob are not replayed. No pixels are patched, limbs rigged, or replacement poses assembled.
-- Diagonal-first substeps prevent tunnelling and unnecessary axis-probe snags; facing follows actual displacement. Pointer destinations clamp to remaining travel distance.
+- Cardinal substeps prevent tunnelling and diagonal collision slides; facing follows actual displacement. Click targets use one straight leg at a time and clamp travel to the remaining distance on that axis. Most-recent-held keyboard/touch direction takes priority without combining axes.
 - Gait is driven by actual distance travelled, not the global clock. Blocked motion does not advance gait, footstep effects, sprint drain, or distance statistics. Pause freezes the current cell.
 - The inventory bitmap is mirrored at its grip **only while carrying** an axe/pickaxe. Full-body strike frames remain the originals, with contact at frame 4.
 - During plant gathering, movement is briefly held and playback avoids the two fully outstretched reach poses. This reuses existing whole cells, without deforming bodies or drawing limbs. **A genuine crouching collection sequence is not provided by the existing artwork and remains outstanding.**

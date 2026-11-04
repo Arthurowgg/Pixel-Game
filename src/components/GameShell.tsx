@@ -328,7 +328,7 @@ export function GameShell({
     { label: 'See three sunrises', progress: view.nights, goal: 3 },
   ];
   const trackedTask = tasks.find((task) => task.progress < task.goal);
-  const touchKey = (key: string, label: string, icon?: string, keys: readonly string[] = [key]) => (
+  const touchKey = (key: string, label: string, icon?: string) => (
     <button
       className={`touch-key touch-${key === ' ' ? 'attack' : key}`}
       aria-label={label}
@@ -342,7 +342,7 @@ export function GameShell({
           else if (key === 'f' && !sim.keys.has(' ') && !sim.keys.has('e')) sim.useHeld();
           refresh();
         }
-        if (!overlayRef.current) input.press(event.pointerId, keys);
+        if (!overlayRef.current) input.press(event.pointerId, [key]);
       }}
       onPointerMove={(event) => {
         if (!input.owns(event.pointerId)) return;
@@ -370,7 +370,7 @@ export function GameShell({
         className="game-canvas"
         tabIndex={0}
         ref={canvasRef}
-        aria-label="The Forest: WASD to move, E to gather, 1–6 to hold items, F to use, Space to defend"
+        aria-label="The Forest: WASD to move in four directions, E to gather, 1–6 to hold items, F to use, Space to defend"
         onContextMenu={(event) => event.preventDefault()}
         onPointerDown={(event) => {
           if (!ready || overlay || !rendererRef.current) return;
@@ -718,11 +718,7 @@ export function GameShell({
           </div>
         </div>
         <div className="touch-controls">
-          <div className="touch-dpad">
-            {touchKey('wa', 'Move up and left', 'arrow', ['w', 'a'])}
-            {touchKey('wd', 'Move up and right', 'arrow', ['w', 'd'])}
-            {touchKey('sa', 'Move down and left', 'arrow', ['s', 'a'])}
-            {touchKey('sd', 'Move down and right', 'arrow', ['s', 'd'])}
+          <div className="touch-dpad" role="group" aria-label="Four-direction movement">
             <span className="touch-center" aria-hidden="true">
               <Icon name="compass" size={20} />
             </span>

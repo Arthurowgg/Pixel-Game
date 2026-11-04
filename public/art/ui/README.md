@@ -61,4 +61,6 @@ npm run format
 
 The **Hearth & Hand builder must run last**, since older stages may restore an older registry. All fifteen inventory icons are already generated; this batch adds a world station, not a new inventory item.
 
-Condition and fieldcraft menus are read-only and pause the world. The workshop deliberately changes inventory, applying exact batch costs only after validating station reach and materials. The movement fixes select existing complete cells; see `../animations/README.md` for remaining crouch/diagonal-art limitations.
+Condition and fieldcraft menus are read-only and pause the world. The workshop deliberately changes inventory, applying exact batch costs only after validating station reach and materials. The movement fixes select existing complete cells; see `../animations/README.md` for remaining whole-sheet/crouching-art limitations.
+
+As of v0.7.1 the touch pad exposes only four cardinal buttons. Diagonal buttons were removed at the user’s request; keyboard, touch dragging, and click-to-move also use one movement axis at a time. This control revision changes no generated images.

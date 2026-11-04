@@ -74,6 +74,7 @@ try {
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByRole('tab', { name: 'Your controls' }).click();
   await expect(page.getByText('Stand your ground', { exact: true })).toBeVisible();
+  await expect(page.getByText('Move up, down, left, or right.', { exact: false })).toBeVisible();
   await page.getByRole('tab', { name: 'Expect the unexpected' }).click();
   await expect(page.getByRole('heading', { name: 'Cold snaps' })).toBeVisible();
   const wolfRows = await page.getByRole('img', { name: 'Wolf running animation' }).evaluate(
@@ -578,9 +579,11 @@ try {
     s.needs = { health: 100, hunger: 90, thirst: 90, warmth: 90, stamina: 100 };
     localStorage.setItem('wildpine.save.v2', JSON.stringify(s));
   });
-  await page.keyboard.down('w');
-  await page.keyboard.down('d');
-  await expect(page.locator('.game-canvas')).toHaveAttribute('data-facing', 'up-right');
+  await page.evaluate(() => {
+    const canvas = document.querySelector('.game-canvas');
+    for (const key of ['w', 'd']) canvas.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+  });
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-facing', 'right');
   const gaitFrames = await page.evaluate(
     () =>
       new Promise((resolve) => {
@@ -599,17 +602,56 @@ try {
   await page.keyboard.up('w');
   await page.keyboard.up('d');
   await page.keyboard.press('Escape');
-  const diagonal = await saved(page);
-  expect(diagonal.player.x).toBeGreaterThan(500);
-  expect(diagonal.player.y).toBeLessThan(500);
-  expect(Math.abs(diagonal.player.x - 500 - (500 - diagonal.player.y))).toBeLessThan(4);
+  const cardinal = await saved(page);
+  expect(cardinal.player.x).toBeGreaterThan(500);
+  expect(cardinal.player.y).toBe(500);
+  expect(cardinal.direction).toBe('right');
   await page.getByRole('button', { name: 'Save & return to main menu', exact: true }).click();
   await page.reload({ waitUntil: 'networkidle' });
   await enter(page);
-  await expect(page.locator('.game-canvas')).toHaveAttribute('data-facing', 'up-right');
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-facing', 'right');
   await screenshot(page, 'carry-axe-outward');
   await page.keyboard.press('Escape');
-  passed('Diagonal keyboard movement uses clean distance-driven gait cells and survives save/reload');
+  passed(
+    'Held keyboard combinations move on only the latest cardinal axis, keep clean gait cells, and save correctly',
+  );
+
+  await checkpoint(page, () => {
+    const state = JSON.parse(localStorage.getItem('wildpine.save.v2'));
+    state.player = { x: 500, y: 500 };
+    state.distance = 0;
+    state.direction = 'down';
+    localStorage.setItem('wildpine.save.v2', JSON.stringify(state));
+  });
+  const ground = page.locator('.game-canvas');
+  const groundBox = await ground.boundingBox();
+  // The renderer uses a two-screen-pixel world scale, with feet 24px above center.
+  await ground.click({ position: { x: groundBox.width / 2 + 60, y: groundBox.height / 2 + 8 } });
+  await expect(ground).toHaveAttribute('data-facing', 'right');
+  await expect(ground).toHaveAttribute('data-facing', 'down');
+  await expect(ground).toHaveAttribute('data-animation', 'idle-down');
+  await page.keyboard.press('Escape');
+  const clicked = await saved(page);
+  expect(clicked.player.x).toBeCloseTo(530, 5);
+  expect(clicked.player.y).toBeCloseTo(516, 5);
+  expect(clicked.distance).toBeCloseTo(46, 5);
+  passed('Click-to-move takes two straight legs, not a diagonal or a staircase shortcut');
+
+  await checkpoint(page, () => {
+    const state = JSON.parse(localStorage.getItem('wildpine.save.v2'));
+    state.player = { x: 500, y: 500 };
+    state.direction = 'up-left';
+    state.inventory.wood = 23;
+    localStorage.setItem('wildpine.save.v2', JSON.stringify(state));
+  });
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-facing', 'up');
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-animation', 'idle-up');
+  await page.keyboard.press('Escape');
+  const oldFacing = await saved(page);
+  expect(oldFacing.direction).toBe('up');
+  expect(oldFacing.inventory.wood).toBe(23);
+  expect(oldFacing.player).toEqual({ x: 500, y: 500 });
+  passed('Existing diagonal-facing saves resume with a cardinal pose without losing position or supplies');
 
   await checkpoint(page, () => {
     const s = JSON.parse(localStorage.getItem('wildpine.save.v2'));
@@ -674,19 +716,16 @@ try {
   await mobile.mouse.down();
   await mobile.waitForTimeout(650);
   await mobile.mouse.up();
-  const diagonalButton = await mobile
-    .getByRole('button', { name: 'Move down and right', exact: true })
-    .boundingBox();
-  await mobile.mouse.move(
-    diagonalButton.x + diagonalButton.width / 2,
-    diagonalButton.y + diagonalButton.height / 2,
-  );
+  await expect(mobile.locator('.touch-dpad button')).toHaveCount(4);
+  await expect(mobile.getByRole('button', { name: /Move (up|down) and (left|right)/ })).toHaveCount(0);
+  const rightButton = await mobile.getByRole('button', { name: 'Move right', exact: true }).boundingBox();
+  await mobile.mouse.move(rightButton.x + rightButton.width / 2, rightButton.y + rightButton.height / 2);
   await mobile.mouse.down();
-  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-facing', 'down-right');
+  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-facing', 'right');
   await mobile.waitForTimeout(450);
   await mobile.mouse.up();
-  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-animation', 'idle-down');
-  passed('One-finger diagonal touch controls move on both axes and release without sticky movement');
+  await expect(mobile.locator('.game-canvas')).toHaveAttribute('data-animation', 'idle-right');
+  passed('The mobile pad has only four cardinal buttons and releases without sticky movement');
   await mobile.getByRole('button', { name: 'Wild berries, shortcut 3, 3 available', exact: true }).click();
   await expect(mobile.locator('.held-item-status')).toHaveAttribute('data-item', 'berries');
   const useButton = mobile.locator('.touch-f');

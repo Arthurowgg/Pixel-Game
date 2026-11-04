@@ -207,33 +207,11 @@
   grid-row: 3;
   grid-column: 2;
 }
-.touch-wa {
-  grid-row: 1;
-  grid-column: 1;
-}
-.touch-wd {
-  grid-row: 1;
-  grid-column: 3;
-}
-.touch-sa {
-  grid-row: 3;
-  grid-column: 1;
-}
-.touch-sd {
-  grid-row: 3;
-  grid-column: 3;
-}
-.touch-wa .icon {
-  transform: rotate(-135deg);
-}
-.touch-wd .icon {
-  transform: rotate(-45deg);
-}
-.touch-sa .icon {
-  transform: rotate(135deg);
-}
-.touch-sd .icon {
-  transform: rotate(45deg);
+.game-shell .touch-dpad {
+  /* Empty corners and the neutral center must not click through to the ground. */
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
 }
 .touch-center {
   grid-row: 2;
@@ -241,20 +219,6 @@
   display: grid;
   place-items: center;
   opacity: 0.65;
-}
-.game-shell .touch-wa,
-.game-shell .touch-wd,
-.game-shell .touch-sa,
-.game-shell .touch-sd {
-  background: #213a26ba;
-  border-color: #76835c;
-}
-.game-shell .touch-wa > .icon,
-.game-shell .touch-wd > .icon,
-.game-shell .touch-sa > .icon,
-.game-shell .touch-sd > .icon {
-  width: 16px;
-  height: 16px;
 }
 .camp-save-summary {
   display: flex;

@@ -1,4 +1,4 @@
-import { locomotionFrame, spriteDirection } from './movement';
+import { locomotionFrame } from './movement';
 import manifest from './animation-manifest.json';
 import { imageTask, loadBitmap, loadTasks } from './loading';
 import type { LoadProgress } from './loading';
@@ -161,7 +161,7 @@ export function playerPose(sim: Simulation, reducedMotion = false) {
         mode = 'use';
     }
   }
-  const facing = spriteDirection(direction);
+  const facing = direction;
   const name = `${mode}-${facing === 'left' ? 'right' : facing}`;
   // Idle holds its intact neutral cell: the legacy blink repainted facial pixels and
   // the idle bob detached the torso from the boots. No replacement frames are made.
@@ -185,7 +185,7 @@ export function playerPose(sim: Simulation, reducedMotion = false) {
     clip,
     frame,
     direction,
-    flip: direction.includes('left'),
+    flip: direction === 'left',
     elapsed,
     item: action ? action.item : sim.state.equipped,
   };

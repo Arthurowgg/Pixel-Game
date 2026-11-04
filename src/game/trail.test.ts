@@ -3,14 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { artImages, CLIPS, drawCarriedTool, playerPose, toolActionClip } from './animation';
 import { DEFAULT_SETTINGS, distance, SETTINGS_KEY } from './data';
 import registry from './generated-assets.json';
-import {
-  DIRECTIONS,
-  facingDirection,
-  GameInput,
-  locomotionFrame,
-  spriteDirection,
-  STABLE_WALK_FRAMES,
-} from './movement';
+import { DIRECTIONS, facingDirection, GameInput, locomotionFrame, STABLE_WALK_FRAMES } from './movement';
 import { createGame, Simulation } from './simulation';
 import { isGameState, loadSettings, migrateGame } from './storage';
 import type { Direction } from './types';
@@ -28,16 +21,16 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('eight-way movement without invented artwork', () => {
+describe('four-way movement without invented artwork', () => {
   it.each([
     ['right', ['d'], 1, 0],
-    ['down-right', ['s', 'd'], 1, 1],
+    ['right', ['arrowright'], 1, 0],
     ['down', ['s'], 0, 1],
-    ['down-left', ['s', 'a'], -1, 1],
+    ['down', ['arrowdown'], 0, 1],
     ['left', ['a'], -1, 0],
-    ['up-left', ['w', 'a'], -1, -1],
+    ['left', ['arrowleft'], -1, 0],
     ['up', ['w'], 0, -1],
-    ['up-right', ['w', 'd'], 1, -1],
+    ['up', ['arrowup'], 0, -1],
   ] as [Direction, string[], number, number][])(
     'moves %s at the same total walking speed',
     (direction, keys, x, y) => {
@@ -54,13 +47,14 @@ describe('eight-way movement without invented artwork', () => {
       expect(playerPose(sim).clip).toBeDefined();
     },
   );
-  it('maps all diagonal facing sectors onto existing intact cardinal art', () => {
+  it('uses only four facings and existing intact cardinal art', () => {
     expect(facingDirection(0, 0, 'left')).toBe('left');
     expect(facingDirection(NaN, 0)).toBe('down');
     expect(facingDirection(10, 1)).toBe('right');
-    expect(facingDirection(-1, -1)).toBe('up-left');
-    expect(spriteDirection('down-left')).toBe('down');
-    expect(spriteDirection('up-right')).toBe('up');
+    expect(facingDirection(-1, -1)).toBe('up');
+    expect(facingDirection(-2, 1)).toBe('left');
+    expect(facingDirection(1, 2)).toBe('down');
+    expect(DIRECTIONS).toHaveLength(4);
     for (const direction of DIRECTIONS) {
       const sim = fresh();
       sim.state.direction = direction;
@@ -85,16 +79,22 @@ describe('eight-way movement without invented artwork', () => {
     expect(playerPose(sim).name).toBe('idle-down');
     expect(sim.state.needs.stamina).toBeGreaterThan(30);
   });
-  it('checks the combined diagonal destination so obstacle corners remain solid', () => {
+  it('stops at a tree without sliding along the other held direction', () => {
     const sim = fresh();
-    const tree = { id: 0, kind: 'tree' as const, x: 510, y: 510, hp: 3, readyAt: 0, scale: 1, variant: 0 };
+    const tree = { id: 0, kind: 'tree' as const, x: 510, y: 500, hp: 3, readyAt: 0, scale: 1, variant: 0 };
     sim.state.resources = [tree];
     sim.keys.add('s');
     sim.keys.add('d');
     sim.update(Math.sqrt(50) / 58);
     expect(distance(sim.state.player, tree)).toBeGreaterThanOrEqual(10);
     expect(sim.state.distance).toBeCloseTo(distance({ x: 500, y: 500 }, sim.state.player), 6);
-    expect(sim.state.distance).toBeLessThan(Math.sqrt(50));
+    expect(sim.state.player).toEqual({ x: 500, y: 500 });
+    expect(sim.moving).toBe(false);
+    sim.keys.delete('d');
+    sim.update(0.05);
+    expect(sim.state.player.x).toBe(500);
+    expect(sim.state.player.y).toBeGreaterThan(500);
+    expect(sim.state.direction).toBe('down');
   });
   it('selects only safe source cells at a distance-driven cadence and freezes when paused', () => {
     expect([0, 9, 18, 27, 36].map((distance) => locomotionFrame(distance))).toEqual([0, 3, 4, 7, 0]);
@@ -137,7 +137,7 @@ describe('eight-way movement without invented artwork', () => {
     sim.update(0.2);
     expect(sim.state.player.x).toBeGreaterThan(start.x);
   });
-  it('preserves the complete axe/pickaxe contact frames for all eight facing directions', () => {
+  it('preserves the complete axe/pickaxe contact frames for all four facing directions', () => {
     for (const direction of DIRECTIONS)
       for (const item of ['hatchet', 'pickaxe'] as const) {
         const sim = fresh();
@@ -175,11 +175,11 @@ describe('eight-way movement without invented artwork', () => {
   });
 });
 
-describe('shared keyboard and eight-way touch controls', () => {
+describe('shared keyboard and four-way touch controls', () => {
   it('does not release a direction still owned by another finger', () => {
     const keys = new Set<string>(),
       input = new GameInput(keys);
-    input.press(1, ['w', 'd']);
+    input.press(1, ['d']);
     input.press(2, ['d']);
     input.release(1);
     expect([...keys]).toEqual(['d']);
@@ -190,12 +190,12 @@ describe('shared keyboard and eight-way touch controls', () => {
     const keys = new Set<string>(),
       input = new GameInput(keys);
     input.key('w', true);
-    input.press(4, ['w', 'a']);
+    input.press(4, ['a']);
     input.release(4);
     expect([...keys]).toEqual(['w']);
     input.key('w', false);
     expect(keys.size).toBe(0);
-    input.press(8, ['s', 'd']);
+    input.press(8, ['s']);
     input.key('shift', true);
     input.clear();
     expect(keys.size).toBe(0);

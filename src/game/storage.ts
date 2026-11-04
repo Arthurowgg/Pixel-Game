@@ -9,7 +9,7 @@ import {
   SETTINGS_KEY,
   WORLD,
 } from './data';
-import type { GameState, RunRecord, Settings } from './types';
+import type { Direction, GameState, RunRecord, Settings } from './types';
 
 function read(key: string): unknown {
   try {
@@ -51,7 +51,8 @@ export function isGameState(value: unknown): value is GameState {
     return false;
   const inventory = value.inventory as Record<string, number>;
   const item = (v: unknown) => typeof v === 'string' && Object.hasOwn(ITEMS, v);
-  if (!(DIRECTIONS as readonly string[]).includes(String(value.direction))) return false;
+  if (typeof value.direction !== 'string' || !(DIRECTIONS as readonly string[]).includes(value.direction))
+    return false;
   if (
     value.equipped !== null &&
     (!item(value.equipped) ||
@@ -140,6 +141,14 @@ export function isGameState(value: unknown): value is GameState {
     typeof value.victoryAcknowledged === 'boolean'
   );
 }
+// v0.6/v0.7 stored eight-way facings. Preserve those camps, but normalize their
+// old diagonal pose to its existing front/back art; new saves are cardinal only.
+const LEGACY_DIRECTIONS: Record<string, Direction> = {
+  'up-right': 'up',
+  'up-left': 'up',
+  'down-right': 'down',
+  'down-left': 'down',
+};
 export function migrateGame(value: unknown): GameState | null {
   if (isGameState(value)) return value;
   if (!object(value) || !object(value.inventory)) return null;
@@ -147,7 +156,11 @@ export function migrateGame(value: unknown): GameState | null {
   // explicit invalid values and missing original items must still be rejected.
   const inventory = { nuts: 0, tea: 0, ...value.inventory };
   if (value.version === 2) {
-    const upgraded = { ...value, inventory };
+    const direction =
+      typeof value.direction === 'string' && Object.hasOwn(LEGACY_DIRECTIONS, value.direction)
+        ? LEGACY_DIRECTIONS[value.direction]
+        : value.direction;
+    const upgraded = { ...value, inventory, direction };
     return isGameState(upgraded) ? upgraded : null;
   }
   if (value.version !== 1) return null;
