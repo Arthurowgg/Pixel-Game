@@ -731,21 +731,21 @@ export class Renderer {
       const x = Math.round(collecting.resource.x - this.camera.x),
         y = Math.round(collecting.resource.y - this.camera.y - 34);
       ctx.save();
-      ctx.lineWidth = 2;
+      ctx.fillStyle = '#0f1f1add';
+      ctx.beginPath();
+      ctx.arc(x, y, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.lineWidth = 3;
       ctx.lineCap = 'round';
-      ctx.fillStyle = '#172c26e6';
+      ctx.strokeStyle = '#5b6d54';
       ctx.beginPath();
       ctx.arc(x, y, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#60765a';
-      ctx.beginPath();
-      ctx.arc(x, y, 8, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.strokeStyle = '#e2cc8e';
+      ctx.strokeStyle = '#f2dc9c';
       ctx.beginPath();
-      ctx.arc(x, y, 8, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * collecting.progress);
+      ctx.arc(x, y, 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * collecting.progress);
       ctx.stroke();
-      drawItem(ctx, 'berries', x - 5, y - 5, 10);
+      drawItem(ctx, 'berries', x - 6, y - 6, 12);
       ctx.restore();
     }
     if (this.settings.vignette) {
