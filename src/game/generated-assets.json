@@ -86,6 +86,41 @@
       "height": 24,
       "source": "generated",
       "sourceAsset": "art/generated/hearth-workshop/workbench-icon.png"
+    },
+    "audio": {
+      "file": "art/ui/audio-emblem.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated",
+      "sourceAsset": "art/generated/embers-instinct/audio-emblem.png"
+    },
+    "display": {
+      "file": "art/ui/display-emblem.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated",
+      "sourceAsset": "art/generated/embers-instinct/display-emblem.png"
+    },
+    "controls": {
+      "file": "art/ui/controls-emblem.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated",
+      "sourceAsset": "art/generated/embers-instinct/controls-emblem.png"
+    },
+    "wolfMark": {
+      "file": "art/ui/wolf-mark.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated",
+      "sourceAsset": "art/generated/embers-instinct/wolf-mark.png"
+    },
+    "mouse": {
+      "file": "art/ui/mouse-emblem.png",
+      "width": 24,
+      "height": 24,
+      "source": "generated",
+      "sourceAsset": "art/generated/embers-instinct/mouse-emblem.png"
     }
   },
   "textures": {
@@ -135,6 +170,22 @@
       "source": "generated",
       "sourceAsset": "art/generated/hearth-workshop/workshop-frame.png",
       "slice": 26
+    },
+    "settings": {
+      "file": "art/ui/settings-frame.png",
+      "width": 192,
+      "height": 128,
+      "source": "generated",
+      "sourceAsset": "art/generated/embers-instinct/settings-frame.png",
+      "slice": 18
+    },
+    "hearth": {
+      "file": "art/ui/hearth-frame.png",
+      "width": 192,
+      "height": 96,
+      "source": "generated",
+      "sourceAsset": "art/generated/embers-instinct/hearth-frame.png",
+      "slice": 20
     }
   },
   "effects": {

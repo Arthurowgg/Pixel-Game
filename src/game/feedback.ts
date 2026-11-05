@@ -179,10 +179,11 @@ export class ForestFeedback {
     height: number,
     settings: Settings,
   ) {
-    if (!settings.atmosphere) return;
+    if (!settings.atmosphere && !(settings.damageFlash && !settings.reducedMotion && sim.hitFlash > 0))
+      return;
     ctx.save();
     // A held torch adds warm visibility; reduced motion removes its flicker, not its light.
-    if (sim.torchActive) {
+    if (settings.atmosphere && sim.torchActive) {
       const p = sim.state.player,
         x = p.x - camera.x,
         y = p.y - camera.y - 18;
@@ -193,7 +194,7 @@ export class ForestFeedback {
       ctx.fillStyle = glow;
       ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
     }
-    if (!settings.reducedMotion && sim.hitFlash > 0) {
+    if (settings.damageFlash && !settings.reducedMotion && sim.hitFlash > 0) {
       ctx.globalAlpha = Math.min(0.2, sim.hitFlash * 0.45);
       ctx.fillStyle = '#cd715a';
       ctx.fillRect(0, 0, width, 3);
@@ -201,7 +202,7 @@ export class ForestFeedback {
       ctx.fillRect(0, 0, 3, height);
       ctx.fillRect(width - 3, 0, 3, height);
     }
-    if (sim.state.weather === 'cold' && sim.state.needs.warmth < 40) {
+    if (settings.atmosphere && sim.state.weather === 'cold' && sim.state.needs.warmth < 40) {
       ctx.globalAlpha = 0.12 + (40 - sim.state.needs.warmth) / 200;
       ctx.fillStyle = '#c0d7ce';
       for (const x of [0, width - 1])

@@ -16,6 +16,7 @@ import './game-ui.css';
 import './trail-ui.css';
 import './loading.css';
 import './workshop.css';
+import './embers.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

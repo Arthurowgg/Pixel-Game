@@ -177,7 +177,7 @@ export function playerPose(sim: Simulation, reducedMotion = false) {
         : animationFrame(clip, elapsed, reducedMotion);
   // Suppress the two overextended legacy reach poses, using only existing complete cells.
   // A genuinely crouching cycle still requires new whole-sheet artwork.
-  if (action?.kind === 'forage') frame = [0, 1, 2, 2, 2, 2, 1, 0][frame];
+  if (action?.kind === 'forage' || action?.kind === 'feed') frame = [0, 1, 2, 2, 2, 2, 1, 0][frame];
   return {
     name,
     bodyName,
@@ -187,6 +187,6 @@ export function playerPose(sim: Simulation, reducedMotion = false) {
     direction,
     flip: direction === 'left',
     elapsed,
-    item: action ? action.item : sim.state.equipped,
+    item: action ? action.item : sim.campFocus !== null ? null : sim.state.equipped,
   };
 }

@@ -2,7 +2,7 @@ import { PixelPreview } from './PixelPreview';
 import { useState } from 'react';
 import { Icon, Key } from './Icon';
 import { Modal } from './Modal';
-import type { Difficulty, GameState, RunRecord, Settings } from '../game/types';
+import type { Difficulty, GameState, RunRecord } from '../game/types';
 import { DAY_LENGTH } from '../game/data';
 
 export function NewAdventure({
@@ -105,144 +105,7 @@ export function NewAdventure({
     </Modal>
   );
 }
-export function SettingsDialog({
-  settings,
-  onChange,
-  onClose,
-}: {
-  settings: Settings;
-  onChange: (settings: Settings) => void;
-  onClose: () => void;
-}) {
-  const [fullscreenMessage, setFullscreenMessage] = useState('');
-  const update = (key: keyof Settings, value: boolean | number) => onChange({ ...settings, [key]: value });
-  const fullscreen = async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await document.documentElement.requestFullscreen();
-      setFullscreenMessage('Display updated.');
-    } catch {
-      setFullscreenMessage(
-        'Fullscreen is not available in this preview. Try your browser’s fullscreen shortcut.',
-      );
-    }
-  };
-  return (
-    <Modal title="Make yourself comfortable." eyebrow="SETTINGS" onClose={onClose}>
-      <div className="settings-section">
-        <h3>
-          <Icon name="volume" size={17} />
-          Sounds of the wild
-        </h3>
-        <SettingToggle
-          title="Forest sounds"
-          description="A little wind. A few birds. Your own footsteps."
-          checked={settings.sound}
-          onChange={(v) => update('sound', v)}
-        />
-        <label className="slider-row">
-          <span>Sound effects</span>
-          <input
-            aria-label="Sound effects volume"
-            type="range"
-            min="0"
-            max="100"
-            value={Math.round(settings.effects * 100)}
-            onChange={(e) => update('effects', +e.target.value / 100)}
-          />
-          <output>{Math.round(settings.effects * 100)}%</output>
-        </label>
-        <label className="slider-row">
-          <span>Forest ambience</span>
-          <input
-            aria-label="Forest ambience volume"
-            type="range"
-            min="0"
-            max="100"
-            value={Math.round(settings.ambience * 100)}
-            onChange={(e) => update('ambience', +e.target.value / 100)}
-          />
-          <output>{Math.round(settings.ambience * 100)}%</output>
-        </label>
-      </div>
-      <div className="settings-section">
-        <h3>
-          <Icon name="spark" size={17} />
-          Your view of things
-        </h3>
-        <SettingToggle
-          title="Forest atmosphere"
-          description="Sun rays, leaves, campfire smoke, footsteps, splashes, and impact sparks."
-          checked={settings.atmosphere}
-          onChange={(v) => update('atmosphere', v)}
-        />
-        <SettingToggle
-          title="Reduce motion"
-          description="Less ambient movement. Actions keep two clear key poses."
-          checked={settings.reducedMotion}
-          onChange={(v) => update('reducedMotion', v)}
-        />
-        <SettingToggle
-          title="Compact HUD"
-          description="A quieter view. Hide the minimap, repeated hints, and extra notices. Map and journal stay one key away."
-          checked={settings.compactHud}
-          onChange={(value) => update('compactHud', value)}
-        />
-        <SettingToggle
-          title="Helpful hints"
-          description="Show controls and your first survival checklist."
-          checked={settings.showHints}
-          onChange={(v) => update('showHints', v)}
-        />
-        <button className="setting-fullscreen" onClick={fullscreen}>
-          <span>
-            <Icon name="expand" size={17} />
-            Toggle fullscreen
-          </span>
-          <Icon name="arrow" size={14} />
-        </button>
-        {fullscreenMessage && (
-          <p className="settings-feedback" role="status">
-            {fullscreenMessage}
-          </p>
-        )}
-      </div>
-      <div className="settings-footnote">
-        <Icon name="save" size={14} />
-        Preferences save automatically. Just like your adventure.
-      </div>
-    </Modal>
-  );
-}
-function SettingToggle({
-  title,
-  description,
-  checked,
-  onChange,
-}: {
-  title: string;
-  description: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <div className="setting-row">
-      <div>
-        <strong>{title}</strong>
-        <p>{description}</p>
-      </div>
-      <button
-        className={`toggle ${checked ? 'on' : ''}`}
-        role="switch"
-        aria-checked={checked}
-        aria-label={title}
-        onClick={() => onChange(!checked)}
-      >
-        <span />
-      </button>
-    </div>
-  );
-}
+export { SettingsDialog } from './SettingsDialog';
 
 export function GuideDialog({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState('basics');
@@ -284,7 +147,7 @@ export function GuideDialog({ onClose }: { onClose: () => void }) {
                 'tree',
                 '01',
                 'Start with the small things.',
-                'Walk up to pines, boulders, and plants. Hold E to gather; your axe or pickaxe is readied automatically. Three axe swings fell a pine and reveal a portion of pine nuts; two pickaxe strikes break a boulder.',
+                'Walk up to pines, boulders, and plants. Equip your axe or pickaxe yourself, then left-click or use E nearby. Three axe swings fell a pine and reveal a portion of pine nuts; two pickaxe strikes break a boulder.',
               ],
               [
                 'fire',
@@ -302,7 +165,7 @@ export function GuideDialog({ onClose }: { onClose: () => void }) {
                 'water',
                 '04',
                 'Look after yourself.',
-                'Select berries with 3 or water with 4, then press F to use what you hold. Refill at the spring northeast of camp. Brew berry tea beside a fire: two berries and one water restore thirst and warmth.',
+                'Select berries with 3 or water with 4, then left-click to use what you hold. Refill at the spring northeast of camp. Brew berry tea beside a fire: two berries and one water restore thirst and warmth.',
               ],
             ].map(([icon, number, title, text]) => (
               <article className="guide-step" key={number}>
@@ -334,6 +197,7 @@ export function GuideDialog({ onClose }: { onClose: () => void }) {
                 'Find your way',
                 'Move up, down, left, or right. The last held direction takes priority; arrow keys work too.',
               ],
+              [['RIGHT CLICK'], 'Walk to a spot', 'Move one axis at a time toward the spot you choose.'],
               [['SHIFT'], 'Pick up the pace', 'Hold while moving to sprint. Keep an eye on your stamina.'],
               [['H'], 'Check your condition', 'Health, survival needs, and practical advice.'],
               [['E'], 'A helping hand', 'Gather, chop, refill water, feed a fire, or rest.'],
@@ -343,9 +207,9 @@ export function GuideDialog({ onClose }: { onClose: () => void }) {
                 'Swing what you’re holding. An axe or pickaxe hits harder than empty hands.',
               ],
               [
-                ['F'],
+                ['LEFT CLICK'],
                 'Put it to use',
-                'Use your held item, chop with an axe, or mine with a pickaxe. Right-click works too.',
+                'Use the item you equipped, chop with your axe, mine with your pickaxe, or attack. No automatic tool switching.',
               ],
               [['X'], 'Travel light', 'Stow what you’re holding and keep your hands free.'],
               [

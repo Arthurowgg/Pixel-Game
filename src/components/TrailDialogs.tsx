@@ -186,7 +186,7 @@ export function FieldcraftDialog({ onClose }: { onClose: () => void }) {
                 <p>{WHERE[selected]}</p>
                 <div className="fieldcraft-tip">
                   <Key>B</Key> choose &amp; hold <span>·</span>
-                  <Key>F</Key> use
+                  <Key>LEFT CLICK</Key> use
                 </div>
               </article>
             </div>

@@ -4,14 +4,38 @@
 
 After the whole-sheet-generation limitation was explained, the user approved **separate AI-generated item, texture, and UI images**, up to ten per batch, with **animation-sheet generation on hold**.
 
-Do not create more rigged poses or synthetic animation frames. Complete AI-drawn animation sheets can be cropped and integrated if supplied. The requested whole-sheet animation overhaul is **not complete**. Player movement is now cardinal-only: the user explicitly removed diagonal movement in v0.7.1. Eight-direction movement/art is no longer a pending feature for the current controls. Existing animation sheets from earlier work remain in the game; the latest static-art batches do not redraw or reconstruct them. Batches 4 and 5 correct runtime playback, carrying, collision, and input without constructing frames.
+Do not create more rigged poses or synthetic animation frames. Complete AI-drawn animation sheets can be cropped and integrated if supplied. The requested whole-sheet animation overhaul is **not complete**. Player movement is now cardinal-only: the user explicitly removed diagonal movement in v0.7.1. Eight-direction movement/art is no longer a pending feature for the current controls. Existing animation sheets from earlier work remain in the game; the latest static-art batches do not redraw or reconstruct them. Batches 4–6 correct runtime playback, carrying, collision, and input without constructing frames.
+
+## Batch 6 · Ember & Instinct · v0.8 · seven accepted images
+
+**7/10 image generations used.** Each call produced one standalone static UI image. The user chose **existing actor art only**, declining separate sitting, biting, and fallen poses. No animation sheets or replacement body parts were constructed.
+
+| AI-generated image            | Integration                                               |
+| ----------------------------- | --------------------------------------------------------- |
+| Sage/brass settings frame     | Dedicated settings window; 192 × 128, nine-slice inset 18 |
+| Dark wood/copper hearth frame | Quiet live campfire panel; 192 × 96, inset 20             |
+| Audio emblem                  | Audio settings tab and sound check; 24 × 24               |
+| Display emblem                | Pixel-scale/display controls and preview; 24 × 24         |
+| Controls emblem               | Settings controls tab; 24 × 24                            |
+| Wolf mark                     | Encounter warning and control reference; 24 × 24          |
+| Left-button mouse emblem      | Held-item use button and control affordance; 24 × 24      |
+
+Raw originals: `.art-originals/embers-instinct/` (ignored). Checked-in normalized inputs: `public/art/generated/embers-instinct/`. Runtime copies: `public/art/ui/`. Run **`scripts/build_embers_assets.py --normalized-only` last**, after the previous inventory → camp UI → trail UI → Hearth & Hand stages. Only cropping, keying, nearest-neighbor resizing, palette reduction, and copying are used.
+
+- Wolves now have staggered wind-ups, locked dodgeable lunges, recovery, orbit slots, spacing, obstacle steering, hit interruptions and brief whole-frame defeat fades. Rendering uses the existing wolf alert/run/idle sheets; it does **not** provide a newly drawn biting or fallen cycle.
+- Camp focus clears the HUD while safe, keeps fuel/world time live, and offers one log action. Existing safe forage cells and the complete generated log icon supply placement feedback; there is **no sitting pose**. Movement/danger cancels an unplaced log, and the table remains accessible.
+- Settings have four functional tabs, actual view/audio/effect controls, fullscreen error handling, guarded defaults, and local preference migration.
+- Left-click uses/attacks, E interacts, right-click/WASD moves, F is unbound, tools must be chosen manually, and the gameplay control legend is removed. Cardinal movement, existing tool swings, face/leg fixes, and save migration are retained.
+- Current validation: **229 unit tests and 61 browser scenarios**, plus root/Pages builds, generated-source reproducibility and actor/manifest preservation checks.
+
+**Still pending:** complete AI-drawn sheets for genuinely new sitting, biting, fallen-wolf, and crouching artwork. The seven UI images are not actor animations and do not fulfill that deferred work.
 
 ## Control revision · v0.7.1 · no image generations
 
 - Removed diagonal player movement from keyboard combinations, thumb dragging, and click-to-move. Four cardinal directions remain, with most-recent-held input priority and no diagonal/staircase shortcuts.
 - Removed the four diagonal touch buttons and their styles. The neutral center/empty corners cannot click through into the ground; captured thumb dragging still supports the four remaining directions.
 - Old v2 diagonal-facing saves migrate without resetting supplies or progress. Existing face/leg playback corrections and all tool animation PNGs remain intact.
-- Added 34 unit regressions for single-axis movement, input ownership/order, straight-leg target travel, and save migration. Current suite: **172 unit tests and 45 browser scenarios**.
+- Added 34 unit regressions for single-axis movement, input ownership/order, straight-leg target travel, and save migration. The v0.7.1 suite had **172 unit tests and 45 browser scenarios**.
 - No generated assets were created or rebuilt. Historical eight-way descriptions below document v0.6/v0.7, not current behavior.
 
 ## Batch 5 · Hearth & Hand · v0.7 · six accepted images
@@ -155,4 +179,4 @@ Suggested next batch: forest props/ground cover and remaining weather/action gly
 
 Ten earlier generations supplied four survivor poses, four wolf gait poses, an axe, and a pickaxe. They were assembled into six 4 × 2 directional actor/tool sheets and two wolf sheets, with left-facing poses mirrored. These earlier animations predate the current workflow decision and are **not** claimed to be single-prompt whole-sheet generations.
 
-Existing forest polish includes procedural sun shafts, canopy shadows, ground/path details, drifting leaves, pond rings, cold mist, a persisted atmosphere switch, and reduced-motion handling. No new animation images were generated or changed in batches 2, 3, 4, or 5.
+Existing forest polish includes procedural sun shafts, canopy shadows, ground/path details, drifting leaves, pond rings, cold mist, a persisted atmosphere switch, and reduced-motion handling. No new animation images were generated or changed in batches 2–6.

@@ -1,4 +1,4 @@
-import type { ItemId, Recipe, Weather } from './types';
+import type { ItemId, Recipe, Settings, Weather } from './types';
 
 export const WORLD = { width: 1800, height: 1400 };
 export const CAMP = { x: 900, y: 740 };
@@ -16,13 +16,14 @@ export const ITEMS: Record<ItemId, { name: string; description: string; action?:
     hatchet: {
       name: 'Old hatchet',
       description:
-        'A little worn, but still sharp. Chop trees with E or F and keep wolves at bay with Space.',
+        'A little worn, but still sharp. Equip it yourself, then left-click to chop or swing. E interacts with nearby trees.',
       action: 'Ready hatchet',
       category: 'TOOL',
     },
     pickaxe: {
       name: 'Stone pickaxe',
-      description: 'A sturdy little pick. Mine boulders with E or F. Every strike lands on the downswing.',
+      description:
+        'Equip this pick before mining. Left-click or E near a boulder; each strike lands on the downswing.',
       action: 'Ready pickaxe',
       category: 'TOOL',
     },
@@ -192,14 +193,19 @@ export const WEATHER: Record<Weather, { name: string; description: string; icon:
   },
 };
 export const QUICK_ITEMS: ItemId[] = ['hatchet', 'pickaxe', 'berries', 'water', 'bandage', 'torch'];
-export const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS: Settings = {
   sound: true,
+  masterVolume: 1,
   effects: 0.35,
   ambience: 0.2,
   reducedMotion: false,
   atmosphere: true,
   showHints: true,
   compactHud: true,
+  pixelScale: 2,
+  damageFlash: true,
+  floatingText: true,
+  vignette: true,
 };
 export const distance = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);

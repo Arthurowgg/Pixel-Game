@@ -278,7 +278,7 @@ export function MainMenu({
       <footer className="main-footer">
         <span className="version">
           <span />
-          v0.7.1 <i> / </i> HEARTH & HAND
+          v0.8.0 <i> / </i> EMBER & INSTINCT
         </span>
         <span className="footer-motto">A LITTLE COURAGE GOES A LONG WAY.</span>
         <button onClick={onGuide} className="footer-guide">

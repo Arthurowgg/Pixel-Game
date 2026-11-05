@@ -1,6 +1,6 @@
 {
   "name": "wildpine",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
-    "test:browser": "node scripts/browser-test.mjs && node scripts/workshop-browser-test.mjs",
+    "test:browser": "node scripts/browser-test.mjs && node scripts/workshop-browser-test.mjs && node scripts/embers-browser-test.mjs",
     "format": "prettier --write src scripts/*.mjs .github index.html vite.config.ts tsconfig.json package.json README.md ART_ROADMAP.md public/art/animations/README.md public/art/ui/README.md",
     "build:pages": "tsc -b && vite build --base=/Pixel-Game/ && node scripts/check-pages-build.mjs",
     "preview:pages": "vite preview --host 0.0.0.0 --base=/Pixel-Game/"

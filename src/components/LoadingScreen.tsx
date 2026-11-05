@@ -8,7 +8,7 @@ const TIPS = [
   ['A place to begin', 'The crafting table at your first camp turns found supplies into tools and shelter.'],
   [
     'Travel light. Stay ready.',
-    'Your pockets hold anything. Choose with 1–6, then use what you’re holding with F.',
+    'Your pockets hold anything. Choose with 1–6, then left-click to use what you’re holding.',
   ],
   [
     'A little warmth goes a long way',

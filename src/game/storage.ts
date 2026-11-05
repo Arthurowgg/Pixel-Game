@@ -204,12 +204,18 @@ export function loadSettings(): Settings {
   if (!object(value)) return { ...DEFAULT_SETTINGS, reducedMotion: prefersReducedMotion };
   return {
     sound: typeof value.sound === 'boolean' ? value.sound : true,
+    masterVolume: finite(value.masterVolume, 0, 1) ? value.masterVolume : DEFAULT_SETTINGS.masterVolume,
     effects: finite(value.effects, 0, 1) ? value.effects : DEFAULT_SETTINGS.effects,
     ambience: finite(value.ambience, 0, 1) ? value.ambience : DEFAULT_SETTINGS.ambience,
     reducedMotion: typeof value.reducedMotion === 'boolean' ? value.reducedMotion : prefersReducedMotion,
     atmosphere: typeof value.atmosphere === 'boolean' ? value.atmosphere : true,
     showHints: typeof value.showHints === 'boolean' ? value.showHints : true,
     compactHud: typeof value.compactHud === 'boolean' ? value.compactHud : DEFAULT_SETTINGS.compactHud,
+    pixelScale: value.pixelScale === 3 ? 3 : 2,
+    damageFlash: typeof value.damageFlash === 'boolean' ? value.damageFlash : DEFAULT_SETTINGS.damageFlash,
+    floatingText:
+      typeof value.floatingText === 'boolean' ? value.floatingText : DEFAULT_SETTINGS.floatingText,
+    vignette: typeof value.vignette === 'boolean' ? value.vignette : DEFAULT_SETTINGS.vignette,
   };
 }
 export function saveSettings(settings: Settings) {

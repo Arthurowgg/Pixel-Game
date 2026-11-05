@@ -1,7 +1,7 @@
+import { WOLF_FADE, WOLF_LUNGE, WOLF_WINDUP } from './wolves';
 import { CAMP, POND, SPRING, WORLD, WORKBENCH, clamp, distance, random } from './data';
 import type { GameState, Resource, Settings } from './types';
 import {
-  animationFrame,
   artImages,
   CLIPS,
   drawAnimation,
@@ -56,8 +56,8 @@ export class Renderer {
     this.resize();
   }
   resize() {
-    this.width = Math.ceil(this.canvas.clientWidth / 2);
-    this.height = Math.ceil(this.canvas.clientHeight / 2);
+    this.width = Math.ceil(this.canvas.clientWidth / this.settings.pixelScale);
+    this.height = Math.ceil(this.canvas.clientHeight / this.settings.pixelScale);
     this.canvas.width = this.width;
     this.canvas.height = this.height;
     this.ctx.imageSmoothingEnabled = false;
@@ -255,7 +255,7 @@ export class Renderer {
     this.canvas.dataset.facing = pose.direction;
     this.canvas.dataset.gaitDistance = sim.gaitDistance.toFixed(2);
     const drawHeld = () => {
-      if (!pose.item) return;
+      if (!pose.item || sim.action?.kind === 'feed') return;
       const item = pose.item;
       ctx.save();
       ctx.translate(Math.round(p.x), Math.round(p.y + 3));
@@ -285,7 +285,7 @@ export class Renderer {
       ctx.restore();
     };
     this.shadow(p.x, p.y, 10);
-    if (sim.hitFlash > 0) ctx.globalAlpha = 0.72;
+    if (sim.hitFlash > 0 && this.settings.damageFlash && !this.settings.reducedMotion) ctx.globalAlpha = 0.72;
     if (actionClip) {
       // The entire actor + tool is a sliced frame, never a second rotating overlay.
       drawAnimation(ctx, actionClip, p.x, p.y + 3, pose.elapsed, { flip: pose.flip, frame: pose.frame });
@@ -327,6 +327,15 @@ export class Renderer {
         ? 'reduced'
         : 'active';
     this.canvas.dataset.footprints = String(this.feedback.footprintCount);
+    this.canvas.dataset.pixelScale = String(this.settings.pixelScale);
+    this.canvas.dataset.floatingText = String(this.settings.floatingText);
+    this.canvas.dataset.vignette = String(this.settings.vignette);
+    this.canvas.dataset.damageFlash = String(this.settings.damageFlash);
+    this.canvas.dataset.wolfPhases = [...sim.wolfPack.minds.values()].map((mind) => mind.phase).join(' ');
+    this.canvas.dataset.wolfFallen = String(sim.wolfPack.fallen.length);
+    this.canvas.dataset.wolfCount = String(s.wolves.length);
+    this.canvas.dataset.campFocus = sim.campFocus === null ? 'none' : String(sim.campFocus);
+    this.canvas.dataset.feeding = String(sim.action?.kind === 'feed');
 
     // Pixel ripples on the pond.
     ctx.fillStyle = '#7ea99b55';
@@ -336,7 +345,7 @@ export class Renderer {
       ctx.fillRect(Math.round(x + Math.sin(t * 0.5 + i) * 3), y, 5 + (i % 7), 1);
     }
     const near = sim.nearest();
-    if (near && near.kind !== 'water' && near.kind !== 'shelter') {
+    if (sim.campFocus === null && near && near.kind !== 'water' && near.kind !== 'shelter') {
       const target =
         near.kind === 'workbench'
           ? WORKBENCH
@@ -429,33 +438,87 @@ export class Renderer {
         },
       });
     }
-    for (const wolf of s.wolves)
+    for (const fallen of sim.wolfPack.fallen) {
+      draws.push({
+        y: fallen.y,
+        draw: () => {
+          // A whole existing frame fades away. This is defeat feedback, not a new
+          // drawn fallen pose; actor artwork is never rigged or reconstructed.
+          ctx.save();
+          ctx.globalAlpha = clamp(1 - (s.time - fallen.startedAt) / WOLF_FADE, 0, 1);
+          this.shadow(fallen.x, fallen.y, 17);
+          drawAnimation(ctx, 'wolf-idle', fallen.x, fallen.y, 0, { flip: fallen.flip, frame: 0 });
+          ctx.restore();
+        },
+      });
+    }
+    for (const wolf of s.wolves) {
       draws.push({
         y: wolf.y,
         draw: () => {
-          const running =
-            distance(wolf, s.player) < 175 ||
-            (s.weather === 'wolves' && !sim.fireNearby && !sim.torchActive && wolf.scared <= 0);
-          const gait = animationFrame(
-            CLIPS['wolf-run'],
-            s.time + wolf.id * 0.11,
-            this.settings.reducedMotion,
-          );
-          this.shadow(wolf.x, wolf.y, running && gait >= 4 && gait <= 6 ? 15 : 19);
-          drawAnimation(ctx, running ? 'wolf-run' : 'wolf-alert', wolf.x, wolf.y, s.time + wolf.id * 0.11, {
-            flip: wolf.x < s.player.x,
-            reducedMotion: this.settings.reducedMotion,
+          const mind = sim.wolfPack.minds.get(wolf.id);
+          const phase = mind?.phase ?? 'stalk';
+          const age = mind ? s.time - mind.startedAt : 0;
+          const running = !!mind?.moving;
+          const frame = this.settings.reducedMotion
+            ? phase === 'lunge'
+              ? 4
+              : 0
+            : phase === 'lunge'
+              ? Math.min(7, Math.floor((age / WOLF_LUNGE) * 8))
+              : running
+                ? Math.floor((mind?.gait ?? 0) / 4) % 8
+                : 0;
+          this.shadow(wolf.x, wolf.y, running && frame >= 4 && frame <= 6 ? 15 : 19);
+          if (phase === 'windup') {
+            // Ground brackets and a filling warning are readable with motion off.
+            ctx.strokeStyle = '#edb677';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(Math.round(wolf.x - 17), Math.round(wolf.y - 7), 34, 12);
+            ctx.fillStyle = '#20281c';
+            ctx.fillRect(Math.round(wolf.x - 11), Math.round(wolf.y - 36), 22, 4);
+            ctx.fillStyle = '#edc58c';
+            ctx.fillRect(
+              Math.round(wolf.x - 10),
+              Math.round(wolf.y - 35),
+              Math.round(20 * Math.min(1, age / WOLF_WINDUP)),
+              2,
+            );
+            ctx.fillRect(Math.round(wolf.x - 1), Math.round(wolf.y - 47), 2, 7);
+            ctx.fillRect(Math.round(wolf.x - 1), Math.round(wolf.y - 38), 2, 2);
+          }
+          ctx.save();
+          if (phase === 'hurt' && age < 0.12 && this.settings.damageFlash && !this.settings.reducedMotion)
+            ctx.globalAlpha = 0.65;
+          drawAnimation(ctx, running || phase === 'lunge' ? 'wolf-run' : 'wolf-alert', wolf.x, wolf.y, 0, {
+            flip: mind?.flip ?? wolf.x < s.player.x,
+            frame,
           });
+          ctx.restore();
           if (wolf.hp < 2) {
             ctx.fillStyle = '#18231e';
-            ctx.fillRect(wolf.x - 10, wolf.y - 29, 20, 3);
+            ctx.fillRect(Math.round(wolf.x - 10), Math.round(wolf.y - 30), 20, 3);
             ctx.fillStyle = '#c9826c';
-            ctx.fillRect(wolf.x - 10, wolf.y - 29, 10, 2);
+            ctx.fillRect(Math.round(wolf.x - 10), Math.round(wolf.y - 30), Math.round((20 * wolf.hp) / 2), 2);
           }
         },
       });
+    }
     draws.push({ y: s.player.y, draw: () => this.survivor(sim) });
     draws.sort((a, b) => a.y - b.y).forEach((d) => d.draw());
+    if (sim.action?.kind === 'feed' && sim.feedingFire && !sim.action.impacted) {
+      // Move the complete generated log icon from the existing hand position to
+      // the fire. No new limbs, poses, or animation-sheet pixels are fabricated.
+      const pose = playerPose(sim, this.settings.reducedMotion);
+      const hand = pose.clip.hands![pose.frame];
+      const fromX = s.player.x + (hand[0] - pose.clip.anchor[0]) * (pose.flip ? -1 : 1);
+      const fromY = s.player.y + hand[1] - pose.clip.anchor[1] + 3;
+      const raw = clamp((s.time - sim.action.startedAt) / sim.action.impactAt, 0, 1);
+      const progress = this.settings.reducedMotion ? 0 : raw * raw * (3 - 2 * raw);
+      const x = fromX + (sim.feedingFire.x - fromX) * progress;
+      const y = fromY + (sim.feedingFire.y - 9 - fromY) * progress - Math.sin(progress * Math.PI) * 9;
+      drawItem(ctx, 'wood', Math.round(x - 9), Math.round(y - 9), 18);
+    }
     for (const effect of sim.effects)
       drawAnimation(ctx, effect.clip, effect.x, effect.y, s.time - effect.startedAt, {
         flip: effect.flip,
@@ -466,13 +529,13 @@ export class Renderer {
     this.canvas.dataset.impactFlashes = String(feedback.impacts);
     this.canvas.dataset.embers = String(feedback.embers);
 
-    for (const p of sim.particles) {
+    for (const p of this.settings.atmosphere && !this.settings.reducedMotion ? sim.particles : []) {
       ctx.globalAlpha = Math.min(1, p.life * 2);
       ctx.fillStyle = p.color;
       ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
     }
     ctx.globalAlpha = 1;
-    for (const text of sim.floating) {
+    for (const text of this.settings.floatingText ? sim.floating : []) {
       ctx.globalAlpha = Math.min(1, text.life);
       ctx.font = '9px "Pixelify Sans", monospace';
       ctx.textAlign = 'center';
@@ -498,7 +561,11 @@ export class Renderer {
       if (fire.fuel > 0) {
         const x = fire.x - this.camera.x,
           y = fire.y - this.camera.y - 10;
-        const radius = 59 + Math.sin(t * 3) * 2;
+        const stoked =
+          sim.feedingFire?.id === fire.id && sim.action?.impacted && !this.settings.reducedMotion
+            ? Math.max(0, 1 - (s.time - sim.action.startedAt - sim.action.impactAt) / 0.5)
+            : 0;
+        const radius = 59 + Math.sin(t * 3) * 2 + stoked * 12;
         const glow = ctx.createRadialGradient(x, y, 3, x, y, radius);
         glow.addColorStop(0, `rgba(245, 180, 81, ${sim.night ? 0.19 : 0.07})`);
         glow.addColorStop(1, 'rgba(245, 180, 81, 0)');
@@ -520,7 +587,12 @@ export class Renderer {
         ctx.lineTo(Math.floor(x) - 2, Math.floor(y) + 6);
         ctx.stroke();
       }
-      if (s.weather === 'storm' && !this.settings.reducedMotion && s.time % 17 < 0.12) {
+      if (
+        s.weather === 'storm' &&
+        this.settings.damageFlash &&
+        !this.settings.reducedMotion &&
+        s.time % 17 < 0.12
+      ) {
         ctx.fillStyle = '#e1e8df38';
         ctx.fillRect(0, 0, w, h);
       }
@@ -533,11 +605,13 @@ export class Renderer {
         ctx.fillStyle = sim.night ? `rgba(225, 219, 139, ${0.2 + Math.sin(t + i) * 0.18})` : '#d6d6a640';
         ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
       }
-    const vignette = ctx.createRadialGradient(w / 2, h / 2, h * 0.25, w / 2, h / 2, w * 0.65);
-    vignette.addColorStop(0, '#0c171900');
-    vignette.addColorStop(1, '#0c171953');
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, w, h);
+    if (this.settings.vignette) {
+      const vignette = ctx.createRadialGradient(w / 2, h / 2, h * 0.25, w / 2, h / 2, w * 0.65);
+      vignette.addColorStop(0, '#0c171900');
+      vignette.addColorStop(1, '#0c171953');
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, w, h);
+    }
     if (s.needs.health < 25) {
       ctx.strokeStyle = '#a652424d';
       ctx.lineWidth = 6;
@@ -545,7 +619,13 @@ export class Renderer {
     }
   }
   screenToWorld(x: number, y: number) {
-    return { x: x / 2 + this.camera.x, y: y / 2 + this.camera.y };
+    return {
+      x:
+        (x * this.width) / (this.canvas.clientWidth || this.width * this.settings.pixelScale) + this.camera.x,
+      y:
+        (y * this.height) / (this.canvas.clientHeight || this.height * this.settings.pixelScale) +
+        this.camera.y,
+    };
   }
 }
 export function drawMap(

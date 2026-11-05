@@ -1,3 +1,4 @@
+import { CampfirePanel } from './CampfirePanel';
 import { ConditionDialog, FieldcraftDialog } from './TrailDialogs';
 import { GameInput, touchMovementKeys } from '../game/movement';
 import { LoadingScreen } from './LoadingScreen';
@@ -93,7 +94,22 @@ export function GameShell({
     onQuit();
   };
   useEffect(() => {
-    if (rendererRef.current) rendererRef.current.settings = settings;
+    if (view.camp) {
+      input.clear();
+      sim.aim = null;
+      // Entering the quiet view can hide a focused touch/HUD button. Keep
+      // keyboard movement reachable rather than leaving focus in an inert tree.
+      if (document.activeElement instanceof HTMLElement && document.activeElement.closest('.game-hud'))
+        canvasRef.current?.focus({ preventScroll: true });
+    }
+  }, [view.camp?.id, input, sim]);
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    if (renderer) {
+      const resized = renderer.settings.pixelScale !== settings.pixelScale;
+      renderer.settings = settings;
+      if (resized) renderer.resize();
+    }
   }, [settings]);
   useEffect(() => {
     sim.paused = !ready || overlay !== null;
@@ -213,7 +229,7 @@ export function GameShell({
     })();
     const onKeyDown = (event: KeyboardEvent) => {
       if (!readyRef.current) return;
-      if ((event.target as HTMLElement)?.matches('input, textarea, select')) return;
+      if (event.target instanceof HTMLElement && event.target.matches('input, textarea, select')) return;
       const key = event.key.toLowerCase();
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       const shortcuts: Record<string, Overlay> = {
@@ -246,6 +262,12 @@ export function GameShell({
         return;
       }
       if (overlayRef.current) return;
+      if (
+        event.target instanceof HTMLElement &&
+        event.target.closest('button') &&
+        (key === ' ' || key === 'enter')
+      )
+        return;
       if (/^[1-6]$/.test(key) && !event.repeat) {
         const index = Number(key) - 1;
         sim.selectSlot(index);
@@ -256,31 +278,19 @@ export function GameShell({
         sim.equip(null);
         refresh();
       }
-      if (!event.repeat && ['e', 'f', ' '].includes(key)) {
+      if (!event.repeat && ['e', ' '].includes(key)) {
         event.preventDefault();
         // A quick tap must work even if keyup arrives before the next animation
         // frame. Holding continues through Simulation.update with the same gates.
         if (key === ' ') sim.attack();
-        else if (key === 'e' && !sim.keys.has(' ')) sim.interact();
-        else if (key === 'f' && !sim.keys.has(' ') && !sim.keys.has('e')) sim.useHeld();
+        else if (key === 'e' && !sim.keys.has(' ') && !sim.keys.has('primary')) sim.interact();
         refresh();
         if (overlayRef.current) return;
       }
       if (
-        [
-          'w',
-          'a',
-          's',
-          'd',
-          'arrowup',
-          'arrowdown',
-          'arrowleft',
-          'arrowright',
-          'e',
-          'f',
-          ' ',
-          'shift',
-        ].includes(key)
+        ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'e', ' ', 'shift'].includes(
+          key,
+        )
       ) {
         event.preventDefault();
         input.key(key, true);
@@ -336,10 +346,13 @@ export function GameShell({
         event.preventDefault();
         if (!readyRef.current || overlayRef.current) return;
         event.currentTarget.setPointerCapture(event.pointerId);
-        if (key === 'f' || key === 'e' || key === ' ') {
+        if (key === 'primary' || key === 'e' || key === ' ') {
           if (key === ' ') sim.attack();
           else if (key === 'e' && !sim.keys.has(' ')) sim.interact();
-          else if (key === 'f' && !sim.keys.has(' ') && !sim.keys.has('e')) sim.useHeld();
+          else if (key === 'primary' && !sim.keys.has(' ')) {
+            sim.aim = null;
+            sim.useHeld();
+          }
           refresh();
         }
         if (!overlayRef.current) input.press(event.pointerId, [key]);
@@ -365,23 +378,46 @@ export function GameShell({
     </button>
   );
   return (
-    <div className="game-shell" data-hud={settings.compactHud ? 'compact' : 'full'} data-loading={!ready}>
+    <div
+      className="game-shell"
+      data-hud={settings.compactHud ? 'compact' : 'full'}
+      data-loading={!ready}
+      data-camp={!!view.camp}
+    >
       <canvas
         className="game-canvas"
         tabIndex={0}
         ref={canvasRef}
-        aria-label="The Forest: WASD to move in four directions, E to gather, 1–6 to hold items, F to use, Space to defend"
+        aria-label="The Forest: WASD or right-click to move, left-click to attack or use, E to interact"
         onContextMenu={(event) => event.preventDefault()}
         onPointerDown={(event) => {
           if (!ready || overlay || !rendererRef.current) return;
-          if (event.button === 2) {
-            sim.useHeld();
-            refresh();
-            return;
-          }
+          event.preventDefault();
+          event.currentTarget.focus({ preventScroll: true });
           const rect = event.currentTarget.getBoundingClientRect();
-          sim.target = rendererRef.current.screenToWorld(event.clientX - rect.left, event.clientY - rect.top);
+          const point = rendererRef.current.screenToWorld(
+            event.clientX - rect.left,
+            event.clientY - rect.top,
+          );
+          if (event.button === 2) {
+            sim.leaveCamp();
+            sim.target = point;
+          } else if (event.button === 0) {
+            sim.aim = point;
+            sim.useHeld(point);
+            input.press(event.pointerId, ['primary']);
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }
+          refresh();
         }}
+        onPointerMove={(event) => {
+          if (!input.owns(event.pointerId) || !rendererRef.current) return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          sim.aim = rendererRef.current.screenToWorld(event.clientX - rect.left, event.clientY - rect.top);
+        }}
+        onPointerUp={(event) => input.release(event.pointerId)}
+        onPointerCancel={(event) => input.release(event.pointerId)}
+        onLostPointerCapture={(event) => input.release(event.pointerId)}
       />
       {!ready && (
         <LoadingScreen
@@ -396,7 +432,11 @@ export function GameShell({
           reducedMotion={settings.reducedMotion}
         />
       )}
-      <div className="game-hud" inert={!ready} aria-hidden={!ready || undefined}>
+      <div
+        className="game-hud"
+        inert={!ready || !!view.camp}
+        aria-hidden={!ready || !!view.camp || undefined}
+      >
         <SurvivalHud view={view} onDetails={() => open('condition')} />
         <div className="time-weather">
           <div className="day-panel hud-panel">
@@ -418,15 +458,26 @@ export function GameShell({
               ))}
             </div>
           </div>
-          <div
-            className={`weather-chip ${view.weather !== 'clear' ? 'weather-warning' : ''}`}
-            title={weather.description}
-          >
-            <Icon name={weather.icon} size={14} style={{ color: weather.color }} />
-            <span>{weather.name}</span>
-            <i />
-            {16 - (night ? 8 : 0) - (view.weather === 'cold' ? 11 : view.weather === 'rain' ? 4 : 0)}°
-          </div>
+          {view.wolvesNear > 0 ? (
+            <div className={`wolf-encounter ${view.wolfWindup ? 'is-warning' : ''}`} role="status">
+              <Icon name="wolfMark" size={21} />
+              <span>
+                {view.wolfWindup
+                  ? 'A wolf is about to lunge.'
+                  : `${view.wolvesNear} ${view.wolvesNear === 1 ? 'wolf' : 'wolves'} on your trail.`}
+              </span>
+            </div>
+          ) : (
+            <div
+              className={`weather-chip ${view.weather !== 'clear' ? 'weather-warning' : ''}`}
+              title={weather.description}
+            >
+              <Icon name={weather.icon} size={14} style={{ color: weather.color }} />
+              <span>{weather.name}</span>
+              <i />
+              {16 - (night ? 8 : 0) - (view.weather === 'cold' ? 11 : view.weather === 'rain' ? 4 : 0)}°
+            </div>
+          )}
         </div>
         <div className="map-tools">
           <div className="game-top-buttons">
@@ -534,13 +585,6 @@ export function GameShell({
           </div>
         )}
         <div className="player-context">
-          {view.fireNearby && (
-            <span className="context-chip">
-              <Icon name="fire" size={12} />
-              BY THE FIRE <i />
-              {Math.ceil(view.fireFuel)}% FUEL
-            </span>
-          )}
           {view.shelterNearby && (
             <span className="context-chip">
               <Icon name="home" size={12} />
@@ -589,7 +633,7 @@ export function GameShell({
             }}
             aria-label="Use held item"
           >
-            <Key>F</Key>
+            <Icon name="mouse" size={16} />
             <span>USE</span>
           </button>
           <button
@@ -680,22 +724,6 @@ export function GameShell({
               <span className="slot-tooltip">Your backpack</span>
             </button>
           </div>
-          {settings.showHints && (
-            <div className="quickbar-hints">
-              <span>
-                <Key>WASD</Key> MOVE
-              </span>
-              <span>
-                <Key>E</Key> INTERACT
-              </span>
-              <span>
-                <Key>SPACE</Key> DEFEND
-              </span>
-              <span>
-                <Key>F</Key> USE HELD
-              </span>
-            </div>
-          )}
         </div>
         <div className="game-bottom-tools">
           <div className="tool-buttons">
@@ -728,12 +756,29 @@ export function GameShell({
             {touchKey('d', 'Move right', 'arrow')}
           </div>
           <div className="touch-actions">
-            {touchKey('f', 'Use held item', 'spark')}
+            {touchKey('primary', 'Use held item', 'mouse')}
             {touchKey(' ', 'Defend', 'hammer')}
             {touchKey('e', 'E')}
           </div>
         </div>
       </div>
+      {ready && view.camp && (
+        <CampfirePanel
+          camp={view.camp}
+          wood={view.inventory.wood}
+          saveIssue={saveIssue}
+          onFeed={() => {
+            sim.feedFire(view.camp!.id);
+            refresh();
+          }}
+          onLeave={() => {
+            sim.leaveCamp();
+            input.clear();
+            refresh();
+            canvasRef.current?.focus();
+          }}
+        />
+      )}
       {(overlay === 'inventory' || overlay === 'craft') && (
         <BackpackDialog
           tab={overlay}

@@ -101,6 +101,7 @@ try {
 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('switch', { name: 'Reduce motion' }).click();
+  await page.getByRole('tab', { name: 'Audio', exact: true }).click();
   await page.getByRole('slider', { name: 'Sound effects volume' }).focus();
   await page.keyboard.press('Home');
   await page.keyboard.press('ArrowRight');
@@ -110,6 +111,7 @@ try {
   expect(
     await page.evaluate(() => JSON.parse(localStorage.getItem('wildpine.settings.v1')).reducedMotion),
   ).toBe(true);
+  await page.getByRole('tab', { name: 'Display', exact: true }).click();
   await page.getByRole('switch', { name: 'Reduce motion' }).click();
   await page.keyboard.press('Escape');
   passed('Settings controls persist and reduced-motion mode applies');
@@ -211,6 +213,7 @@ try {
   passed('Embers and extra motion obey preferences, and paused reduced-motion pixels stay frozen');
   await expect(page.locator('.game-shell')).toHaveAttribute('data-hud', 'compact');
   await expect(page.locator('.minimap-panel')).toBeHidden();
+  await page.getByRole('tab', { name: 'Interface', exact: true }).click();
   await page.getByRole('switch', { name: 'Compact HUD', exact: true }).click();
   await expect(page.locator('.minimap-panel')).toBeVisible();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('wildpine.settings.v1')).compactHud)).toBe(
@@ -401,7 +404,7 @@ try {
   await page.keyboard.press('Escape');
   expect((await saved(page)).inventory.berries).toBe(3);
   await page.getByRole('button', { name: 'Back to the wild' }).click();
-  await page.keyboard.press('f');
+  await page.locator('.game-canvas').click({ position: { x: 720, y: 390 } });
   await page.waitForTimeout(800);
   await page.keyboard.press('x');
   await expect(page.locator('.held-item-status')).toHaveAttribute('data-item', 'none');
@@ -409,7 +412,7 @@ try {
   expect((await saved(page)).inventory.berries).toBe(2);
   expect((await saved(page)).hotbar[5]).toBe('wood');
   passed(
-    'All 15 items can be held; pocket selection, arbitrary slot pinning, F-to-use, and stowing work without accidental consumption',
+    'All 15 items can be held; pocket selection, arbitrary slot pinning, left-click use, and stowing work without accidental consumption',
   );
 
   await checkpoint(page, () => {
@@ -464,6 +467,11 @@ try {
     s.lastInteract = -10;
     localStorage.setItem('wildpine.save.v2', JSON.stringify(s));
   });
+  await page.keyboard.press('e');
+  await page.waitForTimeout(750);
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-held-item', 'hatchet');
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-animation', 'idle-right');
+  await page.keyboard.press('2');
   await page.keyboard.down('e');
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-animation', 'mine-right');
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-sprite-sheet', 'survivor-mine-right');
@@ -475,7 +483,7 @@ try {
   expect((await saved(page)).inventory.stone).toBe(0);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(800);
-  await page.keyboard.press('f');
+  await page.locator('.game-canvas').click({ position: { x: 780, y: 410 } });
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-animation', 'mine-right');
   await screenshot(page, 'pickaxe-in-use');
   await page.waitForTimeout(800);
@@ -484,7 +492,7 @@ try {
   expect((await saved(page)).equipped).toBe('pickaxe');
   expect((await saved(page)).resources[0].hp).toBe(0);
   passed(
-    'Context gathering equips the pickaxe, pause freezes the sheet, and two mining impacts break a boulder',
+    'Wrong-tool gathering does not auto-equip; manually choosing the pickaxe enables two pause-safe mining impacts',
   );
 
   await checkpoint(page, () => {
@@ -517,7 +525,7 @@ try {
   await screenshot(page, 'berry-tea-inventory');
   await page.getByRole('button', { name: 'Hold berry tea', exact: true }).click();
   await expect(page.locator('.held-item-status')).toHaveAttribute('data-item', 'tea');
-  await page.keyboard.press('f');
+  await page.locator('.game-canvas').click({ position: { x: 720, y: 390 } });
   await page.waitForTimeout(800);
   await page.keyboard.press('Escape');
   const afterTea = await saved(page);
@@ -626,7 +634,10 @@ try {
   const ground = page.locator('.game-canvas');
   const groundBox = await ground.boundingBox();
   // The renderer uses a two-screen-pixel world scale, with feet 24px above center.
-  await ground.click({ position: { x: groundBox.width / 2 + 60, y: groundBox.height / 2 + 8 } });
+  await ground.click({
+    button: 'right',
+    position: { x: groundBox.width / 2 + 60, y: groundBox.height / 2 + 8 },
+  });
   await expect(ground).toHaveAttribute('data-facing', 'right');
   await expect(ground).toHaveAttribute('data-facing', 'down');
   await expect(ground).toHaveAttribute('data-animation', 'idle-down');
@@ -635,7 +646,7 @@ try {
   expect(clicked.player.x).toBeCloseTo(530, 5);
   expect(clicked.player.y).toBeCloseTo(516, 5);
   expect(clicked.distance).toBeCloseTo(46, 5);
-  passed('Click-to-move takes two straight legs, not a diagonal or a staircase shortcut');
+  passed('Right-click movement takes two straight legs, not a diagonal or a staircase shortcut');
 
   await checkpoint(page, () => {
     const state = JSON.parse(localStorage.getItem('wildpine.save.v2'));
@@ -728,7 +739,7 @@ try {
   passed('The mobile pad has only four cardinal buttons and releases without sticky movement');
   await mobile.getByRole('button', { name: 'Wild berries, shortcut 3, 3 available', exact: true }).click();
   await expect(mobile.locator('.held-item-status')).toHaveAttribute('data-item', 'berries');
-  const useButton = mobile.locator('.touch-f');
+  const useButton = mobile.locator('.touch-primary');
   const useBox = await useButton.boundingBox();
   await mobile.mouse.click(useBox.x + useBox.width / 2, useBox.y + useBox.height / 2);
   await mobile.waitForTimeout(800);

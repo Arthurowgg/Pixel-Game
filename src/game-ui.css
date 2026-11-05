@@ -1070,7 +1070,7 @@
     gap: 6px;
     max-width: none;
   }
-  .game-shell .touch-f,
+  .game-shell .touch-primary,
   .game-shell .touch-attack {
     width: 39px;
     height: 39px;
@@ -1446,7 +1446,7 @@
     grid-template-columns: repeat(2, 36px);
     gap: 5px;
   }
-  .game-shell .touch-f,
+  .game-shell .touch-primary,
   .game-shell .touch-attack,
   .game-shell .touch-e {
     width: 36px;

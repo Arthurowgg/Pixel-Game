@@ -326,6 +326,7 @@ describe('equipment and synchronized actions', () => {
     const rock = sim.state.resources.find((r) => r.kind === 'stone')!;
     sim.state.resources = [rock];
     sim.state.player = { x: rock.x - 30, y: rock.y };
+    sim.equip('pickaxe');
     sim.interact();
     expect(sim.state.equipped).toBe('pickaxe');
     expect(sim.action?.kind).toBe('mine');
@@ -359,6 +360,7 @@ describe('equipment and synchronized actions', () => {
     advance(sim, 0.8);
     expect(sim.state.resources[0].hp).toBe(3);
     expect(sim.action).toBeNull();
+    sim.equip('hatchet');
     sim.interact();
     advance(sim, 0.35);
     sim.equip('berries');

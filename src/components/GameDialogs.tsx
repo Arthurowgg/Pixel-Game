@@ -147,7 +147,8 @@ export function BackpackDialog({
             </button>
             {ITEMS[selected].category === 'TOOL' ? (
               <p className="tool-use-hint">
-                <Key>E</Key> gather <span>·</span> <Key>F</Key> swing <span>·</span> <Key>SPACE</Key> defend
+                <Key>E</Key> gather <span>·</span> <Key>LEFT CLICK</Key> swing <span>·</span> <Key>SPACE</Key>{' '}
+                defend
               </p>
             ) : ITEMS[selected].action ? (
               <button

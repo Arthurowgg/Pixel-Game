@@ -129,6 +129,14 @@ export interface NearTarget {
   detail: string;
   distance: number;
 }
+export interface CampView {
+  id: number;
+  fuel: number;
+  secondsLeft: number;
+  canFeed: boolean;
+  feeding: boolean;
+  progress: number;
+}
 export interface GameView {
   time: number;
   day: number;
@@ -146,6 +154,9 @@ export interface GameView {
   fireNearby: boolean;
   workbenchNearby: boolean;
   fireFuel: number;
+  camp: CampView | null;
+  wolvesNear: number;
+  wolfWindup: boolean;
   shelterNearby: boolean;
   torchActive: boolean;
   journal: JournalEntry[];
@@ -161,12 +172,17 @@ export interface GameView {
 }
 export interface Settings {
   sound: boolean;
+  masterVolume: number;
   effects: number;
   ambience: number;
   reducedMotion: boolean;
   atmosphere: boolean;
   showHints: boolean;
   compactHud: boolean;
+  pixelScale: 2 | 3;
+  damageFlash: boolean;
+  floatingText: boolean;
+  vignette: boolean;
 }
 export interface RunRecord {
   name: string;

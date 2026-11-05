@@ -208,7 +208,7 @@
   padding-right: 3px;
   scrollbar-gutter: stable;
 }
-.touch-f {
+.touch-primary {
   width: 40px;
   height: 40px;
   background: #545f347d;
@@ -239,7 +239,7 @@
   .game-hud .interaction-prompt {
     bottom: 201px;
   }
-  .touch-f {
+  .touch-primary {
     width: 36px;
     height: 36px;
   }
@@ -339,7 +339,7 @@
     max-width: 92px;
     gap: 7px;
   }
-  .touch-f {
+  .touch-primary {
     width: 36px;
     height: 36px;
   }
@@ -406,7 +406,7 @@
     gap: 8px;
   }
   .touch-attack,
-  .touch-f {
+  .touch-primary {
     width: 40px;
     height: 40px;
   }

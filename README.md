@@ -16,13 +16,23 @@ npm run build     # Strict TypeScript checks + a root-path production build
 npm run preview   # Serve that build
 ```
 
+## Ember & Instinct · v0.8 · art batch 6
+
+- **A more readable wolf pack.** Wolves spread into separate approach slots, avoid obstacles and each other, and take turns attacking. A 0.55-second wind-up locks the landing point; the following lunge can be dodged. Hits interrupt their intent, push them back without tunnelling through obstacles, and leave brief defeat feedback. Fires and held burning torches still discourage them. Wolves can escape old collision overlaps or a newly placed fire instead of getting stuck.
+- **More forgiving axe contact, with manual equipment.** Aimed swings prioritize the clicked wolf, reach a little farther, and can catch two targets in front. Damage still lands at the existing contact frame. Trees require an equipped axe; stone requires an equipped pickaxe. Owning the correct tool is no longer enough, and attacks never silently equip it.
+- **New controls:** left-click attacks or uses the held item; holding it repeats tool swings. **E** is general interaction. **Right-click** and **WASD/arrows** move, always on one cardinal axis. **F is unbound.** Touch keeps the four-way pad and separate use/interact/defend buttons. The permanent controls legend has been removed from the gameplay HUD.
+- **A dedicated pixel-framed settings window.** Display, Audio, Interface, and Controls tabs; three visual presets; real 2×/3× world scaling; independent master/effects/ambience levels; mute and sound check; atmosphere, motion, damage/storm flashes, vignette, floating numbers, objectives, and HUD options. Preferences apply immediately and remain local. Fullscreen failure is handled, resets require confirmation, and keyboard/focus behavior works on desktop and mobile.
+- **A quieter, live campfire.** Stand close and still while safe to clear away the HUD. The dedicated hearth frame shows fuel, estimated burn time, and one large log action. A whole log icon travels from the existing hand position into the fire; one wood is spent at 0.58-second contact, not at button press. Movement, danger, leaving, or changing items can cancel an unplaced log. Holding E never auto-feeds logs. Movement/dismissal restores the HUD; nearby danger or critical needs prevent quiet focus. The world and fuel keep running, and the crafting table remains independently interactable.
+
+**Seven standalone generated images** supply two frame families and five glyphs, below the ten-generation cap. The user chose **existing actor art only**: wind-up/lunge/hurt/fade timing and safe whole-cell playback improve feedback, but **new sitting, biting, fallen-wolf, and crouching poses are not provided**. Those still require complete AI-drawn sheets. All existing actor/tool images and both animation manifests are unchanged.
+
 ## Four-direction controls · v0.7.1
 
 Diagonal player movement has been removed at the user's request. Only **up, down, left, and right** remain:
 
 - WASD and arrow keys use the **most recently pressed held direction**. Releasing it restores the previous held direction. Key repeat, modifiers, and overlapping fingers cannot combine movement axes or increase speed.
 - The touch pad has four cardinal buttons. Thumb dragging still works, but always chooses one axis; the center rests and dragging outside releases movement. Empty corners do not click through to the world.
-- Click/tap navigation completes one straight leg before turning onto the other axis. It does not alternate axes every frame to approximate a diagonal. Obstacles stop the route; this is not automatic pathfinding.
+- Ground navigation (right-click as of v0.8) completes one straight leg before turning onto the other axis. It does not alternate axes every frame to approximate a diagonal. Obstacles stop the route; this is not automatic pathfinding.
 - Older v2 saves with diagonal facing migrate to their existing up/down pose without resetting location, inventory, equipment, or progress. New saves contain only cardinal facing.
 - The corrected walking/idle cells and all axe/pickaxe animation PNGs are unchanged. **No image generation or animation rebuilding was needed.**
 
@@ -113,34 +123,37 @@ Start a new adventure, choose a name and difficulty, and survive **three nights*
 
 ## Controls
 
-| Key / input        | Action                                                                         |
-| ------------------ | ------------------------------------------------------------------------------ |
-| WASD / arrow keys  | Move in four directions; the last pressed direction wins                       |
-| Shift + movement   | Sprint                                                                         |
-| E (hold to repeat) | Interact / gather / use the crafting table; readies the appropriate owned tool |
-| 1–6                | Hold the item assigned to that pocket, without consuming it                    |
-| F / right-click    | Use the held item; hold F for repeated tool swings                             |
-| Space              | Defend with the held item; an axe or pickaxe hits harder than empty hands      |
-| X                  | Stow the held item                                                             |
-| B / I              | Backpack; hold any owned item and assign pockets                               |
-| C                  | Camp workshop                                                                  |
-| M                  | Map                                                                            |
-| J                  | Field journal                                                                  |
-| H                  | Your condition and recovery advice                                             |
-| Esc                | Pause / close a panel                                                          |
+| Key / input       | Action                                                                 |
+| ----------------- | ---------------------------------------------------------------------- |
+| WASD / arrow keys | Move in four directions; the last pressed direction wins               |
+| Right-click       | Walk to a point in two straight legs; obstacles stop the route         |
+| Shift + movement  | Sprint                                                                 |
+| Left-click        | Attack or use the held item; hold to repeat equipped tool swings       |
+| E                 | General interaction: gather, refill, use the table, or add one log     |
+| 1–6               | Hold the assigned pocket item without consuming it                     |
+| Space             | Defend with the held item; an axe/pickaxe hits harder than empty hands |
+| X                 | Stow the held item                                                     |
+| B / I             | Backpack; hold any owned item and assign pockets                       |
+| C                 | Camp workshop                                                          |
+| M                 | Map                                                                    |
+| J                 | Field journal                                                          |
+| H                 | Your condition and recovery advice                                     |
+| Esc               | Pause / close a panel                                                  |
+
+**F is unbound.** Hold E to repeat resource gathering, but not log feeding. Trees and boulders require the matching tool to be **manually equipped**.
 
 Default pockets: **1 axe, 2 pickaxe, 3 berries, 4 water, 5 bandage, 6 torch**. A pocket may stay assigned after its item runs out. A lit torch remains holdable after its inventory item is consumed; it keeps burning while stowed, but only supplies warmth and protection while held.
 
-Click or tap the ground to walk toward it along one axis, then the other. Movement is not pathfinding: steer around trunks and the pond. Touch screens have a four-way directional pad with drag-to-steer, a center dead zone, and separate gather, use, and defense buttons.
+Right-click the ground to walk toward it along one axis, then the other. Left-click/tap on the world never sets a movement target. Movement is not pathfinding: steer around trunks and the pond. Touch screens have a four-way directional pad with drag-to-steer, a center dead zone, and separate gather, use, and defense buttons.
 
 ### A good first day
 
-1. Hold **E** beside the first pine to collect wood and pine nuts. Mine nearby boulders and gather fiber. You start with an axe and a pickaxe.
-2. Keep spare wood for the campfire. Feed it with **E** while standing nearby.
-3. Visit the **crafting table east of your first campfire**. Craft a shelter with **10 wood + 6 fiber**, then use the kit from your backpack or hold it and press **F** on open ground.
-4. Select **3**, then **F**, to eat berries; select **4**, then **F**, to drink. Refill bottles at the spring northeast of camp.
+1. Equip your axe with **1**, then left-click or hold **E** beside a pine to collect wood and pine nuts. Select **2** before mining boulders. Gather plants with **E**. Tools never switch themselves.
+2. Keep spare wood for the campfire. Stand close and still, then add a log with **E** or the large hearth button. Stay there until the log lands; moving early cancels it without spending wood.
+3. Visit the **crafting table east of your first campfire**. Craft a shelter with **10 wood + 6 fiber**, then use the kit from your backpack or hold it and left-click on open ground.
+4. Select **3**, then left-click to eat berries; select **4**, then left-click to drink. Refill bottles at the spring northeast of camp.
 5. Brew **berry tea** beside a burning campfire with **2 berries + 1 water** when you need warmth and a drink. Pine nuts make a small trail snack.
-6. Stay in the firelight when wolves arrive. With a held axe or pickaxe, two hits send a wolf away.
+6. Stay in the firelight when wolves arrive. Their warning marks a committed lunge: move aside, then swing your equipped axe toward the wolf. Two tool hits defeat one.
 
 ## Saves and privacy
 
@@ -189,7 +202,8 @@ src/
   App.tsx                    Menu / adventure routing and preferences
   components/                Title screen, dialogs, heart HUD, equipment, lifecycle
   game/
-    simulation.ts            Survival simulation, equipment, timed impacts
+    simulation.ts            Survival simulation, equipment, timed impacts, quiet camp state
+    wolves.ts                Staggered pack intent, steering, separation, runtime defeat feedback
     renderer.ts              Canvas world renderer and minimap
     animation.ts             Row-major slicing, frame playback, hand transforms
     atmosphere.ts            Sun shafts, canopy shadows, particles, textures
@@ -214,6 +228,7 @@ src/
   trail-ui.css               Distinct frames, readable vitals, compact HUD and new menus
   loading.css                Opening / world-entry loading scenes
   workshop.css               Framed, responsive camp workshop
+  embers.css                 Dedicated pixel settings and live hearth interfaces
 public/art/
   keyframes/                 Normalized image-generated key poses and props
   animations/                Seventeen active sheets + documented manifest
@@ -222,6 +237,7 @@ public/art/
   generated/camp-ui/          Final item icons, HUD frame, navigation, sparkle
   generated/trail-ui/         Three frame families and seven status/menu glyphs
   generated/hearth-workshop/  Two loading scenes, table, frame, and two emblems
+  generated/embers-instinct/  Settings/hearth frames and five interface glyphs
   loading/                   Full-screen generated arrival panoramas
   objects/                   Generated world props
   ui/                        Generated interface bitmaps
@@ -233,41 +249,43 @@ scripts/
   build_inventory_assets.py  Forager art and fifteen-item atlas
   build_camp_ui_assets.py     Camp-interface art stage
   build_trail_ui_assets.py    Trail frame / status icon stage
-  build_hearth_assets.py      Latest loading / workshop stage (run last)
+  build_hearth_assets.py     Loading / workshop stage
+  build_embers_assets.py     Latest settings / hearth stage (run last)
   browser-test.mjs           Thirty-two gameplay / UI end-to-end scenarios
   workshop-browser-test.mjs  Thirteen loading / workshop / touch regression scenarios
-  browser-helpers.mjs       Shared headless Chromium launcher
+  embers-browser-test.mjs    Sixteen settings / input / combat / campfire scenarios
+  browser-helpers.mjs        Shared headless Chromium launcher
   check-pages-build.mjs      Production subpath/asset validation
 ```
 
 ## Art and reproducibility
 
-Five original AI-generated images established the style: the forest campsite background, pine, survivor, wolf, and campfire. Eight additional generations supplied empty-handed front/side/back/work poses, a wolf stride, an alternate flame, a boulder, and a berry bush, using the existing art as references. The first polish batch added ten more: four survivor action poses, four wolf gait poses, an axe, and a pickaxe. The forager batch adds ten standalone item, UI, and terrain images. The campfire-interface batch adds ten more: the remaining five item icons, three navigation glyphs, a UI frame, and an impact sprite. Trail & Camp adds three functional frame designs and seven status/menu glyphs. Hearth & Hand adds six standalone loading/workshop images.
+Five original AI-generated images established the style: the forest campsite background, pine, survivor, wolf, and campfire. Eight additional generations supplied empty-handed front/side/back/work poses, a wolf stride, an alternate flame, a boulder, and a berry bush, using the existing art as references. The first polish batch added ten more: four survivor action poses, four wolf gait poses, an axe, and a pickaxe. The forager batch adds ten standalone item, UI, and terrain images. The campfire-interface batch adds ten more: the remaining five item icons, three navigation glyphs, a UI frame, and an impact sprite. Trail & Camp adds three functional frame designs and seven status/menu glyphs. Hearth & Hand adds six standalone loading/workshop images. Ember & Instinct adds seven standalone settings/hearth images.
 
 Generated sources are keyed, palette-normalized, and resized with **nearest-neighbor** sampling. The animation builders combine those key poses with pixel-rigged limbs, frame-specific hand anchors, foliage warping, and hand-coded effects. Complete axe/pickaxe poses are precomposited into individual 4 × 2 action sheets. Gameplay uses actual source rectangles from the packed sheets—not just bobbing static sprites. Left-facing poses mirror right-facing ones; all clips advance on simulation time, and reduced motion removes ambient cycling while preserving clear action poses.
 
-See **[`public/art/animations/README.md`](public/art/animations/README.md)** for sheet dimensions and metadata. Processed keyframes and sheets are checked in, so CI and players need neither Python nor an image-generation service. All inventory icons, thirteen UI glyphs, five frame families, the crafting table, two loading scenes, the impact sprite, and the forest-floor tile now use generated art. Other UI glyphs, some world props/shelter details, atmospheric effects, and future-biome thumbnails still include hand-coded or procedural artwork; they are not presented as newly generated assets. Fonts are bundled through Fontsource; their original SIL Open Font License notices are included in [`public/licenses/`](public/licenses/).
+See **[`public/art/animations/README.md`](public/art/animations/README.md)** for sheet dimensions and metadata. Processed keyframes and sheets are checked in, so CI and players need neither Python nor an image-generation service. All inventory icons, eighteen UI glyphs, seven frame families, the crafting table, two loading scenes, the impact sprite, and the forest-floor tile now use generated art. Other UI glyphs, some world props/shelter details, atmospheric effects, and future-biome thumbnails still include hand-coded or procedural artwork; they are not presented as newly generated assets. Fonts are bundled through Fontsource; their original SIL Open Font License notices are included in [`public/licenses/`](public/licenses/).
 
 To rebuild the current standalone assets from the supplied normalized inputs without touching animations:
 
 ```sh
 python -m venv .venv
 .venv/bin/python -m pip install Pillow
-.venv/bin/python scripts/build_hearth_assets.py --normalized-only
+.venv/bin/python scripts/build_embers_assets.py --normalized-only
 npm run format
 ```
 
-On Windows, use `.venv\Scripts\python` instead. The Hearth & Hand builder only prepares static assets; it never constructs animation frames. Omitting `--normalized-only` also processes local raw generation outputs when present in `.art-originals/hearth-workshop/`. Rebuilding only from the supplied keyframes has been checked to reproduce the PNGs byte-for-byte.
+On Windows, use `.venv\Scripts\python` instead. The Ember & Instinct builder only prepares static assets; it never constructs animation frames. Omitting `--normalized-only` also processes local raw generation outputs when present in `.art-originals/embers-instinct/`. Rebuilding only from the supplied keyframes has been checked to reproduce the PNGs byte-for-byte.
 
-For a full **static-only** rebuild, run `build_inventory_assets.py --normalized-only`, `build_camp_ui_assets.py --normalized-only`, `build_trail_ui_assets.py --normalized-only`, and **`build_hearth_assets.py --normalized-only` last**. Older stages overwrite the registry. Historical animation builders remain for provenance, but must not be run under the current no-new-rigged-frames agreement. No animation builder was run for the forager, campfire-interface, Trail & Camp, or Hearth & Hand batches. Raw generations, local GIF previews, screenshots, dependencies, and build outputs are intentionally excluded from Git.
+For a full **static-only** rebuild, run `build_inventory_assets.py --normalized-only`, `build_camp_ui_assets.py --normalized-only`, `build_trail_ui_assets.py --normalized-only`, `build_hearth_assets.py --normalized-only`, and **`build_embers_assets.py --normalized-only` last**. Older stages overwrite the registry. Historical animation builders remain for provenance, but must not be run under the current no-new-rigged-frames agreement. No animation builder was run for the forager, campfire-interface, Trail & Camp, Hearth & Hand, or Ember & Instinct batches. Raw generations, local GIF previews, screenshots, dependencies, and build outputs are intentionally excluded from Git.
 
 ## Checks
 
 ```sh
-npm test               # 172 unit tests
+npm test               # 229 unit tests
 npm run build          # Strict TypeScript + Vite production build
 npm run build:pages    # Build /Pixel-Game/ and verify asset paths
-npm run test:browser   # 45 browser scenarios; start the dev server first
+npm run test:browser   # 61 browser scenarios; start the dev server first
 npm audit
 ```
 
@@ -278,3 +296,5 @@ The browser suite checks desktop and mobile layouts, dialogs, navigation, real g
 The runner uses the Chromium dependency on Linux, or an existing Chrome installation through `CHROME_EXECUTABLE=/path/to/chrome`. It extracts the bundled NSS libraries when needed in small sandboxes.
 
 The loading/workshop regressions additionally exercise delayed bundles and images, honest completion counts, corrupt/stalled requests, retry/cache reuse, cancellation, no simulation during entry, station reach, atomic batch costs, old-save table overlap, mobile workshop use, real thumb dragging, and decoded head-pixel consistency across the retained walking cells.
+
+Ember & Instinct regressions exercise staggered pack attacks, dodging, separation, collision/overlap recovery, manual-tool requirements, forgiving aimed contact, runtime-only defeat feedback, one-log contact/cancellation, non-pausing camp focus, E reopening/dismissal, dangerous/critical camp states, preference migration, actual renderer flags and viewport coordinates, real Web Audio gains, settings keyboard/touch navigation, reset/fullscreen failures, and HUD/input restoration. Actor image hashes are checked separately against the previous release; no animation builder is run.

@@ -11,7 +11,11 @@ class ForestAudio {
   configure(settings: Settings) {
     this.settings = settings;
     if (this.master && this.context)
-      this.master.gain.setTargetAtTime(settings.sound ? 0.45 : 0, this.context.currentTime, 0.15);
+      this.master.gain.setTargetAtTime(
+        settings.sound ? 0.45 * settings.masterVolume : 0,
+        this.context.currentTime,
+        0.15,
+      );
     if (this.wind && this.context)
       this.wind.gain.setTargetAtTime(settings.ambience * 0.13, this.context.currentTime, 0.2);
   }
@@ -20,7 +24,7 @@ class ForestAudio {
       if (!this.context) {
         this.context = new AudioContext();
         this.master = this.context.createGain();
-        this.master.gain.value = this.settings.sound ? 0.45 : 0;
+        this.master.gain.value = this.settings.sound ? 0.45 * this.settings.masterVolume : 0;
         this.master.connect(this.context.destination);
         const buffer = this.context.createBuffer(1, this.context.sampleRate * 3, this.context.sampleRate);
         const channel = buffer.getChannelData(0);
@@ -45,8 +49,10 @@ class ForestAudio {
         }, 5800);
       }
       if (this.context.state === 'suspended') await this.context.resume();
+      return this.context.state === 'running';
     } catch {
-      /* Audio is enhancement-only on restricted browsers. */
+      // Audio is enhancement-only on restricted browsers.
+      return false;
     }
   }
   private tone(
@@ -56,7 +62,14 @@ class ForestAudio {
     type: OscillatorType = 'triangle',
     endFrequency?: number,
   ) {
-    if (!this.context || !this.master || !this.settings.sound) return;
+    if (
+      !this.context ||
+      !this.master ||
+      !this.settings.sound ||
+      this.settings.masterVolume <= 0 ||
+      volume <= 0
+    )
+      return;
     const osc = this.context.createOscillator(),
       gain = this.context.createGain(),
       now = this.context.currentTime;

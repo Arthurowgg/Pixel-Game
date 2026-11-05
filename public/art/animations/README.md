@@ -35,7 +35,17 @@ All of these sheets use **4 columns × 2 rows**. Left-facing player poses mirror
 | `camp.png`         | 96 × 64 | Shelter cloth and construction                                      |
 | `held.png`         | 24 × 32 | Held burning torch                                                  |
 
-`wildlife.png` is retained as an original build-stage artifact, but the runtime no longer loads it. The new wolf sheets replace its clips. The inventory has its own **`../item-sprites.png`** atlas with all 15 items, described by `../item-sprites.json`. Both the Canvas held-item renderer and the SVG-backed HUD icons crop that shared bitmap. All fifteen item icons now come from generated artwork. The inventory/UI pipelines are `scripts/build_camp_ui_assets.py` and `scripts/build_trail_ui_assets.py`, and the final `scripts/build_hearth_assets.py`, independent of animation generation.
+`wildlife.png` is retained as an original build-stage artifact, but the runtime no longer loads it. The new wolf sheets replace its clips. The inventory has its own **`../item-sprites.png`** atlas with all 15 items, described by `../item-sprites.json`. Both the Canvas held-item renderer and the SVG-backed HUD icons crop that shared bitmap. All fifteen item icons now come from generated artwork. The inventory/UI pipelines are `scripts/build_camp_ui_assets.py` and `scripts/build_trail_ui_assets.py`, `scripts/build_hearth_assets.py`, and the final `scripts/build_embers_assets.py`, independent of animation generation.
+
+## Runtime combat/camp feedback · v0.8
+
+The user chose **existing artwork only** for this pass. The 17 active sheets, inactive wildlife PNG, all source poses/tool PNGs, and both manifests remain unchanged. No actor generation or animation builder ran.
+
+- Wolf AI advances through stalk/circle, a 0.55-second warning, a locked-point lunge (up to 0.32 seconds), recovery, retreat, and hurt. The renderer selects complete existing alert/run cells; warning brackets, a progress mark, position changes and contact feedback clarify intent. A defeated wolf's complete idle cell fades over 1.25 seconds, stored only at runtime.
+- **There are no new bite or fallen-wolf clips.** The defeat effect is a whole-frame fade, not a newly drawn lying-down pose.
+- Quiet camp uses the existing neutral standing frame with the carried item visually stowed, without changing actual equipment. Log feeding reuses the same safe 0/1/2 whole forage cells as gathering, and moves one complete generated log icon from the current hand toward the fire. A 1.05-second feed action spends its one log at 0.58 seconds, with cancellation before contact.
+- **There is no sitting pose.** Sitting, biting, fallen-wolf and genuinely crouching gathering artwork remain deferred until complete AI-drawn sheets can be supplied. Nothing is rigged or reconstructed to imply those sheets exist.
+- Four-direction player movement and the liked axe/pickaxe contact frames remain intact. Only controls changed: left-click uses/attacks, E interacts, right-click moves, F is unbound; no automatic tool selection.
 
 ## Runtime corrections · v0.7.1
 
@@ -84,9 +94,10 @@ python scripts/build_inventory_assets.py --normalized-only
 python scripts/build_camp_ui_assets.py --normalized-only
 python scripts/build_trail_ui_assets.py --normalized-only
 python scripts/build_hearth_assets.py --normalized-only
+python scripts/build_embers_assets.py --normalized-only
 npm run format
 ```
 
-Requires Pillow. The final Hearth & Hand stage restores the latest loading/workshop registry after older stages. No animation builder was used for art batches 2–5, and all 18 existing animation PNGs, including the inactive wildlife artifact, retain their pre-batch hashes.
+Requires Pillow. The final Ember & Instinct stage restores the settings/hearth registry after the loading/workshop and older static stages. No animation builder was used for art batches 2–6, and all 18 existing animation PNGs, including the inactive wildlife artifact, retain their pre-batch hashes.
 
 The leaves, ripples, sun shafts, canopy shadows, and ground microtextures are procedural pixel/lighting work—not additional image generations. Remaining prop/UI and whole-sheet animation work is tracked in `ART_ROADMAP.md` at the repository root.
