@@ -296,18 +296,19 @@ describe('a real seated state at the remade camp', () => {
     expect(sim.view().camp).toBeNull();
     expect(sim.state.player.y).toBeGreaterThan(CAMP_BENCH.y);
   });
-  it('stands immediately for danger and cancels an unplaced log', () => {
+  it('keeps the survivor seated while a wolf patrols past the lit hearth', () => {
     const sim = camp();
     advance(sim, 3);
+    sim.state.weather = 'wolves';
     sim.feedFire(0);
     sim.state.wolves = [
-      { id: 1, x: CAMP_BENCH.x + 60, y: CAMP_BENCH.y, hp: 4, maxHp: 4, cooldown: 1, scared: 0 },
+      { id: 1, x: CAMP_BENCH.x + 60, y: CAMP_BENCH.y, hp: 4, maxHp: 4, cooldown: 0, scared: 0 },
     ];
-    advance(sim, 0.01);
-    expect(sim.seated).toBe(false);
-    expect(sim.action).toBeNull();
-    expect(sim.state.inventory.wood).toBe(3);
-    expect(sim.view().camp).toBeNull();
+    advance(sim, 1.2);
+    expect(sim.seated).toBe(true);
+    expect(sim.state.inventory.wood).toBe(2);
+    expect(sim.view().camp?.id).toBe(0);
+    expect(sim.view().wolvesNear).toBe(0);
   });
   it.each(['health', 'hunger', 'thirst', 'warmth'] as const)(
     'does not hide dangerously low %s behind camp UI',

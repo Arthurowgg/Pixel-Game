@@ -1,15 +1,18 @@
+import { EXPLORE_CELLS, initialExploration } from './exploration';
 import { DIRECTIONS } from './movement';
 import {
   DEFAULT_SETTINGS,
   ITEMS,
   LEGACY_SAVE_KEY,
   QUICK_ITEMS,
+  RESOURCE_HP,
+  TORCH_DURATION,
   RECORDS_KEY,
   SAVE_KEY,
   SETTINGS_KEY,
   WORLD,
 } from './data';
-import type { Direction, GameState, RunRecord, Settings } from './types';
+import type { Direction, GameState, RunRecord, Settings, ResourceKind, Point } from './types';
 
 function read(key: string): unknown {
   try {
@@ -29,6 +32,12 @@ export function isGameState(value: unknown): value is GameState {
   if (
     !object(value) ||
     value.version !== 2 ||
+    ![1, 2].includes(Number(value.forestVersion)) ||
+    typeof value.forestVersion !== 'number' ||
+    !Array.isArray(value.explored) ||
+    value.explored.length > EXPLORE_CELLS ||
+    !value.explored.every((cell) => Number.isInteger(cell) && finite(cell, 0, EXPLORE_CELLS - 1)) ||
+    new Set(value.explored).size !== value.explored.length ||
     typeof value.name !== 'string' ||
     !['explorer', 'survivor', 'wild'].includes(String(value.difficulty))
   )
@@ -80,7 +89,7 @@ export function isGameState(value: unknown): value is GameState {
         point(r) &&
         finite(r.id) &&
         ['tree', 'stone', 'berries', 'fiber', 'mushroom'].includes(String(r.kind)) &&
-        finite(r.hp, 0, 3) &&
+        finite(r.hp, 0, RESOURCE_HP[String(r.kind) as ResourceKind]) &&
         finite(r.readyAt) &&
         finite(r.scale, 0.1, 3) &&
         finite(r.variant, 0, 1),
@@ -168,18 +177,47 @@ export function migrateGame(value: unknown): GameState | null {
   // An absent old permanent station is not gifted back: new progression starts
   // with handcraft. Explicitly invalid station data is never replaced.
   const workbenches = Object.hasOwn(value, 'workbenches') ? value.workbenches : [];
+  const oldForest = !Object.hasOwn(value, 'forestVersion');
+  // Preserve old resource coordinates and damage proportion; never regenerate a
+  // saved world or grant its entire map. The revision makes this upgrade one-time.
+  const forestVersion = oldForest ? 1 : value.forestVersion;
+  let resources = value.resources;
+  if (oldForest && Array.isArray(resources)) {
+    const oldHP: Record<string, number> = { tree: 3, stone: 2, berries: 1, fiber: 1, mushroom: 1 };
+    if (
+      !resources.every(
+        (r) => object(r) && Object.hasOwn(oldHP, String(r.kind)) && finite(r.hp, 0, oldHP[String(r.kind)]),
+      )
+    )
+      return null;
+    resources = resources.map((r: Record<string, unknown>) => ({
+      ...r,
+      hp: Number(r.hp) * (r.kind === 'tree' || r.kind === 'stone' ? 2 : 1),
+    }));
+  }
+  const explored = Object.hasOwn(value, 'explored')
+    ? value.explored
+    : point(value.player)
+      ? initialExploration(value.player as unknown as Point)
+      : [];
+  const torchUntil =
+    oldForest && finite(value.torchUntil) && finite(value.time)
+      ? Math.min(value.torchUntil, value.time + TORCH_DURATION)
+      : value.torchUntil;
+  const forest = { forestVersion, resources, explored, torchUntil };
   if (value.version === 2) {
     const direction =
       typeof value.direction === 'string' && Object.hasOwn(LEGACY_DIRECTIONS, value.direction)
         ? LEGACY_DIRECTIONS[value.direction]
         : value.direction;
-    const upgraded = { ...value, inventory, direction, workbenches };
+    const upgraded = { ...value, ...forest, inventory, direction, workbenches };
     return isGameState(upgraded) ? upgraded : null;
   }
   if (value.version !== 1) return null;
   const upgraded: unknown = {
     ...value,
     version: 2,
+    ...forest,
     workbenches,
     inventory: { ...inventory, pickaxe: 1 },
     direction: value.facing === -1 ? 'left' : 'down',

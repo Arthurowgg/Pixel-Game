@@ -157,7 +157,7 @@ try {
   await page.getByRole('switch', { name: 'Soft vignette', exact: true }).click();
   await page.getByRole('tab', { name: 'Interface', exact: true }).click();
   await page.getByRole('switch', { name: 'Floating numbers', exact: true }).click();
-  await page.getByRole('switch', { name: 'Field objectives', exact: true }).click();
+  await page.getByRole('switch', { name: 'Context hints', exact: true }).click();
   await screenshot(page, 'settings-interface-desktop');
   await page.getByRole('button', { name: 'Done', exact: true }).click();
   await page.reload({ waitUntil: 'networkidle' });
@@ -447,10 +447,18 @@ try {
   await mobile.setViewportSize({ width: 320, height: 568 });
   const smallThreat = await mobile.locator('.wolf-encounter').boundingBox();
   const smallVitals = await mobile.locator('.survivor-panel').boundingBox();
-  expect(smallThreat.x).toBeGreaterThanOrEqual(smallVitals.x + smallVitals.width);
+  expect(
+    smallThreat.x < smallVitals.x + smallVitals.width &&
+      smallThreat.x + smallThreat.width > smallVitals.x &&
+      smallThreat.y < smallVitals.y + smallVitals.height &&
+      smallThreat.y + smallThreat.height > smallVitals.y,
+  ).toBe(false);
+  expect(smallThreat.x + smallThreat.width).toBeLessThanOrEqual(320);
   await noOverflow(mobile);
   await screenshot(mobile, 'wolf-warning-small-phone');
-  passed('The mobile wolf warning occupies the weather slot instead of covering survival gauges or notices');
+  passed(
+    'The mobile wolf warning sits in the weather slot or drops below the gauges instead of covering them',
+  );
   await mobile.close();
 
   expect(errors).toEqual([]);

@@ -1,6 +1,10 @@
+import { ForestLighting } from './lighting';
+import { daylightAt } from './climate';
+import { FOREST_CLEARINGS, FOREST_DECOR, FOREST_TRAILS, groveDensity, trailSamples } from './forest';
+export { drawMap } from './cartography';
 import { WOLF_FADE, WOLF_ATTACKS, wolfMaxHealth } from './wolves';
-import { CAMP, POND, SPRING, WORLD, CAMP_BENCH, clamp, distance, random } from './data';
-import type { GameState, Point, Resource, Settings } from './types';
+import { CAMP, POND, WORLD, CAMP_BENCH, RESOURCE_HP, clamp, distance, random } from './data';
+import type { Point, Resource, Settings } from './types';
 import {
   artImages,
   CLIPS,
@@ -43,10 +47,13 @@ export class Renderer {
   private atmosphere: ForestAtmosphere;
   private seed: number;
   private feedback = new ForestFeedback();
-  constructor(canvas: HTMLCanvasElement, seed: number, settings: Settings) {
+  private lighting = new ForestLighting();
+  private forestVersion: 1 | 2;
+  constructor(canvas: HTMLCanvasElement, seed: number, settings: Settings, forestVersion: 1 | 2 = 2) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d', { alpha: false })!;
     this.settings = settings;
+    this.forestVersion = forestVersion;
     this.rng = random(seed + 47);
     this.seed = seed;
     this.atmosphere = new ForestAtmosphere(seed);
@@ -72,7 +79,11 @@ export class Renderer {
     for (let y = 0; y < WORLD.height; y += 16)
       for (let x = 0; x < WORLD.width; x += 16) {
         const shade = Math.floor((Math.sin(x / 108 + Math.cos(y / 130)) + Math.cos(y / 80) + 2) * 1.25);
-        ctx.fillStyle = palette[shade % palette.length];
+        const density = groveDensity({ x, y });
+        ctx.fillStyle =
+          this.forestVersion === 2 && density > 0.5
+            ? ['#3a5037', '#3c5238', '#40543a'][shade % 3]
+            : palette[shade % palette.length];
         ctx.fillRect(x, y, 16, 16);
       }
     // An actual AI-generated, nearest-neighbor terrain tile—not synthesized noise.
@@ -87,19 +98,46 @@ export class Renderer {
       ctx.restore();
       this.canvas.dataset.groundTexture = 'generated';
     }
-    // A meandering, stepped trail links the clearing and the eastern spring.
-    for (let x = 0; x < WORLD.width; x += 4) {
-      const y = Math.floor((760 + Math.sin(x / 175) * 30) / 4) * 4;
-      ctx.fillStyle = '#5b6542';
-      ctx.fillRect(x, y - 24, 4, 48);
-      ctx.fillStyle = '#72744b';
-      ctx.fillRect(x, y - 16, 4, 32);
-      ctx.fillStyle = '#7b7950';
-      ctx.fillRect(x, y - 10, 4, 20);
+    if (this.forestVersion === 2) {
+      for (const area of FOREST_CLEARINGS.slice(1)) {
+        pixelEllipse(ctx, area.x, area.y, area.rx + 9, area.ry + 9, '#4e5e3f');
+        pixelEllipse(ctx, area.x, area.y, area.rx, area.ry, '#566343');
+      }
+      for (const trail of FOREST_TRAILS) {
+        const samples = trailSamples(trail);
+        for (const [extra, color] of [
+          [7, '#4e5b3f'],
+          [0, '#666449'],
+          [-6, '#7b7050'],
+        ] as const)
+          for (const point of samples) {
+            const radius = Math.max(3, trail.width / 2 + extra);
+            pixelEllipse(
+              ctx,
+              Math.round(point.x / 3) * 3,
+              Math.round(point.y / 3) * 3,
+              radius,
+              radius,
+              color,
+              3,
+            );
+          }
+      }
+    } else {
+      // Saved expeditions keep their original routes and resource coordinates.
+      for (let x = 0; x < WORLD.width; x += 4) {
+        const y = Math.floor((760 + Math.sin(x / 175) * 30) / 4) * 4;
+        ctx.fillStyle = '#5b6542';
+        ctx.fillRect(x, y - 24, 4, 48);
+        ctx.fillStyle = '#72744b';
+        ctx.fillRect(x, y - 16, 4, 32);
+        ctx.fillStyle = '#7b7950';
+        ctx.fillRect(x, y - 10, 4, 20);
+      }
     }
-    const clearing = artImages['object-campClearing'];
+    const clearing = artImages['object-campGround'];
     if (clearing?.naturalWidth) {
-      const asset = generatedAssets.objects.campClearing;
+      const asset = generatedAssets.objects.campGround;
       ctx.drawImage(
         clearing,
         CAMP.x - asset.anchor[0],
@@ -126,7 +164,7 @@ export class Renderer {
         ctx.fillRect(x, y, 2, 2);
       }
     }
-    addTerrainDetail(ctx, this.seed);
+    addTerrainDetail(ctx, this.seed, this.forestVersion);
     pixelEllipse(ctx, POND.x, POND.y, POND.rx + 16, POND.ry + 13, '#73806a');
     pixelEllipse(ctx, POND.x, POND.y, POND.rx + 9, POND.ry + 7, '#495e50');
     pixelEllipse(ctx, POND.x, POND.y, POND.rx, POND.ry, '#365e5c');
@@ -206,7 +244,7 @@ export class Renderer {
         draw(
           age < 0.43 && animation?.kind === 'hit'
             ? 'rock-hit'
-            : resource.hp < 2
+            : resource.hp <= RESOURCE_HP.stone / 2
               ? 'rock-cracked'
               : 'rock-idle',
           age < 0.43 ? age : 0,
@@ -322,7 +360,7 @@ export class Renderer {
     ctx.translate(-this.camera.x, -this.camera.y);
     ctx.drawImage(this.ground, 0, 0);
     this.canvas.dataset.sunlight =
-      this.settings.atmosphere && sunlightStrength(sim.hour, s.weather) > 0 ? 'on' : 'off';
+      this.settings.atmosphere && sunlightStrength(sim.hour, sim.weatherMix) > 0 ? 'on' : 'off';
     this.canvas.dataset.atmosphere = String(this.settings.atmosphere);
     this.atmosphere.ground(ctx, sim, this.camera, w, h, this.settings);
     this.feedback.update(sim, this.settings);
@@ -362,7 +400,7 @@ export class Renderer {
       ctx.fillRect(Math.round(x + Math.sin(t * 0.5 + i) * 3), y, 5 + (i % 7), 1);
     }
     const near = sim.nearest();
-    if (sim.campFocus === null && near && near.kind !== 'water' && near.kind !== 'shelter') {
+    if (sim.campFocus === null && near && (near.kind === 'workbench' || near.kind === 'fire')) {
       const target =
         near.kind === 'workbench'
           ? s.workbenches.find((bench) => bench.id === near.id)
@@ -390,6 +428,15 @@ export class Renderer {
         r.y < this.camera.y + h + 85
       )
         draws.push({ y: r.y, draw: () => this.resource(r, sim) });
+    if (s.forestVersion === 2)
+      for (const decoration of FOREST_DECOR)
+        if (
+          decoration.x > this.camera.x - 50 &&
+          decoration.x < this.camera.x + w + 50 &&
+          decoration.y > this.camera.y - 10 &&
+          decoration.y < this.camera.y + h + 55
+        )
+          draws.push({ y: decoration.y, draw: () => this.prop(decoration.kind, decoration) });
     for (const bench of s.workbenches)
       draws.push({
         y: bench.y,
@@ -613,17 +660,15 @@ export class Renderer {
     }
     ctx.globalAlpha = 1;
     ctx.restore();
-    const darkness = sim.night
-      ? 0.38
-      : sim.hour > 18
-        ? (sim.hour - 18) * 0.12
-        : sim.hour < 8
-          ? (8 - sim.hour) * 0.09
-          : 0;
-    if (darkness > 0) {
-      ctx.fillStyle = `rgba(11, 24, 36, ${darkness})`;
-      ctx.fillRect(0, 0, w, h);
-    }
+    const darkness = this.lighting.draw(ctx, sim, this.camera, w, h);
+    const daylight = daylightAt(s.time),
+      mix = sim.weatherMix;
+    this.canvas.dataset.darkness = darkness.toFixed(3);
+    this.canvas.dataset.rain = mix.rain.toFixed(3);
+    this.canvas.dataset.daylight = daylight.toFixed(3);
+    this.canvas.dataset.torchLight = String(sim.torchActive);
+    this.canvas.dataset.collecting = sim.collecting ? String(sim.collecting.resource.id) : 'none';
+    this.canvas.dataset.collectionProgress = sim.collecting?.progress.toFixed(3) ?? '0';
     for (const fire of s.fires)
       if (fire.fuel > 0) {
         const x = fire.x - this.camera.x,
@@ -634,44 +679,75 @@ export class Renderer {
             : 0;
         const radius = 59 + Math.sin(t * 3) * 2 + stoked * 12;
         const glow = ctx.createRadialGradient(x, y, 3, x, y, radius);
-        glow.addColorStop(0, `rgba(245, 180, 81, ${sim.night ? 0.19 : 0.07})`);
+        glow.addColorStop(0, `rgba(245, 180, 81, ${0.07 + (1 - daylight) * 0.12})`);
         glow.addColorStop(1, 'rgba(245, 180, 81, 0)');
         ctx.fillStyle = glow;
         ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
       }
     this.atmosphere.light(ctx, sim, this.camera, w, h, this.settings);
     this.feedback.screen(ctx, sim, this.camera, w, h, this.settings);
-    if (s.weather === 'rain' || s.weather === 'storm') {
-      ctx.fillStyle = '#29415132';
+    if (mix.rain > 0.001) {
+      ctx.save();
+      ctx.globalAlpha = mix.rain * 0.12;
+      ctx.fillStyle = '#294151';
       ctx.fillRect(0, 0, w, h);
-      ctx.strokeStyle = '#b6cac64a';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 115; i++) {
-        const x = (((i * 67.3 - t * 35) % (w + 30)) + w + 30) % (w + 30),
-          y = (i * 37.7 + t * 170) % (h + 20);
-        ctx.beginPath();
-        ctx.moveTo(Math.floor(x), Math.floor(y));
-        ctx.lineTo(Math.floor(x) - 2, Math.floor(y) + 6);
-        ctx.stroke();
+      if (this.settings.atmosphere) {
+        ctx.globalAlpha = mix.rain;
+        ctx.strokeStyle = '#b6cac64a';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < (this.settings.reducedMotion ? 40 : 115); i++) {
+          const x = (((i * 67.3 - t * 35) % (w + 30)) + w + 30) % (w + 30),
+            y = (i * 37.7 + t * 170) % (h + 20);
+          ctx.beginPath();
+          ctx.moveTo(Math.floor(x), Math.floor(y));
+          ctx.lineTo(Math.floor(x) - 2, Math.floor(y) + 6);
+          ctx.stroke();
+        }
       }
-      if (
-        s.weather === 'storm' &&
-        this.settings.damageFlash &&
-        !this.settings.reducedMotion &&
-        s.time % 17 < 0.12
-      ) {
-        ctx.fillStyle = '#e1e8df38';
-        ctx.fillRect(0, 0, w, h);
-      }
+      ctx.restore();
     }
-    // Fireflies and drifting pollen, tiny enough to remain part of the pixel world.
-    if (s.weather === 'clear' && this.settings.atmosphere && !this.settings.reducedMotion)
+    // Storm flashes read as weather, not damage; the flash switch still owns them.
+    if (mix.storm > 0 && this.settings.damageFlash && !this.settings.reducedMotion && s.time % 17 < 0.12) {
+      ctx.save();
+      ctx.globalAlpha = mix.storm;
+      ctx.fillStyle = '#e1e8df38';
+      ctx.fillRect(0, 0, w, h);
+      ctx.restore();
+    }
+    // Pollen becomes fireflies continuously through dusk; clouds fade both out.
+    if (this.settings.atmosphere && !this.settings.reducedMotion) {
+      ctx.save();
+      ctx.globalAlpha = 1 - mix.cloud;
       for (let i = 0; i < 16; i++) {
         const x = (((i * 87 + Math.sin(t / 3 + i) * 15 - this.camera.x * 0.2) % w) + w) % w,
           y = (((i * 41 + Math.cos(t / 4 + i) * 13 - this.camera.y * 0.2) % h) + h) % h;
-        ctx.fillStyle = sim.night ? `rgba(225, 219, 139, ${0.2 + Math.sin(t + i) * 0.18})` : '#d6d6a640';
+        ctx.fillStyle = `rgba(${Math.round(225 - daylight * 11)}, ${Math.round(219 - daylight * 5)}, ${Math.round(139 + daylight * 27)}, ${0.2 + Math.sin(t + i) * 0.15 * (1 - daylight)})`;
         ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
       }
+      ctx.restore();
+    }
+    const collecting = sim.collecting;
+    if (collecting) {
+      const x = Math.round(collecting.resource.x - this.camera.x),
+        y = Math.round(collecting.resource.y - this.camera.y - 34);
+      ctx.save();
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.fillStyle = '#172c26e6';
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#60765a';
+      ctx.beginPath();
+      ctx.arc(x, y, 8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = '#e2cc8e';
+      ctx.beginPath();
+      ctx.arc(x, y, 8, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * collecting.progress);
+      ctx.stroke();
+      drawItem(ctx, 'berries', x - 5, y - 5, 10);
+      ctx.restore();
+    }
     if (this.settings.vignette) {
       const vignette = ctx.createRadialGradient(w / 2, h / 2, h * 0.25, w / 2, h / 2, w * 0.65);
       vignette.addColorStop(0, '#0c171900');
@@ -693,70 +769,5 @@ export class Renderer {
         (y * this.height) / (this.canvas.clientHeight || this.height * this.settings.pixelScale) +
         this.camera.y,
     };
-  }
-}
-export function drawMap(
-  canvas: HTMLCanvasElement,
-  state: GameState,
-  ground?: HTMLCanvasElement,
-  expanded = false,
-) {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-  const w = canvas.width,
-    h = canvas.height,
-    sx = w / WORLD.width,
-    sy = h / WORLD.height;
-  ctx.imageSmoothingEnabled = false;
-  if (ground) ctx.drawImage(ground, 0, 0, w, h);
-  else {
-    ctx.fillStyle = '#43563c';
-    ctx.fillRect(0, 0, w, h);
-  }
-  ctx.fillStyle = '#172d2644';
-  ctx.fillRect(0, 0, w, h);
-  for (const r of state.resources)
-    if (r.kind === 'tree' && r.hp > 0) {
-      ctx.fillStyle = r.variant > 0.5 ? '#243e32' : '#334c38';
-      ctx.fillRect(Math.floor(r.x * sx) - 1, Math.floor(r.y * sy) - 2, expanded ? 4 : 2, expanded ? 5 : 3);
-    }
-  ctx.strokeStyle = '#e2d1a51a';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < w; x += w / 6) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, h);
-    ctx.stroke();
-  }
-  for (let y = 0; y < h; y += h / 5) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(w, y);
-    ctx.stroke();
-  }
-  const marker = (x: number, y: number, color: string, size: number, label?: string, above = false) => {
-    ctx.fillStyle = '#15251f';
-    ctx.fillRect(Math.round(x * sx) - size - 1, Math.round(y * sy) - size - 1, size * 2 + 2, size * 2 + 2);
-    ctx.fillStyle = color;
-    ctx.fillRect(Math.round(x * sx) - size, Math.round(y * sy) - size, size * 2, size * 2);
-    if (expanded && label) {
-      ctx.font = '10px "Pixelify Sans", monospace';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#192920';
-      const labelY = y * sy + (above ? -23 : size + 5);
-      ctx.fillRect(x * sx - 42, labelY, 84, 13);
-      ctx.fillStyle = '#e1dcc1';
-      ctx.fillText(label, x * sx, labelY + 9);
-    }
-  };
-  for (const fire of state.fires) marker(fire.x, fire.y, '#dca36b', expanded ? 4 : 2, 'CAMPFIRE');
-  for (const sh of state.shelters) marker(sh.x, sh.y, '#b9bd82', expanded ? 3 : 2);
-  for (const bench of state.workbenches)
-    marker(bench.x, bench.y, '#c3bd87', expanded ? 4 : 2, 'WORKBENCH', true);
-  marker(SPRING.x, SPRING.y, '#91c2c0', expanded ? 4 : 2, 'THE SPRING');
-  marker(state.player.x, state.player.y, '#f3ebce', expanded ? 3 : 2);
-  if (!expanded) {
-    ctx.strokeStyle = '#e9e0bc70';
-    ctx.strokeRect(state.player.x * sx - 20, state.player.y * sy - 12, 40, 24);
   }
 }

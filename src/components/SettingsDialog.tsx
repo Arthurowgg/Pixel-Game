@@ -372,7 +372,7 @@ export function SettingsDialog({
                 <Icon name="play" size={15} />
               </button>
               <p className="settings-note">
-                Wind, birds, footsteps. No external streams or background music downloads.
+                Wind, rain, daytime birds and footsteps. No external streams or background music downloads.
               </p>
             </>
           )}
@@ -380,13 +380,13 @@ export function SettingsDialog({
             <>
               <Toggle
                 title="Compact HUD"
-                detail="Hide the minimap and extra notices. Keep your health and pockets."
+                detail="Icon meters and a single pocket bar. The full layout adds need labels and a local map."
                 value={settings.compactHud}
                 onChange={(value) => update('compactHud', value)}
               />
               <Toggle
-                title="Field objectives"
-                detail="Your expedition checklist. No permanent control tutorial on the screen."
+                title="Context hints"
+                detail="Tips for campfires, stations and springs. Gathering stays uncluttered; objectives live in the journal."
                 value={settings.showHints}
                 onChange={(value) => update('showHints', value)}
               />

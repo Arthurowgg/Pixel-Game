@@ -112,23 +112,35 @@ describe('a readable, separated wolf pack', () => {
     expect(f.state.wolves[0].x).toBeGreaterThanOrEqual(533.99);
   });
   it('steers around obstacles without entering their collision footprint', () => {
-    const f = packFixture(wolf(1, 650, 500), wolf(2, 660, 530));
-    const blocked = (point: Point) => distance(point, { x: 610, y: 520 }) < 18;
+    const f = packFixture(wolf(1, 570, 470), wolf(2, 566, 530));
+    const blocked = (point: Point) => distance(point, { x: 540, y: 514 }) < 18;
     f.block(blocked);
-    for (let i = 0; i < 500; i++) {
+    for (let i = 0; i < 900; i++) {
       f.tick(0.01);
       for (const value of f.state.wolves) expect(blocked(value)).toBe(false);
     }
     expect(Math.min(...f.state.wolves.map((value) => distance(value, f.state.player)))).toBeLessThan(90);
   });
-  it.each(['fire', 'torch'] as const)('backs away from %s instead of entering a bite loop', (source) => {
+  it.each(['fire', 'torch'] as const)('breaks the hunt when the survivor lights a %s', (source) => {
     const f = packFixture(wolf(1, 530, 500));
+    f.tick(0.2);
+    expect(f.pack.minds.get(1)?.aware).toBe(true);
     if (source === 'fire') f.state.fires = [{ x: 500, y: 500, id: 0, fuel: 60 }];
     else f.lightTorch();
     f.tick(1);
     expect(f.bite).not.toHaveBeenCalled();
     expect(f.pack.minds.get(1)?.phase).toBe('retreat');
     expect(distance(f.state.wolves[0], f.state.player)).toBeGreaterThan(50);
+  });
+  it('lets an unaware wolf patrol past a lit camp without ever becoming a threat', () => {
+    const f = packFixture(wolf(1, 548, 500));
+    f.state.fires = [{ x: 500, y: 500, id: 0, fuel: 60 }];
+    for (let i = 0; i < 600; i++) {
+      f.tick(0.01);
+      expect(f.pack.minds.get(1)?.aware).toBe(false);
+    }
+    expect(f.bite).not.toHaveBeenCalled();
+    expect(f.pack.threats(f.state, false).length).toBe(0);
   });
   it('walks out when a newly lit fire encloses a wolf instead of trapping it forever', () => {
     const f = packFixture(wolf(1, 510, 500));
@@ -144,7 +156,7 @@ describe('a readable, separated wolf pack', () => {
     f.block(blocked);
     f.tick(0.01);
     expect(f.pack.minds.get(1)?.phase).not.toBe('windup');
-    f.tick(0.6);
+    f.tick(0.85);
     expect(blocked(f.state.wolves[0])).toBe(false);
     expect(f.bite).not.toHaveBeenCalled();
   });
@@ -424,17 +436,17 @@ describe('a quiet, live hearth with one log action', () => {
       expect(sim.campFocus).toBeNull();
     },
   );
-  it('restores the HUD and cancels a pending log when danger approaches', () => {
+  it('keeps a lit hearth quiet while an unaware wolf passes instead of sounding danger', () => {
     const sim = camp();
     sim.state.time = 120;
     sim.state.weather = 'wolves';
     sim.feedFire(0);
     advance(sim, 0.57);
-    sim.state.wolves = [wolf(1, 530, 532)];
-    advance(sim, 0.4);
-    expect(sim.campFocus).toBeNull();
-    expect(sim.action).toBeNull();
-    expect(sim.state.inventory.wood).toBe(2);
+    sim.state.wolves = [wolf(1, 500, 560)];
+    advance(sim, 0.6);
+    expect(sim.campFocus).toBe(0);
+    expect(sim.state.inventory.wood).toBe(1);
+    expect(sim.view().wolvesNear).toBe(0);
   });
   it('lets E reopen a dismissed full or empty-stock hearth without spending anything', () => {
     const sim = camp();
@@ -469,7 +481,8 @@ describe('a quiet, live hearth with one log action', () => {
     sim.feedFire(0);
     advance(sim, 0.6);
     expect(sim.fireNearby).toBe(true);
-    expect(sim.view().camp?.secondsLeft).toBe(Math.ceil(sim.state.fires[0].fuel / 0.44));
+    const burn = 0.25 + 0.19 * sim.weatherMix.rain;
+    expect(sim.view().camp?.secondsLeft).toBe(Math.ceil(sim.state.fires[0].fuel / burn));
   });
   it('rejects distant, missing, overfilled, and unfunded log actions', () => {
     const sim = camp();

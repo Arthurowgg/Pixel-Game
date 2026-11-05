@@ -4,7 +4,30 @@
 
 After the whole-sheet-generation limitation was explained, the user approved **separate AI-generated item, texture, and UI images**, up to ten per batch, with **animation-sheet generation on hold**.
 
-Do not create more rigged poses or synthetic animation frames. Complete AI-drawn animation sheets can be cropped and integrated if supplied. The requested whole-sheet animation overhaul is **not complete**. Player movement is now cardinal-only: the user explicitly removed diagonal movement in v0.7.1. Eight-direction movement/art is no longer a pending feature for the current controls. Existing animation sheets from earlier work remain in the game; the latest static-art batches do not redraw or reconstruct them. Batches 4–7 correct runtime playback, carrying, collision, and input without constructing frames.
+Do not create more rigged poses or synthetic animation frames. Complete AI-drawn animation sheets can be cropped and integrated if supplied. The requested whole-sheet animation overhaul is **not complete**. Player movement is now cardinal-only: the user explicitly removed diagonal movement in v0.7.1. Eight-direction movement/art is no longer a pending feature for the current controls. Existing animation sheets from earlier work remain in the game; the latest static-art batches do not redraw or reconstruct them. Batches 4–8 correct runtime playback, carrying, collision, and input without constructing frames.
+
+## Batch 8 · Trails & Twilight · v0.10 · eight images, eight calls
+
+**8/10 image-generation calls used.** No additional calls are needed for this pass. Each call produced one standalone static image; no grid, animation sheet, or rigged limb was generated.
+
+The batch supplies the ground and chart furniture for the new lighting, exploration, and map pass. The camp clearing arrived on a magenta sheet with a fully opaque body and a straight-edged path arm; the builder keys the sheet (including its soft mauve fringe), erases the arm geometrically for `x ≥ 1070, y 240–565`, and crops to the organic rim instead of clipping it at runtime.
+
+| AI-generated image | Runtime integration                                              |
+| ------------------ | ---------------------------------------------------------------- |
+| Camp clearing      | 312 × 216, anchor 156/108; replaces the flat painted dirt patch  |
+| Fallen log         | 64 × 40, anchor 32/34; clearing decoration                       |
+| Waystone           | 38 × 46, anchor 19/42; one of three landmark props               |
+| Field-map frame    | 192 × 128, nine-slice inset 14; replaces the CSS-only map border |
+| Map paper          | 96 × 96; tiled parchment backing under the chart                 |
+| Chart pine         | 16 × 22; discovered-tree pin                                     |
+| Chart boulder      | 18 × 14; discovered-stone pin                                    |
+| Forest cursor      | 28 × 32, hotspot 4/9; replaces the platform arrow over the world |
+
+Sources: `.art-originals/trails-twilight/` (ignored); normalized inputs: `public/art/generated/trails-twilight/`. Run **`scripts/build_twilight_assets.py --normalized-only` last**, after every older static builder, because it rewrites the shared registry. The builder only keys, crops, nearest-resizes, palette-reduces, and copies; it never builds animation frames.
+
+Gameplay: smooth daylight/darkness with a 90-unit torch pool and fire-lit ground; 40-unit exploration cells feeding a zoomable, pannable field chart with landmark pins and a charted percentage; five trails with a camp spur, four clearings, eight groves, and three waystone landmarks; six-chop pines, four-strike stone, and a 1.8-second berry hold with movement cancellation; a compact vitals card, one quickbar with a held-item strip and a touch handcraft slot, and a plain-language day/weather chip. The pre-batch hashes of all 17 animation sheets, both manifests, the item atlas, and every older prop were re-checked and are byte-identical; only `generated-assets.json` changes.
+
+Historical batch notes below describe the choices at that time. This batch supersedes their static-map and three-chop descriptions.
 
 ## Batch 7 · Roots & Refuge · v0.9 · eight images, nine calls
 
@@ -193,12 +216,12 @@ Normalized inputs: `public/art/generated/forager-batch/`; originals: `.art-origi
 
 The wider all-assets request is **not finished**:
 
-- **Forest props and decorations:** remaining camp furniture, shelter details, trail/spring artwork, additional ground cover and world props. Existing generated pines, bushes, rocks, and fire provide references.
+- **Forest props and decorations:** remaining camp furniture and shelter details, spring/pond artwork, and additional ground cover. The camp clearing, fallen log, waystone, chart icons/frame/paper, and cursor from batch 8 provide references.
 - **Remaining general UI glyphs:** weather, combat/actions, sound, pause, and miscellaneous interface symbols. Backpack, map, journal, crafting, workbench, pine medallion, compass, settings, and the five vital symbols are generated; not every UI glyph is.
 - **More generated textures:** the forest floor is integrated; other surfaces still include procedural detail.
 - **Complete AI-drawn directional animation sequences:** especially a true crouching berry-collection cycle and intact four-direction walk/run art. Pending supplied sheets or a supported whole-sheet workflow. Do not silently substitute assembled poses.
 
-Suggested next batch: forest props/ground cover and remaining weather/action glyphs, within the ten-generation cap. No further images should be generated until the user says “continue.”
+Suggested next batch: shelter/spring props and the remaining weather/action glyphs, within the ten-generation cap. No further images should be generated until the user says “continue.”
 
 ## Earlier batch 1 · retained, not newly generated here
 

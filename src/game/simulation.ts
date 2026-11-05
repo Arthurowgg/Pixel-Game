@@ -1,3 +1,14 @@
+import { WeatherTransition, daylightAt, weatherAt } from './climate';
+import { EXPLORE_RADIUS, exploredPercent, initialExploration, revealAround } from './exploration';
+import {
+  FOREST_GROVES,
+  FOREST_DECOR,
+  boundToForest,
+  groveDensity,
+  inClearing,
+  inPond,
+  trailDistance,
+} from './forest';
 import { WolfPack, wolfHealth, WOLF_ATTACKS } from './wolves';
 import { blocksCampBench, hasCampBench, routeToBench } from './camp';
 import { facingDirection, movementVector, moveWithCollision } from './movement';
@@ -6,8 +17,10 @@ import {
   CAMP,
   DAY_LENGTH,
   ITEMS,
-  POND,
   QUICK_ITEMS,
+  RESOURCE_HP,
+  TORCH_DURATION,
+  BERRY_COLLECT_TIME,
   RECIPES,
   SPRING,
   WORLD,
@@ -35,10 +48,8 @@ import type {
   Fire,
   Resource,
   ResourceKind,
-  Weather,
 } from './types';
 
-const RESOURCE_HP: Record<ResourceKind, number> = { tree: 3, stone: 2, berries: 1, fiber: 1, mushroom: 1 };
 const RESOURCE_LABEL: Record<ResourceKind, string> = {
   tree: 'Chop pine',
   stone: 'Mine river stone',
@@ -53,9 +64,7 @@ const RESOURCE_REWARD: Record<ResourceKind, [ItemId, number]> = {
   fiber: ['fiber', 3],
   mushroom: ['mushroom', 2],
 };
-export function inWater(p: Point, padding = 0) {
-  return ((p.x - POND.x) / (POND.rx + padding)) ** 2 + ((p.y - POND.y) / (POND.ry + padding)) ** 2 < 1;
-}
+export const inWater = inPond;
 export function createWorld(seed: number): Resource[] {
   const rng = random(seed);
   const result: Resource[] = [];
@@ -80,20 +89,38 @@ export function createWorld(seed: number): Resource[] {
   add('fiber', 966, 852);
   add('mushroom', 919, 678);
   const counts: [ResourceKind, number][] = [
-    ['tree', 385],
-    ['stone', 65],
-    ['berries', 55],
-    ['fiber', 65],
-    ['mushroom', 28],
+    ['tree', 340],
+    ['stone', 58],
+    ['berries', 48],
+    ['fiber', 62],
+    ['mushroom', 30],
   ];
   for (const [kind, count] of counts) {
-    for (let i = 0; i < count; i++) {
-      const x = 35 + rng() * (WORLD.width - 70),
-        y = 50 + rng() * (WORLD.height - 90);
-      const onPath = Math.abs(y - (760 + Math.sin(x / 175) * 30)) < 28;
-      if (distance({ x, y }, CAMP) < 125 || inWater({ x, y }, 22) || (kind === 'tree' && onPath)) continue;
-      if (result.some((r) => distance(r, { x, y }) < (kind === 'tree' ? 27 : 14))) continue;
-      add(kind, x, y);
+    let planted = 0;
+    for (let attempt = 0; attempt < count * 16 && planted < count; attempt++) {
+      const grove = FOREST_GROVES[Math.floor(rng() * FOREST_GROVES.length)];
+      const angle = rng() * Math.PI * 2,
+        radius = Math.sqrt(rng()) * grove.radius;
+      const point =
+        kind === 'tree' && rng() < 0.8
+          ? boundToForest({ x: grove.x + Math.cos(angle) * radius, y: grove.y + Math.sin(angle) * radius })
+          : { x: 35 + rng() * (WORLD.width - 70), y: 50 + rng() * (WORLD.height - 90) };
+      const trailGap = trailDistance(point);
+      if (distance(point, CAMP) < 137 || inWater(point, kind === 'stone' ? 15 : 24)) continue;
+      if (FOREST_DECOR.some((decoration) => distance(point, decoration) < 35)) continue;
+      if ((kind === 'tree' || kind === 'stone') && (trailGap < 12 || inClearing(point, 8))) continue;
+      if (kind === 'berries' && groveDensity(point) > 0.75) continue;
+      if (kind === 'mushroom' && groveDensity(point) < 0.24) continue;
+      if (kind !== 'tree' && kind !== 'stone' && trailGap < 5) continue;
+      if (
+        result.some(
+          (resource) => distance(resource, point) < (kind === 'tree' ? 31 : kind === 'stone' ? 25 : 20),
+        )
+      )
+        continue;
+      add(kind, Math.round(point.x), Math.round(point.y));
+      if (kind === 'tree') result[result.length - 1].scale = 0.84 + groveDensity(point) * 0.31 + rng() * 0.16;
+      planted++;
     }
   }
   return result;
@@ -105,6 +132,8 @@ export function createGame(
 ): GameState {
   return {
     version: 2,
+    forestVersion: 2,
+    explored: initialExploration(SPAWN),
     seed,
     name: name.trim().slice(0, 20) || 'Wanderer',
     difficulty,
@@ -143,7 +172,7 @@ export function createGame(
     journal: [
       {
         time: 0,
-        text: 'A worn clearing, a campfire and a resting bench. The workshop is mine to build.',
+        text: 'A sheltered clearing and a lit campfire. The paths beyond it are still uncharted.',
         kind: 'discovery',
       },
     ],
@@ -159,14 +188,7 @@ export function createGame(
     savedAt: Date.now(),
   };
 }
-export function weatherAt(time: number): Weather {
-  const day = Math.floor(time / DAY_LENGTH),
-    phase = time % DAY_LENGTH;
-  if (phase >= 48 && phase < 83) return day % 2 === 0 ? 'rain' : 'storm';
-  if (phase >= 92 && phase < 119) return 'cold';
-  if (phase >= 120 && phase < 154) return 'wolves';
-  return 'clear';
-}
+export { weatherAt } from './climate';
 export class Simulation {
   state: GameState;
   keys = new Set<string>();
@@ -218,8 +240,15 @@ export class Simulation {
   private toastId = 0;
   private lastStep = 0;
   private rng: () => number;
+  private weatherTransition: WeatherTransition;
+  private exploredCells: Set<number>;
+  private lastExplored: Point;
+  private lastExploreAt = -1;
   constructor(state: GameState) {
     this.state = state;
+    this.weatherTransition = WeatherTransition.fromClock(state.weather, state.time);
+    this.exploredCells = new Set(state.explored);
+    this.lastExplored = { ...state.player };
     state.wolves = state.wolves.filter((wolf) => wolf.hp > 0);
     // Resolve only real, saved furniture overlaps (and the newly added camp
     // bench), never invent a free station when resuming an old expedition.
@@ -249,6 +278,9 @@ export class Simulation {
         : 'Welcome back to your little corner of the forest.',
       'info',
     );
+  }
+  get weatherMix() {
+    return this.weatherTransition.at(this.state.time);
   }
   get hour() {
     return (8 + ((this.state.time % DAY_LENGTH) / DAY_LENGTH) * 24) % 24;
@@ -302,11 +334,9 @@ export class Simulation {
         distance: distance(r, p),
         label: RESOURCE_LABEL[r.kind],
         detail:
-          r.kind === 'tree'
-            ? `${this.state.equipped === 'hatchet' ? 'Axe' : 'Equip axe'} · ${r.hp} chops · +4 wood, +1 pine nuts`
-            : r.kind === 'stone'
-              ? `${this.state.equipped === 'pickaxe' ? 'Pickaxe' : 'Equip pickaxe'} · ${r.hp} strikes · +3 stone`
-              : `+${RESOURCE_REWARD[r.kind][1]} ${RESOURCE_REWARD[r.kind][0]}`,
+          r.kind === 'tree' || r.kind === 'stone'
+            ? ''
+            : `+${RESOURCE_REWARD[r.kind][1]} ${RESOURCE_REWARD[r.kind][0]}`,
       }));
     for (const f of this.state.fires)
       if (distance(f, p) < 43)
@@ -512,10 +542,34 @@ export class Simulation {
       return false;
     }
     this.face(resource);
-    return this.beginAction(tool === 'hatchet' ? 'chop' : tool === 'pickaxe' ? 'mine' : 'forage', tool, () =>
-      this.harvest(resource),
+    if (resource.kind === 'berries' && this.hitFlash > 0) return false;
+    const berries = resource.kind === 'berries';
+    const started = this.beginAction(
+      tool === 'hatchet' ? 'chop' : tool === 'pickaxe' ? 'mine' : 'forage',
+      tool,
+      () => this.harvest(resource),
+      berries ? BERRY_COLLECT_TIME : 2 / 3,
+      berries ? BERRY_COLLECT_TIME : 1 / 3,
     );
+    if (started && berries) this.action!.resourceId = resource.id;
+    return started;
   }
+  get collecting() {
+    const action = this.action;
+    if (action?.kind !== 'forage' || action.resourceId === undefined) return null;
+    const resource = this.state.resources.find(
+      (value) => value.id === action.resourceId && value.kind === 'berries' && value.hp > 0,
+    );
+    return resource
+      ? { resource, progress: clamp((this.state.time - action.startedAt) / action.duration, 0, 1) }
+      : null;
+  }
+  private cancelCollection() {
+    if (this.action?.kind !== 'forage' || this.action.resourceId === undefined) return;
+    this.action = null;
+    this.pendingImpact = null;
+  }
+
   leaveCamp() {
     this.dismissedFire = this.campFocus;
     this.campFocus = null;
@@ -568,7 +622,7 @@ export class Simulation {
   private get campUnsafe() {
     const s = this.state;
     return (
-      s.wolves.some((wolf) => wolf.hp > 0 && distance(wolf, s.player) < 105) ||
+      this.wolfPack.threats(s, this.torchActive, 105).length > 0 ||
       s.needs.health < 30 ||
       s.needs.hunger < 12 ||
       s.needs.thirst < 12 ||
@@ -651,7 +705,7 @@ export class Simulation {
   }
   private harvest(resource: Resource) {
     const s = this.state;
-    if (resource.hp <= 0 || distance(s.player, resource) > 53) return;
+    if (resource.hp <= 0 || !s.resources.includes(resource) || distance(s.player, resource) > 53) return;
     resource.hp--;
     if (resource.kind === 'tree') {
       const count = resource.hp <= 0 ? 14 : 7;
@@ -927,7 +981,7 @@ export class Simulation {
         n.thirst = clamp(n.thirst + 10);
         n.health = clamp(n.health + 8);
       }
-      if (item === 'torch') s.torchUntil = s.time + 90;
+      if (item === 'torch') s.torchUntil = s.time + TORCH_DURATION;
       s.inventory[item]--;
       this.clearUnavailableEquipment();
       const messages: Partial<Record<ItemId, string>> = {
@@ -938,7 +992,7 @@ export class Simulation {
         tea: 'Warm from the inside. +25 thirst. +24 warmth.',
         bandage: 'Patched up. +35 health.',
         meal: 'A warm meal. +55 hunger. +8 health.',
-        torch: 'A light in your hands. Your torch burns for 90 seconds.',
+        torch: 'A light in your hands. Your torch burns for 35 seconds. Carry a spare.',
         campfire: 'Your campfire is ready. Keep it fed with wood.',
         shelter: 'Home is where you make it. Shelter built.',
         workbench: 'Your workbench is ready. Interact with it to open the full workshop.',
@@ -1026,13 +1080,23 @@ export class Simulation {
     );
   }
   update(dt: number) {
-    if (this.paused || this.state.status !== 'playing') return;
+    if (this.paused || this.state.status !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
     const s = this.state,
       n = s.needs;
     const previousTime = s.time;
     const movement = movementVector(this.keys);
     if (this.action?.kind === 'feed' && (movement.x || movement.y || this.target || this.campUnsafe))
       this.leaveCamp();
+    if (
+      this.action?.resourceId !== undefined &&
+      (movement.x ||
+        movement.y ||
+        this.target ||
+        !this.collecting ||
+        distance(s.player, this.collecting.resource) > 48 ||
+        this.hitFlash > 0)
+    )
+      this.cancelCollection();
     s.time += dt;
     this.processAction();
     this.clearUnavailableEquipment();
@@ -1082,6 +1146,17 @@ export class Simulation {
       }
     }
     const travelled = distance(before, s.player);
+    if (distance(this.lastExplored, s.player) >= 8 || s.time - this.lastExploreAt > 0.6) {
+      const light = daylightAt(s.time);
+      const radius = Math.max(
+        30 + light * (EXPLORE_RADIUS - 30),
+        this.torchActive ? 88 : 0,
+        this.fireNearby ? 100 : 0,
+      );
+      revealAround(s.explored, this.exploredCells, s.player, radius);
+      this.lastExplored = { ...s.player };
+      this.lastExploreAt = s.time;
+    }
     if (this.target && intent && dt > 0 && travelled < 0.000001) {
       this.target = null;
       this.campStill = -1;
@@ -1102,9 +1177,18 @@ export class Simulation {
     if (this.keys.has(' ')) this.attack();
     else if (this.keys.has('primary') && (s.equipped === 'hatchet' || s.equipped === 'pickaxe'))
       this.useHeld(this.aim);
-    else if (this.keys.has('e') && this.campFocus === null && !this.campApproach) this.interact();
+    else if (
+      this.keys.has('e') &&
+      !movement.x &&
+      !movement.y &&
+      !this.target &&
+      this.campFocus === null &&
+      !this.campApproach
+    )
+      this.interact();
     const weather = weatherAt(s.time);
     if (weather !== s.weather) {
+      this.weatherTransition.change(weather, s.time);
       s.weather = weather;
       if (weather === 'rain' || weather === 'storm') {
         this.notify(
@@ -1162,18 +1246,18 @@ export class Simulation {
       sheltered = this.shelterNearby;
     n.hunger = clamp(n.hunger - dt * 0.135 * factor);
     n.thirst = clamp(n.thirst - dt * 0.175 * factor);
-    const wet = s.weather === 'rain' || s.weather === 'storm';
-    let warmthChange = this.night ? -0.2 * factor : 0.4;
-    if (wet) warmthChange -= 0.5 * factor;
-    if (s.weather === 'cold') warmthChange -= 0.75 * factor;
+    const mix = this.weatherMix,
+      wet = mix.rain;
+    let warmthChange = -0.2 * factor + daylightAt(s.time) * (0.4 + 0.2 * factor);
+    warmthChange -= wet * 0.5 * factor + mix.cold * 0.75 * factor;
     if (warm) warmthChange += 1.8;
-    if (sheltered) warmthChange += wet ? 1 : 0.65;
+    if (sheltered) warmthChange += 0.65 + wet * 0.35;
     if (this.torchActive) warmthChange += 0.5;
     n.warmth = clamp(n.warmth + warmthChange * dt);
     for (const stat of [n.hunger, n.thirst, n.warmth])
       if (stat < 8) n.health = clamp(n.health - dt * 0.85 * factor);
     if (warm && n.hunger > 40 && n.thirst > 35) n.health = clamp(n.health + dt * 0.22);
-    for (const fire of s.fires) fire.fuel = clamp(fire.fuel - dt * (wet ? 0.44 : 0.25));
+    for (const fire of s.fires) fire.fuel = clamp(fire.fuel - dt * (0.25 + wet * 0.19));
     for (const resource of s.resources)
       if (resource.hp <= 0 && s.time > resource.readyAt) {
         resource.hp = RESOURCE_HP[resource.kind];
@@ -1187,6 +1271,7 @@ export class Simulation {
       (_wolf, attack) => {
         n.health = clamp(n.health - WOLF_ATTACKS[attack].damage * factor);
         n.stamina = clamp(n.stamina - (attack === 'pounce' ? 14 : 6));
+        this.cancelCollection();
         this.hitFlash = 0.35;
         this.burst(s.player, '#cf846d');
         this.onSound?.('hit');
@@ -1255,22 +1340,22 @@ export class Simulation {
         ? {
             id: hearth.id,
             fuel: hearth.fuel,
-            secondsLeft: Math.ceil(
-              hearth.fuel / (s.weather === 'rain' || s.weather === 'storm' ? 0.44 : 0.25),
-            ),
+            secondsLeft: Math.ceil(hearth.fuel / (0.25 + this.weatherMix.rain * 0.19)),
             canFeed: s.inventory.wood > 0 && hearth.fuel <= 80 && !this.action,
             feeding,
             seated: this.seated,
             progress: feeding ? Math.min(1, (s.time - this.action!.startedAt) / this.action!.duration) : 0,
           }
         : null,
-      wolvesNear: s.wolves.filter((wolf) => wolf.hp > 0 && distance(wolf, s.player) < 130).length,
+      wolvesNear: this.wolfPack.threats(s, this.torchActive, 130).length,
       wolfWindup: [...this.wolfPack.minds.values()].some((mind) => mind.phase === 'windup'),
       wolfPounce: [...this.wolfPack.minds.values()].some(
         (mind) => mind.phase === 'windup' && mind.attack === 'pounce',
       ),
       shelterNearby: this.shelterNearby,
       torchActive: this.torchActive,
+      torchSeconds: Math.max(0, Math.ceil(s.torchUntil - s.time)),
+      exploredPercent: exploredPercent(s.explored),
       journal: [...s.journal],
       name: s.name,
       difficulty: s.difficulty,

@@ -121,6 +121,27 @@
       "height": 24,
       "source": "generated",
       "sourceAsset": "art/generated/embers-instinct/mouse-emblem.png"
+    },
+    "mapPine": {
+      "file": "art/ui/map-pine.png",
+      "width": 16,
+      "height": 22,
+      "source": "generated",
+      "sourceAsset": "art/generated/trails-twilight/map-pine.png"
+    },
+    "mapBoulder": {
+      "file": "art/ui/map-boulder.png",
+      "width": 18,
+      "height": 14,
+      "source": "generated",
+      "sourceAsset": "art/generated/trails-twilight/map-boulder.png"
+    },
+    "forestCursor": {
+      "file": "art/ui/forest-cursor.png",
+      "width": 28,
+      "height": 32,
+      "source": "generated",
+      "sourceAsset": "art/generated/trails-twilight/forest-cursor.png"
     }
   },
   "textures": {
@@ -136,6 +157,13 @@
       "height": 64,
       "source": "generated",
       "sourceAsset": "art/generated/roots-reclaimed/satchel-linen.png"
+    },
+    "mapPaper": {
+      "file": "art/textures/map-paper.png",
+      "width": 96,
+      "height": 96,
+      "source": "generated",
+      "sourceAsset": "art/generated/trails-twilight/map-paper.png"
     }
   },
   "frames": {
@@ -201,6 +229,14 @@
       "source": "generated",
       "sourceAsset": "art/generated/roots-reclaimed/satchel-frame.png",
       "slice": 20
+    },
+    "map": {
+      "file": "art/ui/map-frame.png",
+      "width": 192,
+      "height": 128,
+      "source": "generated",
+      "sourceAsset": "art/generated/trails-twilight/map-frame.png",
+      "slice": 14
     }
   },
   "effects": {
@@ -267,6 +303,30 @@
       "source": "generated",
       "sourceAsset": "art/generated/roots-reclaimed/camp-clearing.png",
       "anchor": [120, 92]
+    },
+    "campGround": {
+      "file": "art/objects/camp-ground.png",
+      "width": 312,
+      "height": 216,
+      "source": "generated",
+      "sourceAsset": "art/generated/trails-twilight/camp-ground.png",
+      "anchor": [156, 108]
+    },
+    "fallenLog": {
+      "file": "art/objects/fallen-log.png",
+      "width": 64,
+      "height": 40,
+      "source": "generated",
+      "sourceAsset": "art/generated/trails-twilight/fallen-log.png",
+      "anchor": [32, 34]
+    },
+    "waystone": {
+      "file": "art/objects/waystone.png",
+      "width": 38,
+      "height": 46,
+      "source": "generated",
+      "sourceAsset": "art/generated/trails-twilight/waystone.png",
+      "anchor": [19, 42]
     }
   }
 }

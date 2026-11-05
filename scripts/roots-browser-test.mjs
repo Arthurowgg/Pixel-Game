@@ -114,7 +114,7 @@ try {
 
   // Earn a station with actual gathering and cardinal navigation, not edited stock.
   await page.keyboard.down('e');
-  await page.waitForTimeout(1820);
+  await page.waitForTimeout(4300);
   await page.keyboard.up('e');
   await expect(canvas).toHaveAttribute('data-chop-leaves', /^[1-9]/);
   await page.waitForTimeout(850);
@@ -123,7 +123,7 @@ try {
   await page.keyboard.press('e');
   await page.waitForTimeout(730); // nearby fiber
   await move(page, -38, -21);
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 6; i++) {
     await clickAt(page, -37, -40);
     await page.waitForTimeout(710);
   }
@@ -339,7 +339,13 @@ try {
   await expect(mobile.locator('.wolf-encounter')).toContainText('Heavy pounce incoming.');
   const warning = await mobile.locator('.wolf-encounter').boundingBox(),
     vitals = await mobile.locator('.survivor-panel').boundingBox();
-  expect(warning.x).toBeGreaterThanOrEqual(vitals.x + vitals.width);
+  const overlaps =
+    warning.x < vitals.x + vitals.width &&
+    warning.x + warning.width > vitals.x &&
+    warning.y < vitals.y + vitals.height &&
+    warning.y + warning.height > vitals.y;
+  expect(overlaps).toBe(false);
+  expect(warning.x).toBeGreaterThanOrEqual(0);
   expect(warning.x + warning.width).toBeLessThanOrEqual(320);
   await screenshot(mobile, 'roots-pounce-small-phone');
   passed('The heavy-pounce warning stays readable on a 320px phone without covering survival gauges');

@@ -75,7 +75,7 @@ export function SatchelDialog({
   return (
     <Modal
       title="Your satchel"
-      eyebrow="ROOTS & REFUGE · EVERYTHING YOU CARRY"
+      eyebrow="TRAILS & TWILIGHT · EVERYTHING YOU CARRY"
       onClose={onClose}
       className="inventory-dialog satchel-dialog"
       wide

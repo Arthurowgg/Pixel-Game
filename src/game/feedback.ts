@@ -1,3 +1,4 @@
+import { daylightAt } from './climate';
 import { artImages } from './animation';
 import { wrap } from './atmosphere';
 import type { Simulation } from './simulation';
@@ -44,7 +45,7 @@ export class ForestFeedback {
         x: sim.state.player.x + this.side * 2,
         y: sim.state.player.y + 3,
         time,
-        wet: sim.state.weather === 'rain' || sim.state.weather === 'storm',
+        wet: sim.weatherMix.rain > 0.35,
         side: this.side,
       });
       if (this.tracks.length > MAX_FOOTPRINTS) this.tracks.shift();
@@ -75,7 +76,7 @@ export class ForestFeedback {
         );
       }
     }
-    if (sim.state.weather === 'rain' || sim.state.weather === 'storm') {
+    if (sim.weatherMix.rain > 0) {
       const count = Math.min(42, Math.max(14, Math.floor((width * height) / 7000)));
       for (let i = 0; i < count; i++) {
         const phase = wrap(sim.state.time * 1.8 + i * 0.618, 1);
@@ -83,7 +84,7 @@ export class ForestFeedback {
         const x = Math.round(camera.x + wrap(i * 113 + 35, width));
         const y = Math.round(camera.y + wrap(i * 79 + 21, height));
         const spread = 1 + Math.floor(phase * 13);
-        ctx.globalAlpha = (1 - phase / 0.26) * 0.35;
+        ctx.globalAlpha = (1 - phase / 0.26) * 0.35 * sim.weatherMix.rain;
         ctx.fillStyle = '#c4d9cb';
         ctx.fillRect(x - spread, y, 2, 1);
         ctx.fillRect(x + spread, y, 2, 1);
@@ -124,14 +125,14 @@ export class ForestFeedback {
         const x = Math.round(fire.x + Math.sin(phase * 5 + i) * 6);
         const y = Math.round(fire.y - 22 - phase * 48);
         ctx.globalAlpha = (1 - phase) * 0.11;
-        ctx.fillStyle = sim.night ? '#b4b6a0' : '#6f7967';
+        const day = daylightAt(sim.state.time);
+        ctx.fillStyle = `rgb(${Math.round(180 - day * 69)},${Math.round(182 - day * 61)},${Math.round(160 - day * 57)})`;
         ctx.fillRect(x - size / 2, y, size, size - 1);
         ctx.fillRect(x - size / 2 - 2, y + 2, size + 2, Math.max(1, size - 4));
       }
-      const rain = sim.state.weather === 'rain' || sim.state.weather === 'storm';
-      for (let i = 0; i < (rain ? 3 : 7); i++) {
+      for (let i = 0; i < 7; i++) {
         const phase = wrap(time * 0.45 + i * 0.143 + fire.id * 0.17, 1);
-        ctx.globalAlpha = (1 - phase) * 0.85;
+        ctx.globalAlpha = (1 - phase) * 0.85 * (i < 3 ? 1 : 1 - sim.weatherMix.rain);
         this.sparkle(
           ctx,
           fire.x + Math.sin(phase * 5 + i) * 9,
@@ -152,12 +153,12 @@ export class ForestFeedback {
       this.sparkle(ctx, resource.x, resource.y - 8, Math.round(10 + age * 38));
       counts.impacts++;
     }
-    if (sim.state.weather === 'cold') {
+    if (sim.weatherMix.cold > 0) {
       const phase = wrap(time * 0.4, 1);
       if (phase < 0.45) {
         const p = sim.state.player,
           sign = sim.state.facing;
-        ctx.globalAlpha = (1 - phase / 0.45) * 0.3;
+        ctx.globalAlpha = (1 - phase / 0.45) * 0.3 * sim.weatherMix.cold;
         ctx.fillStyle = '#c6d9ce';
         ctx.fillRect(
           Math.round(p.x + sign * (5 + phase * 10)),
@@ -182,7 +183,7 @@ export class ForestFeedback {
     if (!settings.atmosphere && !(settings.damageFlash && !settings.reducedMotion && sim.hitFlash > 0))
       return;
     ctx.save();
-    // A held torch adds warm visibility; reduced motion removes its flicker, not its light.
+    // Decorative warm tint only. The independent ForestLighting mask supplies essential visibility.
     if (settings.atmosphere && sim.torchActive) {
       const p = sim.state.player,
         x = p.x - camera.x,
@@ -202,8 +203,8 @@ export class ForestFeedback {
       ctx.fillRect(0, 0, 3, height);
       ctx.fillRect(width - 3, 0, 3, height);
     }
-    if (settings.atmosphere && sim.state.weather === 'cold' && sim.state.needs.warmth < 40) {
-      ctx.globalAlpha = 0.12 + (40 - sim.state.needs.warmth) / 200;
+    if (settings.atmosphere && sim.weatherMix.cold > 0 && sim.state.needs.warmth < 40) {
+      ctx.globalAlpha = (0.12 + (40 - sim.state.needs.warmth) / 200) * sim.weatherMix.cold;
       ctx.fillStyle = '#c0d7ce';
       for (const x of [0, width - 1])
         for (let i = 0; i < 6; i++) ctx.fillRect(x === 0 ? 0 : width - 2 - i, height - 2 - i * 4, 2 + i, 2);

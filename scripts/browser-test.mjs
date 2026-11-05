@@ -130,9 +130,10 @@ try {
   await page.getByRole('button', { name: 'Enter the forest' }).click();
   await page.locator('.forest-loading').waitFor({ state: 'hidden' });
   await expect(page.locator('.survivor-heading h2')).toHaveText('Robin');
-  await expect(page.locator('.interaction-prompt')).toContainText('Chop pine');
+  await expect(page.locator('.interaction-prompt')).toHaveCount(0);
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-collecting', 'none');
   await screenshot(page, 'game-desktop');
-  passed('New adventure loads the pixel world, live HUD, and context interaction');
+  passed('New adventure loads the pixel world and a quiet HUD with no gathering hints over resources');
   await expect(page.getByRole('meter', { name: 'Health', exact: true })).toHaveAttribute(
     'aria-valuenow',
     '100',
@@ -142,12 +143,10 @@ try {
   expect(
     await page.locator('.survivor-panel').evaluate((element) => getComputedStyle(element).borderImageSource),
   ).toContain('/art/ui/status-frame.png');
-  await expect(page.locator('.tracked-task b')).toHaveText('0/8');
-  const fieldNotes = page.getByRole('button', { name: 'FIELD NOTES', exact: true });
-  await expect(fieldNotes).toHaveAttribute('aria-expanded', 'false');
-  await fieldNotes.click();
-  await expect(fieldNotes).toHaveAttribute('aria-expanded', 'true');
-  await fieldNotes.click();
+  await page.keyboard.press('j');
+  await expect(page.getByRole('heading', { name: 'Notes from a life outside.', exact: true })).toBeVisible();
+  await expect(page.locator('.journal-objectives summary')).toContainText('0 / 7');
+  await page.keyboard.press('Escape');
   await page.keyboard.press('b');
   const satchel = await page.getByRole('dialog').boundingBox();
   expect(Math.abs(satchel.x + satchel.width / 2 - 720)).toBeLessThan(2);
@@ -228,7 +227,7 @@ try {
   passed('Sun shafts change actual rendered pixels, can be disabled, and the HUD slices the inventory atlas');
 
   await page.keyboard.down('e');
-  await page.waitForTimeout(2200);
+  await page.waitForTimeout(4300);
   await page.keyboard.up('e');
   await page.keyboard.press('b');
   await expect(page.getByRole('button', { name: 'Pine wood, 4 in backpack', exact: true })).toBeVisible();
@@ -249,7 +248,8 @@ try {
   passed('Keyboard gathering, backpack consumption, and missing-material recipe gates work');
 
   await page.keyboard.press('m');
-  await expect(page.getByRole('heading', { name: 'A familiar patch of wilderness.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'The Forest', exact: true })).toBeVisible();
+  await expect(page.locator('.chart-progress')).toContainText('%');
   await screenshot(page, 'map');
   await page.keyboard.press('Escape');
   await page.keyboard.press('j');
@@ -298,15 +298,15 @@ try {
 
   await checkpoint(page, () => {
     const s = JSON.parse(localStorage.getItem('wildpine.save.v2'));
-    s.time = 227.8;
-    s.weather = 'clear';
+    s.time = 260;
+    s.weather = 'storm';
     s.nights = 1;
     s.player = { x: 900, y: 780 };
     s.fires[0].fuel = 100;
     Object.assign(s.needs, { health: 100, hunger: 100, thirst: 100, warmth: 100 });
     localStorage.setItem('wildpine.save.v2', JSON.stringify(s));
   });
-  await expect(page.locator('.weather-chip')).toContainText('Thunderstorm');
+  await expect(page.locator('.weather-chip')).toContainText('Storm');
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-sunlight', 'off');
   await screenshot(page, 'storm');
   await page.keyboard.press('Escape');
@@ -318,7 +318,7 @@ try {
     s.player = { x: 1040, y: 870 };
     localStorage.setItem('wildpine.save.v2', JSON.stringify(s));
   });
-  await expect(page.locator('.weather-chip')).toContainText('Wolves nearby');
+  await expect(page.locator('.weather-chip')).toContainText('Howls');
   await page.keyboard.press('Escape');
   expect((await saved(page)).wolves.length).toBe(2);
   await page.getByRole('button', { name: 'Back to the wild' }).click();
@@ -349,7 +349,11 @@ try {
   await expect(page.getByRole('heading', { name: 'The wild remembers you.' })).toBeVisible();
   await page.getByRole('button', { name: 'Begin again' }).click();
   await page.locator('.forest-loading').waitFor({ state: 'hidden' });
-  await expect(page.locator('.health-row')).toContainText('100/100');
+  await expect(page.locator('.health-row')).toContainText('100');
+  await expect(page.getByRole('meter', { name: 'Health', exact: true })).toHaveAttribute(
+    'aria-valuenow',
+    '100',
+  );
   passed('Victory, endless continuation, death, and restart form a complete playable loop');
 
   // The equipment fixture exercises every item, not just the six default pockets.
@@ -680,19 +684,23 @@ try {
   });
   await page.keyboard.down('e');
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-animation', 'forage-right');
-  await page.keyboard.down('d');
-  await page.waitForTimeout(230);
-  expect([0, 1, 2]).toContain(Number(await page.locator('.game-canvas').getAttribute('data-frame')));
+  await page.waitForTimeout(850);
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-collecting', '0');
+  const halfCircle = Number(await page.locator('.game-canvas').getAttribute('data-collection-progress'));
+  expect(halfCircle).toBeGreaterThan(0.3);
+  expect(halfCircle).toBeLessThan(0.7);
+  await expect(page.locator('.quick-slot.active .torch-timer')).toHaveCount(0);
+  expect((await saved(page)).inventory.berries).toBe(0);
   await screenshot(page, 'berry-gathering');
-  await page.waitForTimeout(110);
+  await page.waitForTimeout(1250);
   await page.keyboard.up('e');
-  await page.keyboard.up('d');
   await page.keyboard.press('Escape');
   const picked = await saved(page);
   expect(picked.player).toEqual({ x: 500, y: 500 });
   expect(picked.inventory.berries).toBe(3);
   expect(picked.inventory.fiber).toBe(1);
-  passed('Berry gathering plants the feet, avoids the overstretched poses, and awards one contact reward');
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-collecting', 'none');
+  passed('Wild berries take a visible timed circle and only pay out when it fills, with feet planted');
 
   // Release the desktop Canvas loop before measuring touch input on mobile.
   await page.close();

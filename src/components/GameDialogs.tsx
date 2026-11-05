@@ -1,10 +1,13 @@
+import { discoveredLandmarks, mapViewport } from '../game/cartography';
+import type { MapViewport } from '../game/cartography';
+import { cellAt, exploredPercent } from '../game/exploration';
 import { CraftingDialog } from './CraftingDialog';
 import { SatchelDialog } from './SatchelDialog';
 import { PixelPreview } from './PixelPreview';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { Modal } from './Modal';
-import { clock } from '../game/data';
+import { clock, WORLD } from '../game/data';
 import { drawMap } from '../game/renderer';
 import type { Simulation } from '../game/simulation';
 import type { GameView } from '../game/types';
@@ -60,75 +63,176 @@ export function MapDialog({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const [viewport, setViewport] = useState(() =>
+    mapViewport(window.innerWidth < 620 ? 2.4 : 1.6, sim.state.player),
+  );
+  const drag = useRef<{ id: number; x: number; y: number; viewport: MapViewport } | null>(null);
+  const discoveries = discoveredLandmarks(sim.state);
+  const zoom = (change: number) =>
+    setViewport((current) => mapViewport(current.zoom + change, current.center));
   useEffect(() => {
-    if (ref.current) drawMap(ref.current, sim.state, ground, true);
-  }, [sim, ground]);
+    const canvas = ref.current;
+    if (!canvas) return;
+    const paint = () => {
+      canvas.width = Math.max(120, Math.round(canvas.clientWidth));
+      canvas.height = Math.round((canvas.width * WORLD.height) / WORLD.width);
+      drawMap(canvas, sim.state, ground, true, viewport);
+    };
+    const observer = new ResizeObserver(paint);
+    observer.observe(canvas);
+    paint();
+    return () => observer.disconnect();
+  }, [sim, ground, viewport]);
   return (
-    <Modal
-      title="A familiar patch of wilderness."
-      eyebrow="YOUR MAP · THE FOREST"
-      onClose={onClose}
-      wide
-      className="map-dialog"
-    >
-      <div className="map-heading">
-        <span>
-          <Icon name="compass" size={15} />
-          TEMPERATE WOODLAND
+    <Modal title="The Forest" eyebrow="YOUR FIELD MAP" onClose={onClose} wide className="map-dialog">
+      <div className="map-toolbar">
+        <span className="chart-progress">
+          <Icon name="compass" size={17} />
+          <b>{exploredPercent(sim.state.explored)}%</b> charted
         </span>
-        <span>
-          {Math.round(sim.state.player.x)} E · {Math.round(sim.state.player.y)} N
-        </span>
+        <div className="map-navigation" role="group" aria-label="Map navigation">
+          <button onClick={() => zoom(-0.5)} disabled={viewport.zoom <= 1} aria-label="Zoom out">
+            −
+          </button>
+          <output aria-label="Map zoom">{viewport.zoom.toFixed(1)}×</output>
+          <button onClick={() => zoom(0.5)} disabled={viewport.zoom >= 4} aria-label="Zoom in">
+            +
+          </button>
+          <button
+            onClick={() => setViewport(mapViewport(Math.max(2, viewport.zoom), sim.state.player))}
+            aria-label="Center on you"
+            title="Center on you"
+          >
+            <Icon name="compass" size={17} />
+          </button>
+          <button
+            onClick={() => setViewport(mapViewport(1, { x: WORLD.width / 2, y: WORLD.height / 2 }))}
+            aria-label="Full map"
+            title="Full map"
+          >
+            <Icon name="expand" size={17} />
+          </button>
+        </div>
       </div>
       <div className="expanded-map">
         <canvas
           ref={ref}
           width={600}
-          height={420}
-          aria-label="Map of the forest showing your position, campfires, placed workbenches, and the spring"
+          height={467}
+          tabIndex={0}
+          aria-describedby="map-instructions"
+          aria-label={`Exploration map: ${exploredPercent(sim.state.explored)} percent charted. ${discoveries.length ? `Discovered: ${discoveries.map((point) => point.name).join(', ')}.` : 'The woodland beyond your camp is uncharted.'}`}
+          onPointerDown={(event) => {
+            if (drag.current || event.button !== 0) return;
+            event.preventDefault();
+            event.currentTarget.focus();
+            event.currentTarget.setPointerCapture(event.pointerId);
+            drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, viewport };
+          }}
+          onPointerMove={(event) => {
+            const start = drag.current;
+            if (!start || start.id !== event.pointerId) return;
+            const box = event.currentTarget.getBoundingClientRect();
+            setViewport(
+              mapViewport(start.viewport.zoom, {
+                x:
+                  start.viewport.center.x -
+                  (((event.clientX - start.x) / box.width) * WORLD.width) / start.viewport.zoom,
+                y:
+                  start.viewport.center.y -
+                  (((event.clientY - start.y) / box.height) * WORLD.height) / start.viewport.zoom,
+              }),
+            );
+          }}
+          onPointerUp={(event) => {
+            if (drag.current?.id === event.pointerId) drag.current = null;
+          }}
+          onPointerCancel={() => {
+            drag.current = null;
+          }}
+          onLostPointerCapture={() => {
+            drag.current = null;
+          }}
+          onKeyDown={(event) => {
+            const directions: Record<string, [number, number]> = {
+              ArrowLeft: [-1, 0],
+              ArrowRight: [1, 0],
+              ArrowUp: [0, -1],
+              ArrowDown: [0, 1],
+            };
+            const direction = directions[event.key];
+            if (direction) {
+              event.preventDefault();
+              event.stopPropagation();
+              setViewport((current) =>
+                mapViewport(current.zoom, {
+                  x: current.center.x + (direction[0] * 120) / current.zoom,
+                  y: current.center.y + (direction[1] * 120) / current.zoom,
+                }),
+              );
+            } else if (event.key === '+' || event.key === '-' || event.key === '=') {
+              event.preventDefault();
+              zoom(event.key === '-' ? -0.5 : 0.5);
+            }
+          }}
         />
         <span className="map-north">
-          N<Icon name="arrow" size={14} />
-        </span>
-        <span className="map-corner-label">
-          WILDPINE FIELD SURVEY
-          <br />
-          1800 × 1400
+          N<Icon name="arrow" size={12} />
         </span>
       </div>
       <div className="map-legend">
         <span>
           <i className="legend-you" />
-          You are here
+          You
         </span>
         <span>
           <i className="legend-camp" />
-          Campfire
+          Camp
         </span>
-        <span>
-          <i className="legend-workbench" />
-          Workbench
-        </span>
-        <span>
-          <i className="legend-water" />
-          Fresh water
-        </span>
-        <span>
-          <i className="legend-shelter" />
-          Shelter
+        {discoveries.some((point) => point.name === 'The Spring') && (
+          <span>
+            <i className="legend-water" />
+            Spring
+          </span>
+        )}
+        {sim.state.workbenches.some((point) => sim.state.explored.includes(cellAt(point))) && (
+          <span>
+            <i className="legend-workbench" />
+            Workbench
+          </span>
+        )}
+        {sim.state.shelters.some((point) => sim.state.explored.includes(cellAt(point))) && (
+          <span>
+            <i className="legend-shelter" />
+            Shelter
+          </span>
+        )}
+        <span className="uncharted-key">
+          <i />
+          Uncharted
         </span>
       </div>
-      <div className="guide-tip">
-        <Icon name="leaf" size={17} />
-        <p>
-          Only workbenches you place appear on the map. Craft one by hand with C. Fresh spring water waits
-          northeast of camp. The rest is yours to discover.
-        </p>
+      <div className="chart-notes">
+        <span id="map-instructions">Drag or use arrow keys to browse. Walk to reveal more.</span>
+        <span>
+          {discoveries.length
+            ? `${discoveries.length} ${discoveries.length === 1 ? 'landmark' : 'landmarks'} found`
+            : 'Your discoveries are saved.'}
+        </span>
       </div>
     </Modal>
   );
 }
 export function JournalDialog({ view, onClose }: { view: GameView; onClose: () => void }) {
+  const objectives = [
+    { label: 'Gather 8 pine wood', current: view.gathered.wood || 0, goal: 8 },
+    { label: 'Gather 3 wild fiber', current: view.gathered.fiber || 0, goal: 3 },
+    { label: 'Craft your workbench', current: Number(view.crafted.includes('workbench')), goal: 1 },
+    { label: 'Place your workbench', current: Math.min(1, view.workbenchCount), goal: 1 },
+    { label: 'Collect 3 river stone', current: view.gathered.stone || 0, goal: 3 },
+    { label: 'Craft a forest shelter', current: Number(view.crafted.includes('shelter')), goal: 1 },
+    { label: 'See three sunrises', current: view.nights, goal: 3 },
+  ];
   return (
     <Modal
       title="Notes from a life outside."
@@ -145,6 +249,25 @@ export function JournalDialog({ view, onClose }: { view: GameView; onClose: () =
         </p>
         <span>DAY {String(view.day).padStart(2, '0')}</span>
       </div>
+      <details className="journal-objectives">
+        <summary>
+          First steps{' '}
+          <span>
+            {objectives.filter((goal) => goal.current >= goal.goal).length} / {objectives.length}
+          </span>
+        </summary>
+        <ul>
+          {objectives.map((goal) => (
+            <li key={goal.label} className={goal.current >= goal.goal ? 'complete' : ''}>
+              <Icon name={goal.current >= goal.goal ? 'check' : 'diamond'} size={12} />
+              <span>{goal.label}</span>
+              <b>
+                {Math.min(goal.current, goal.goal)}/{goal.goal}
+              </b>
+            </li>
+          ))}
+        </ul>
+      </details>
       <div className="journal-entries">
         {view.journal.map((entry, index) => (
           <article className={`journal-entry ${entry.kind}`} key={`${entry.time}-${index}`}>
@@ -185,6 +308,7 @@ export function PauseDialog({
   onGuide,
   onCondition,
   onFieldcraft,
+  onJournal,
   onQuit,
 }: {
   view: GameView;
@@ -193,6 +317,7 @@ export function PauseDialog({
   onGuide: () => void;
   onCondition: () => void;
   onFieldcraft: () => void;
+  onJournal: () => void;
   onQuit: () => void;
 }) {
   return (
@@ -222,6 +347,10 @@ export function PauseDialog({
         <button className="button button-secondary" onClick={onFieldcraft}>
           <Icon name="compass" size={16} />
           Fieldcraft
+        </button>
+        <button className="button button-secondary" onClick={onJournal}>
+          <Icon name="journal" size={15} />
+          Field journal
         </button>
         <button className="button button-secondary" onClick={onGuide}>
           <Icon name="journal" size={15} />

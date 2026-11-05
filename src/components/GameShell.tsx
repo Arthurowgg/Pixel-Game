@@ -8,10 +8,9 @@ import type { LoadProgress } from '../game/loading';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon, ItemIcon, Key } from './Icon';
 import { SurvivalHud } from './SurvivalHud';
-import { daylightAngle } from '../game/hud';
 import { BackpackDialog, EndDialog, JournalDialog, MapDialog, PauseDialog } from './GameDialogs';
 import { GuideDialog, SettingsDialog } from './MenuDialogs';
-import { ITEMS, WEATHER, clock } from '../game/data';
+import { ITEMS, WEATHER, TORCH_DURATION, clock } from '../game/data';
 import { Simulation } from '../game/simulation';
 import { Renderer, drawMap, loadArt } from '../game/renderer';
 import { clearGame, recordRun, saveGame } from '../game/storage';
@@ -62,7 +61,6 @@ export function GameShell({
     label: 'Forest artwork',
   });
   const readyRef = useRef(false);
-  const [tasksOpen, setTasksOpen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null),
     minimapRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<Renderer | null>(null);
@@ -78,7 +76,7 @@ export function GameShell({
   const open = useCallback(
     (next: Overlay) => {
       if (!readyRef.current && next !== null) return;
-      if (next === 'condition' || next === 'fieldcraft')
+      if (next === 'condition' || next === 'fieldcraft' || next === 'journal')
         trailReturn.current = overlayRef.current === 'pause' ? 'pause' : null;
       if (next !== 'workshop') workshopRef.current = undefined;
       overlayRef.current = next;
@@ -149,7 +147,7 @@ export function GameShell({
       last = performance.now(),
       lastUi = 0,
       lastSave = performance.now();
-    const renderer = new Renderer(canvas, initial.seed, settingsRef.current);
+    const renderer = new Renderer(canvas, initial.seed, settingsRef.current, initial.forestVersion);
     rendererRef.current = renderer;
     sim.onSound = audio.play;
     sim.onOpenCrafting = (id) => {
@@ -170,6 +168,7 @@ export function GameShell({
       renderer.draw(sim, time);
       if (time - lastUi > 120) {
         setView(sim.view());
+        audio.scene(sim.state.time, sim.weatherMix);
         if (minimapRef.current && !settingsRef.current.compactHud)
           drawMap(minimapRef.current, sim.state, renderer.ground);
         lastUi = time;
@@ -337,16 +336,6 @@ export function GameShell({
   }, [sim, initial.seed, open, refresh, input, loadAttempt, arrival]);
   const weather = WEATHER[view.weather],
     night = view.hour >= 20 || view.hour < 6;
-  const tasks = [
-    { label: 'Gather 8 pine wood', progress: view.gathered.wood || 0, goal: 8 },
-    { label: 'Gather 3 wild fiber', progress: view.gathered.fiber || 0, goal: 3 },
-    { label: 'Craft your workbench', progress: Number(view.crafted.includes('workbench')), goal: 1 },
-    { label: 'Place your workbench', progress: Math.min(1, view.workbenchCount), goal: 1 },
-    { label: 'Collect 3 river stone', progress: view.gathered.stone || 0, goal: 3 },
-    { label: 'Craft a forest shelter', progress: Number(view.crafted.includes('shelter')), goal: 1 },
-    { label: 'See three sunrises', progress: view.nights, goal: 3 },
-  ];
-  const trackedTask = tasks.find((task) => task.progress < task.goal);
   const touchKey = (key: string, label: string, icon?: string) => (
     <button
       className={`touch-key touch-${key === ' ' ? 'attack' : key}`}
@@ -455,23 +444,21 @@ export function GameShell({
         <SurvivalHud view={view} onDetails={() => open('condition')} />
         <div className="time-weather">
           <div className="day-panel hud-panel">
-            <div className={`day-dial ${night ? 'is-night' : ''}`} aria-hidden="true">
-              <Icon name={night ? 'moon' : 'sun'} size={24} />
-              <i style={{ transform: `rotate(${daylightAngle(view.hour)}deg)` }} />
-            </div>
-            <div>
-              <span>
-                DAY <b>{String(view.day).padStart(2, '0')}</b>
+            <Icon name={night ? 'moon' : 'sun'} size={17} />
+            <span className="day-number">DAY {view.day}</span>
+            <time>{clock(view.time)}</time>
+            {view.weather !== 'clear' && (
+              <span className="weather-chip" title={weather.description} aria-label={weather.name}>
+                <Icon name={weather.icon} size={15} style={{ color: weather.color }} />
+                {view.weather === 'wolves'
+                  ? 'Howls'
+                  : view.weather === 'storm'
+                    ? 'Storm'
+                    : view.weather === 'cold'
+                      ? 'Cold'
+                      : 'Rain'}
               </span>
-              <small>
-                {clock(view.time)} <i>/</i> {night ? 'NIGHTFALL' : view.hour > 17 ? 'EVENING' : 'DAYLIGHT'}
-              </small>
-            </div>
-            <div className="night-progress" title={`${view.nights} of 3 nights survived`}>
-              {[1, 2, 3].map((n) => (
-                <i key={n} className={view.nights >= n ? 'complete' : ''} />
-              ))}
-            </div>
+            )}
           </div>
           {view.wolvesNear > 0 ? (
             <div className={`wolf-encounter ${view.wolfWindup ? 'is-warning' : ''}`} role="status">
@@ -484,27 +471,17 @@ export function GameShell({
                   : `${view.wolvesNear} ${view.wolvesNear === 1 ? 'wolf' : 'wolves'} on your trail.`}
               </span>
             </div>
-          ) : (
-            <div
-              className={`weather-chip ${view.weather !== 'clear' ? 'weather-warning' : ''}`}
-              title={weather.description}
-            >
-              <Icon name={weather.icon} size={14} style={{ color: weather.color }} />
-              <span>{weather.name}</span>
-              <i />
-              {16 - (night ? 8 : 0) - (view.weather === 'cold' ? 11 : view.weather === 'rain' ? 4 : 0)}°
-            </div>
-          )}
+          ) : null}
         </div>
         <div className="map-tools">
           <div className="game-top-buttons">
             <button
-              className="hud-icon"
-              title="Sound"
-              aria-label={settings.sound ? 'Mute sounds' : 'Unmute sounds'}
-              onClick={() => onSettings({ ...settings, sound: !settings.sound })}
+              className="hud-icon map-open"
+              title="Map (M)"
+              aria-label="Map"
+              onClick={() => open('map')}
             >
-              <Icon name={settings.sound ? 'volume' : 'muted'} size={17} />
+              <Icon name="map" size={18} />
             </button>
             <button
               className="hud-icon"
@@ -534,17 +511,20 @@ export function GameShell({
             </span>
             <canvas ref={minimapRef} width={180} height={125} />
             <span className="minimap-footer">
-              <Key>M</Key>WORLD MAP
+              <Key>M</Key>
+              {view.exploredPercent}% CHARTED
               <Icon name="expand" size={11} />
             </span>
           </button>
-          <div className={`hud-save ${saveIssue ? 'save-warning' : ''}`}>
-            <Icon name={saveIssue ? 'info' : 'save'} size={10} />
-            {saveIssue ? 'LOCAL SAVING UNAVAILABLE' : 'YOUR JOURNEY IS SAVED'}
-          </div>
+          {saveIssue && (
+            <div className="hud-save save-warning" role="status">
+              <Icon name="info" size={10} />
+              LOCAL SAVING UNAVAILABLE
+            </div>
+          )}
         </div>
         <div className="toast-stack" role="status" aria-live="polite">
-          {view.toasts.slice(-2).map((toast) => (
+          {view.toasts.slice(-1).map((toast) => (
             <div className={`game-toast ${toast.type}`} key={toast.id}>
               <Icon
                 name={toast.type === 'warning' ? 'info' : toast.type === 'success' ? 'check' : 'leaf'}
@@ -554,132 +534,69 @@ export function GameShell({
             </div>
           ))}
         </div>
-        {settings.showHints && (
-          <div className={`tasks-panel hud-panel ${tasksOpen ? '' : 'tasks-collapsed'}`}>
+        {settings.showHints &&
+          view.nearest &&
+          ['fire', 'workbench', 'water', 'shelter'].includes(view.nearest.kind) && (
             <button
-              className="tasks-heading"
-              onClick={() => setTasksOpen(!tasksOpen)}
-              aria-expanded={tasksOpen}
-            >
-              <Icon name="flag" size={15} />
-              <span>FIELD NOTES</span>
-              <Icon name="chevron" size={12} />
-            </button>
-            {!tasksOpen && (
-              <div className="tracked-task">
-                <Icon name="diamond" size={8} />
-                <span>{trackedTask?.label || 'Keep wandering.'}</span>
-                <b>
-                  {trackedTask
-                    ? `${trackedTask.progress}/${trackedTask.goal}`
-                    : `${tasks.length}/${tasks.length}`}
-                </b>
-              </div>
-            )}
-            {tasksOpen && (
-              <>
-                <div className="tasks-list">
-                  {tasks.map((task) => (
-                    <div className={task.progress >= task.goal ? 'complete' : ''} key={task.label}>
-                      <span className="task-checkbox">
-                        {task.progress >= task.goal && <Icon name="check" size={9} />}
-                      </span>
-                      <span>{task.label}</span>
-                      <b>
-                        {Math.min(task.progress, task.goal)}/{task.goal}
-                      </b>
-                    </div>
-                  ))}
-                </div>
-                <button className="task-journal" onClick={() => open('journal')}>
-                  <span>One day at a time.</span>
-                  <span>
-                    JOURNAL <Key>J</Key>
-                  </span>
-                </button>
-              </>
-            )}
-          </div>
-        )}
-        <div className="player-context">
-          {view.shelterNearby && (
-            <span className="context-chip">
-              <Icon name="home" size={12} />
-              UNDER SHELTER
-            </span>
-          )}
-          {view.torchActive && (
-            <span className="context-chip">
-              <Icon name="spark" size={12} />
-              TORCH LIT
-            </span>
-          )}
-        </div>
-        {view.nearest && (
-          <button
-            className="interaction-prompt"
-            onClick={() => {
-              sim.interact();
-              refresh();
-            }}
-          >
-            <Key>E</Key>
-            <span>
-              <strong>{view.nearest.label}</strong>
-              <small>{view.nearest.detail}</small>
-            </span>
-            <span className="interaction-dot" />
-          </button>
-        )}
-        <div
-          className="held-item-status"
-          data-item={view.equipped || 'none'}
-          data-action={view.action?.kind || 'idle'}
-        >
-          {view.equipped ? <ItemIcon item={view.equipped} size={27} /> : <Icon name="pack" size={21} />}
-          <div>
-            <span>READY</span>
-            <strong>{view.equipped ? ITEMS[view.equipped].name : 'Empty hands'}</strong>
-          </div>
-          <button
-            className="held-use"
-            disabled={!view.equipped || !!view.action}
-            onClick={() => {
-              sim.useHeld();
-              refresh();
-            }}
-            aria-label="Use held item"
-          >
-            <Icon name="mouse" size={16} />
-            <span>USE</span>
-          </button>
-          <button
-            className="held-stow"
-            disabled={!view.equipped}
-            onClick={() => {
-              sim.equip(null);
-              refresh();
-            }}
-            aria-label="Stow held item"
-            title="Empty hands (X)"
-          >
-            <Icon name="close" size={10} />
-          </button>
-          {view.action && (
-            <i
-              className="action-progress"
-              style={{
-                width: `${Math.min(100, ((view.time - view.action.startedAt) / view.action.duration) * 100)}%`,
+              className="interaction-prompt"
+              onClick={() => {
+                sim.interact();
+                refresh();
               }}
-            />
+            >
+              <Key>E</Key>
+              <span>
+                <strong>{view.nearest.label}</strong>
+                <small>{view.nearest.detail}</small>
+              </span>
+              <span className="interaction-dot" />
+            </button>
           )}
-        </div>
+        {view.action?.resourceId !== undefined && (
+          <span
+            className="sr-only"
+            role="progressbar"
+            aria-label="Collecting wild berries"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(
+              Math.min(100, ((view.time - view.action.startedAt) / view.action.duration) * 100),
+            )}
+          />
+        )}
         <div className="quickbar-wrap">
-          <span className="quickbar-title">
-            <span />
-            YOUR POCKETS
-            <span />
-          </span>
+          <div
+            className="held-item-status"
+            data-item={view.equipped || 'none'}
+            data-action={view.action?.kind || 'idle'}
+          >
+            {view.equipped && <ItemIcon item={view.equipped} size={17} />}
+            <strong>{view.equipped ? ITEMS[view.equipped].name : 'Empty hands'}</strong>
+            <button
+              className="held-use"
+              disabled={!view.equipped || !!view.action}
+              onClick={() => {
+                sim.useHeld();
+                refresh();
+              }}
+              aria-label="Use held item"
+              title="Use held item (left-click)"
+            >
+              <Icon name="mouse" size={13} />
+            </button>
+            <button
+              className="held-stow"
+              disabled={!view.equipped}
+              onClick={() => {
+                sim.equip(null);
+                refresh();
+              }}
+              aria-label="Stow held item"
+              title="Empty hands (X)"
+            >
+              <Icon name="close" size={10} />
+            </button>
+          </div>
           <div className="quickbar">
             {view.hotbar.map((item, index) => (
               <button
@@ -712,11 +629,24 @@ export function GameShell({
                     : `Empty shortcut ${index + 1}`
                 }
               >
+                {item === 'torch' && view.torchLit && (
+                  <svg className="torch-timer" viewBox="0 0 44 44" aria-hidden="true">
+                    <circle
+                      cx="22"
+                      cy="22"
+                      r="20"
+                      pathLength="100"
+                      style={{
+                        strokeDasharray: `${Math.min(100, (view.torchSeconds / TORCH_DURATION) * 100)} 100`,
+                      }}
+                    />
+                  </svg>
+                )}
                 <span className="slot-number">{index + 1}</span>
                 {item ? <ItemIcon item={item} size={36} /> : <span className="empty-slot-mark">+</span>}
                 <span className="slot-count">
                   {item === 'torch' && view.torchLit ? (
-                    <Icon name="fire" size={9} />
+                    `${view.torchSeconds}s`
                   ) : item && ITEMS[item].category === 'TOOL' ? (
                     <Icon name="diamond" size={7} />
                   ) : item ? (
@@ -740,26 +670,11 @@ export function GameShell({
               <Icon name="pack" size={27} />
               <span className="slot-tooltip">Your backpack</span>
             </button>
-          </div>
-        </div>
-        <div className="game-bottom-tools">
-          <div className="tool-buttons">
-            {[
-              ['craft', 'hammer', 'C', 'Handcraft'],
-              ['map', 'map', 'M', 'Map'],
-              ['journal', 'journal', 'J', 'Field journal'],
-            ].map(([panel, icon, key, label]) => (
-              <button
-                className="hud-tool"
-                key={panel}
-                aria-label={label}
-                title={`${label} (${key})`}
-                onClick={() => open(panel as Overlay)}
-              >
-                <Icon name={icon} size={20} />
-                <span>{key}</span>
-              </button>
-            ))}
+            <button className="quick-slot craft-slot" onClick={() => open('craft')} aria-label="Handcraft">
+              <span className="slot-number">C</span>
+              <Icon name="hammer" size={26} />
+              <span className="slot-tooltip">Handcraft</span>
+            </button>
           </div>
         </div>
         <div className="touch-controls">
@@ -809,7 +724,7 @@ export function GameShell({
         />
       )}
       {overlay === 'map' && <MapDialog sim={sim} ground={rendererRef.current?.ground} onClose={close} />}
-      {overlay === 'journal' && <JournalDialog view={view} onClose={close} />}
+      {overlay === 'journal' && <JournalDialog view={view} onClose={() => open(trailReturn.current)} />}
       {overlay === 'pause' && (
         <PauseDialog
           view={view}
@@ -818,6 +733,7 @@ export function GameShell({
           onGuide={() => open('guide')}
           onCondition={() => open('condition')}
           onFieldcraft={() => open('fieldcraft')}
+          onJournal={() => open('journal')}
           onQuit={quit}
         />
       )}

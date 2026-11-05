@@ -51,7 +51,7 @@ export const RECIPE_BENEFITS: Partial<Record<ItemId, string>> = {
   pickaxe: 'Two strikes break a boulder. Hold it with 2, or pin it to any pocket.',
   campfire: 'Place your kit on clear ground. Burn wood for warmth, cooking, and a little safety.',
   shelter: 'Build your kit in an open spot. Stay close to keep out of the cold and rain.',
-  torch: '90 seconds of light and warmth. Keep it in hand to frighten wolves.',
+  torch: '35 seconds of light and warmth. Bring a spare. Keep it in hand to frighten wolves.',
   bandage: 'Restores 35 health. Use from your satchel, or hold it and left-click.',
   meal: '+55 hunger · +10 thirst · +8 health. A proper meal for the trail.',
   tea: '+25 thirst · +24 warmth. Carry the comfort of your campfire with you.',

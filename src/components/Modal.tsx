@@ -39,7 +39,7 @@ export function Modal({
     const focusables = () =>
       Array.from(
         ref.current?.querySelectorAll<HTMLElement>(
-          'button:not(:disabled), [href], input, select, textarea, [tabindex="0"]',
+          'button:not(:disabled), [href], input, select, textarea, summary, [tabindex="0"]',
         ) || [],
       );
     (focusables().find((el) => el.hasAttribute('data-autofocus')) || focusables()[0] || ref.current)?.focus();

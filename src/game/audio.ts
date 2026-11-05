@@ -1,3 +1,5 @@
+import { daylightAt } from './climate';
+import type { WeatherMix } from './climate';
 import { DEFAULT_SETTINGS } from './data';
 import type { Settings } from './types';
 
@@ -6,6 +8,11 @@ class ForestAudio {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private wind: GainNode | null = null;
+  private rain: GainNode | null = null;
+  private sceneDay = 1;
+  private sceneRain = 0;
+  private sceneCloud = 0;
+  private lastScene = { day: -1, rain: -1, cloud: -1 };
   private birdTimer: ReturnType<typeof setInterval> | null = null;
   private settings: Settings = { ...DEFAULT_SETTINGS };
   configure(settings: Settings) {
@@ -17,7 +24,36 @@ class ForestAudio {
         0.15,
       );
     if (this.wind && this.context)
-      this.wind.gain.setTargetAtTime(settings.ambience * 0.13, this.context.currentTime, 0.2);
+      this.wind.gain.setTargetAtTime(
+        settings.ambience * (0.13 + this.sceneCloud * 0.1),
+        this.context.currentTime,
+        0.8,
+      );
+  }
+  scene(time: number, weather: WeatherMix) {
+    const day = daylightAt(time);
+    if (
+      Math.abs(day - this.lastScene.day) < 0.02 &&
+      Math.abs(weather.rain - this.lastScene.rain) < 0.02 &&
+      Math.abs(weather.cloud - this.lastScene.cloud) < 0.02 &&
+      this.lastScene.day >= 0
+    )
+      return;
+    this.lastScene = { day, rain: weather.rain, cloud: weather.cloud };
+    this.sceneDay = day;
+    this.sceneRain = weather.rain;
+    this.sceneCloud = weather.cloud;
+    if (!this.context) return;
+    this.wind?.gain.setTargetAtTime(
+      this.settings.ambience * (0.13 + weather.cloud * 0.1),
+      this.context.currentTime,
+      0.8,
+    );
+    this.rain?.gain.setTargetAtTime(
+      this.settings.ambience * weather.rain * 0.16,
+      this.context.currentTime,
+      0.8,
+    );
   }
   async unlock() {
     try {
@@ -43,9 +79,34 @@ class ForestAudio {
         this.wind.gain.value = this.settings.ambience * 0.13;
         source.connect(filter).connect(this.wind).connect(this.master);
         source.start();
+        const rainBuffer = this.context.createBuffer(1, this.context.sampleRate * 3, this.context.sampleRate);
+        const rainData = rainBuffer.getChannelData(0);
+        for (let i = 0; i < rainData.length; i++) rainData[i] = Math.random() * 2 - 1;
+        const rainSource = this.context.createBufferSource();
+        rainSource.buffer = rainBuffer;
+        rainSource.loop = true;
+        const rainFilter = this.context.createBiquadFilter();
+        rainFilter.type = 'lowpass';
+        rainFilter.frequency.value = 2300;
+        this.rain = this.context.createGain();
+        this.rain.gain.value = this.settings.ambience * this.sceneRain * 0.16;
+        rainSource.connect(rainFilter).connect(this.rain).connect(this.master);
+        rainSource.start();
         this.birdTimer = setInterval(() => {
-          if (this.settings.ambience > 0 && !document.hidden && this.settings.sound)
-            this.tone(1500 + Math.random() * 600, 0.13, this.settings.ambience * 0.06, 'sine', 2200);
+          if (
+            this.settings.ambience > 0 &&
+            !document.hidden &&
+            this.settings.sound &&
+            this.sceneDay > 0.2 &&
+            this.sceneRain < 0.8
+          )
+            this.tone(
+              1500 + Math.random() * 600,
+              0.13,
+              this.settings.ambience * 0.06 * this.sceneDay * (1 - this.sceneRain),
+              'sine',
+              2200,
+            );
         }, 5800);
       }
       if (this.context.state === 'suspended') await this.context.resume();
@@ -113,6 +174,10 @@ class ForestAudio {
     if (this.birdTimer) clearInterval(this.birdTimer);
     void this.context?.close();
     this.context = null;
+    this.master = null;
+    this.wind = null;
+    this.rain = null;
+    this.birdTimer = null;
   }
 }
 export const audio = new ForestAudio();

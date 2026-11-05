@@ -26,6 +26,7 @@ export interface PlayerAction {
   duration: number;
   impactAt: number;
   impacted: boolean;
+  resourceId?: number;
 }
 export interface ResourceAnimation {
   kind: 'hit' | 'harvest' | 'break' | 'fell' | 'regrow';
@@ -86,6 +87,8 @@ export interface JournalEntry {
 }
 export interface GameState {
   version: 2;
+  forestVersion: 1 | 2;
+  explored: number[];
   seed: number;
   name: string;
   difficulty: Difficulty;
@@ -174,6 +177,8 @@ export interface GameView {
   wolfPounce: boolean;
   shelterNearby: boolean;
   torchActive: boolean;
+  torchSeconds: number;
+  exploredPercent: number;
   journal: JournalEntry[];
   name: string;
   difficulty: Difficulty;

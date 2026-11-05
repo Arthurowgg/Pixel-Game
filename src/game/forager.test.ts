@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { ITEM_ATLAS } from './animation';
-import { CAMP, ITEMS, RECIPES } from './data';
+import { CAMP, ITEMS, RECIPES, RESOURCE_HP } from './data';
 import generatedAssets from './generated-assets.json';
 import { createGame, Simulation } from './simulation';
 import { isGameState, migrateGame } from './storage';
@@ -20,9 +20,9 @@ describe('forager supplies', () => {
     expect(Object.keys(ITEMS)).toHaveLength(16);
     expect(RECIPES).toHaveLength(8);
   });
-  it('awards one portion of pine nuts only on the third tree impact, never on key spam', () => {
+  it('awards one portion of pine nuts only when the felled tree lands, never on key spam', () => {
     const sim = fresh();
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < RESOURCE_HP.tree - 1; i++) {
       sim.interact();
       advance(sim, 0.7);
       expect(sim.state.inventory.nuts).toBe(0);

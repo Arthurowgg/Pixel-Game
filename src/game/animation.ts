@@ -34,6 +34,11 @@ export const WORLD_ART = [
     label: name.replaceAll('-', ' '),
   })),
   { name: 'items', file: ITEM_ATLAS.sheet, label: 'Trail supplies' },
+  ...(['mapPine', 'mapBoulder'] as const).map((name) => ({
+    name: `icon-${name}`,
+    file: generatedAssets.icons[name].file,
+    label: 'Field map symbols',
+  })),
   ...Object.entries(generatedAssets.textures).map(([name, asset]) => ({
     name: `texture-${name}`,
     file: asset.file,
@@ -174,7 +179,7 @@ export function playerPose(sim: Simulation, reducedMotion = false) {
       ? locomotionFrame(sim.gaitDistance, reducedMotion)
       : !action
         ? 0
-        : animationFrame(clip, elapsed, reducedMotion);
+        : animationFrame(clip, action?.resourceId !== undefined ? elapsed % (2 / 3) : elapsed, reducedMotion);
   // Suppress the two overextended legacy reach poses, using only existing complete cells.
   // A genuinely crouching cycle still requires new whole-sheet artwork.
   if (action?.kind === 'forage' || action?.kind === 'feed') frame = [0, 1, 2, 2, 2, 2, 1, 0][frame];

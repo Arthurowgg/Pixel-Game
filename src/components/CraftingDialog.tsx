@@ -78,7 +78,7 @@ export function CraftingDialog({
   return (
     <Modal
       title={workshop ? 'Your workbench' : 'Handcraft'}
-      eyebrow={workshop ? 'ROOTS & REFUGE · A WORKSHOP OF YOUR OWN' : 'TRAIL ESSENTIALS · MADE BY HAND'}
+      eyebrow={workshop ? 'TRAILS & TWILIGHT · A WORKSHOP OF YOUR OWN' : 'TRAIL ESSENTIALS · MADE BY HAND'}
       className={`crafting-dialog fieldwork-dialog ${workshop ? 'at-workbench' : 'by-hand'}`}
       wide
       onClose={onClose}

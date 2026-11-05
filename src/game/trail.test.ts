@@ -114,28 +114,39 @@ describe('four-way movement without invented artwork', () => {
     expect(JSON.stringify(sim.state)).toBe(before);
     expect(playerPose(sim).frame).toBe(pose.frame);
   });
-  it('plants the feet while collecting and excludes the overstretched reach cells', () => {
+  it('takes a visible spell to pick berries and abandons them if the survivor walks away', () => {
     const sim = fresh();
     sim.state.resources = [
       { id: 0, kind: 'berries', x: 520, y: 500, hp: 1, readyAt: 0, scale: 1, variant: 0 },
     ];
+    sim.state.inventory.berries = 0;
     expect(sim.interact()).toBe(true);
-    sim.keys.add('d');
-    const start = { ...sim.state.player };
-    sim.update(0.3);
+    expect(sim.collecting?.resource.id).toBe(0);
+    sim.update(0.9);
+    expect(sim.state.inventory.berries).toBe(0);
+    expect(sim.collecting?.progress).toBeCloseTo(0.5, 1);
+    sim.update(0.95);
     expect(sim.state.inventory.berries).toBe(3);
-    expect(sim.state.player).toEqual(start);
-    expect(playerPose(sim).frame).toBe(2);
-    sim.update(0.05);
-    expect(sim.state.inventory.berries).toBe(6);
     expect(sim.state.inventory.fiber).toBe(1);
-    expect(sim.state.player).toEqual(start);
-    expect(playerPose(sim).item).toBeNull();
+    expect(sim.action).toBeNull();
+    sim.state.resources.push({
+      id: 1,
+      kind: 'berries',
+      x: 516,
+      y: 504,
+      hp: 1,
+      readyAt: 0,
+      scale: 1,
+      variant: 0,
+    });
+    expect(sim.interact()).toBe(true);
+    const start = { ...sim.state.player };
+    sim.keys.add('d');
     sim.update(0.2);
-    expect([0, 1, 2]).toContain(playerPose(sim).frame);
-    expect(sim.state.inventory.berries).toBe(6);
-    sim.update(0.2);
+    expect(sim.collecting).toBeNull();
+    expect(sim.state.inventory.berries).toBe(3);
     expect(sim.state.player.x).toBeGreaterThan(start.x);
+    sim.keys.delete('d');
   });
   it('preserves the complete axe/pickaxe contact frames for all four facing directions', () => {
     for (const direction of DIRECTIONS)

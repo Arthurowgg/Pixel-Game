@@ -102,8 +102,11 @@ describe('real render preferences, not decorative settings', () => {
   });
   it('removes storm flashes with the same flash switch', () => {
     const { renderer, sim, fills } = canvasFixture({ damageFlash: false });
-    sim.state.weather = 'storm';
+    // The clock itself rolls a storm front in; the mix eases from clear.
     sim.state.time = 238;
+    sim.update(0.01);
+    sim.update(0.05);
+    expect(sim.weatherMix.storm).toBeGreaterThan(0);
     renderer.draw(sim, 0);
     expect(fills.some((fill) => fill.style === '#e1e8df38')).toBe(false);
     fills.length = 0;
@@ -225,10 +228,10 @@ describe('real audio gains', () => {
     expect(gains[0].gain.value).toBeCloseTo(0.45 * 0.4);
     expect(gains[1].gain.value).toBeCloseTo(0.13 * 0.2);
     audio.play('notice');
-    expect(gains[2].gain.linearRampToValueAtTime).toHaveBeenCalledWith(0.5 * 0.08, 1.008);
+    expect(gains[3].gain.linearRampToValueAtTime).toHaveBeenCalledWith(0.5 * 0.08, 1.008);
     audio.configure({ ...DEFAULT_SETTINGS, sound: false, masterVolume: 0.4, ambience: 0.6 });
     expect(gains[0].gain.setTargetAtTime).toHaveBeenLastCalledWith(0, 1, 0.15);
-    expect(gains[1].gain.setTargetAtTime).toHaveBeenLastCalledWith(0.6 * 0.13, 1, 0.2);
+    expect(gains[1].gain.setTargetAtTime).toHaveBeenLastCalledWith(0.6 * 0.13, 1, 0.8);
     oscillator.mockClear();
     audio.play('notice');
     expect(oscillator).not.toHaveBeenCalled();
@@ -333,6 +336,7 @@ describe('whole static camp states and chopping feedback', () => {
     const mind = sim.wolfPack.mind(wolf, sim.state.player, sim.state.time);
     mind.phase = 'windup';
     mind.attack = 'pounce';
+    mind.target = { ...sim.state.player };
     mind.startedAt = sim.state.time - 0.3;
     const draw = vi.spyOn(animation, 'drawAnimation').mockImplementation(() => {});
     renderer.draw(sim, 0);

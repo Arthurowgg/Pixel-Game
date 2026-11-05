@@ -1,0 +1,851 @@
+/* Trails & Twilight: a small field kit, not a dashboard over the forest. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+:root {
+  --forest-cursor: url('/art/ui/forest-cursor.png') 4 9, auto;
+  --map-frame: url('/art/ui/map-frame.png');
+}
+.app,
+.app :is(button:not(:disabled), a, summary, [role='button'], .game-canvas, .expanded-map canvas) {
+  cursor: var(--forest-cursor);
+}
+.app :is(input, textarea) {
+  cursor: text;
+}
+.game-shell .game-hud .survivor-panel.vitals-panel {
+  top: 14px;
+  left: 14px;
+  width: 206px;
+  padding: 3px 5px 5px;
+  border: 8px solid transparent;
+  border-image: var(--status-frame) 14 fill / 12px / 0 stretch;
+  gap: 5px;
+  transform: none;
+  scale: 1;
+  box-shadow: 2px 3px #0c1c1666;
+}
+.game-shell .game-hud .vitals-panel .health-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0;
+  gap: 5px;
+  min-height: 24px;
+}
+.game-shell .game-hud .vitals-panel .health-pip,
+.game-shell .game-hud .vitals-panel .health-pip .icon {
+  width: 11px;
+  height: 11px;
+}
+.game-shell .game-hud .vitals-panel .health-pips {
+  gap: 1px;
+}
+.game-shell .game-hud .vitals-details {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+}
+.game-shell .game-hud .health-value {
+  font: 12px var(--pixel);
+}
+.game-shell[data-hud='compact'] .game-hud .health-value:not(.critical) {
+  display: none;
+}
+.game-shell .game-hud .vital-rows {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.game-shell .game-hud .vital-row {
+  display: grid;
+  grid-template-columns: 13px minmax(0, 1fr);
+  gap: 4px;
+  min-height: 16px;
+  position: relative;
+}
+.game-shell .game-hud .vital-row > .icon {
+  width: 13px;
+  height: 13px;
+}
+.game-shell .game-hud .vital-row :is(.vital-label, b) {
+  display: none;
+}
+.game-shell .game-hud .vital-track {
+  height: 6px;
+  border-color: #8a986c55;
+}
+.game-shell .game-hud .vital-warning {
+  position: absolute;
+  right: 1px;
+  top: -6px;
+  font-size: 10px;
+}
+.game-shell .game-hud .vital-stamina {
+  min-height: 3px;
+  padding: 0;
+}
+.game-shell .game-hud .vital-stamina .vital-track {
+  height: 3px;
+  width: 100%;
+  border: 0;
+}
+.game-shell .game-hud .vital-stamina i {
+  background: #c0bd7d;
+}
+.game-shell[data-hud='full'] .game-hud .survivor-panel.vitals-panel {
+  width: 236px;
+}
+.game-shell[data-hud='full'] .game-hud .vital-rows {
+  grid-template-columns: 1fr;
+  gap: 4px;
+}
+.game-shell[data-hud='full'] .game-hud .vital-row {
+  grid-template-columns: 14px 47px minmax(0, 1fr) 21px;
+}
+.game-shell[data-hud='full'] .game-hud .vital-row :is(.vital-label, b) {
+  display: block;
+  font: 11px var(--pixel);
+}
+.game-shell .game-hud .time-weather {
+  top: 14px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  scale: 1;
+  align-items: center;
+  gap: 7px;
+  max-width: 300px;
+}
+.game-shell .game-hud .day-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #a4af7c44;
+  border-image: none;
+  padding: 8px 11px;
+  background: #192c24dc;
+  box-shadow: 2px 2px #0e20166b;
+}
+.game-shell .game-hud .day-panel .day-number {
+  font: 12px var(--pixel);
+  color: #d9d4aa;
+  white-space: nowrap;
+}
+.game-shell .game-hud .day-panel time {
+  font: 12px var(--pixel);
+  color: #e1dbb8;
+  font-variant-numeric: tabular-nums;
+}
+.game-shell .game-hud .weather-chip {
+  padding: 0 0 0 8px;
+  margin: 0;
+  min-height: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 11px var(--pixel);
+  color: #b5c6b1;
+  border: 0;
+  border-left: 1px solid #9ca97d44;
+  background: none;
+  box-shadow: none;
+}
+.game-shell .game-hud .wolf-encounter {
+  max-width: min(300px, calc(100vw - 24px));
+  padding: 7px 10px;
+  font-size: 12px;
+}
+.game-shell .game-hud .map-tools {
+  top: 14px;
+  right: 14px;
+  width: 142px;
+}
+.game-shell .game-hud .game-top-buttons {
+  gap: 5px;
+  margin-bottom: 7px;
+}
+.game-shell .game-hud .hud-icon {
+  width: 31px;
+  height: 31px;
+  min-height: 0;
+  padding: 0;
+  background: #1b2d25db;
+  border: 1px solid #7b8d6277;
+  border-image: none;
+  box-shadow: 2px 2px #0a1b1566;
+}
+.game-shell .game-hud .minimap-panel {
+  width: 142px;
+  padding: 3px;
+  border-width: 7px;
+  border-image-width: 11px;
+}
+.game-shell .game-hud .minimap-panel canvas {
+  display: block;
+  width: 120px;
+  height: 93px;
+  margin: 4px 0;
+}
+.game-shell .game-hud .minimap-footer {
+  padding: 1px 0 3px;
+  font-size: 8px;
+}
+.game-shell .game-hud .hud-save {
+  margin-top: 5px;
+  line-height: 1.5;
+  font-size: 8px;
+}
+.game-shell .game-hud .toast-stack {
+  top: 104px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(440px, calc(100vw - 40px));
+}
+.game-shell .game-hud .game-toast {
+  padding: 7px 11px;
+  font: 13px/1.35 var(--pixel);
+  background: #152820d4;
+}
+.game-shell .game-hud .quickbar-wrap {
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 16px);
+  display: flex;
+  flex-direction: column;
+}
+.game-shell .game-hud .held-item-status {
+  position: static;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  scale: 1;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  min-height: 28px;
+  padding: 1px 8px;
+  gap: 6px;
+  margin: 0;
+  background: #16291fe0;
+  border: 1px solid #8b95613d;
+  border-bottom: 0;
+  border-image: none;
+  box-shadow: none;
+}
+.game-shell .game-hud .held-item-status > .item-icon {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.game-shell .game-hud .held-item-status > strong {
+  font: 12px var(--pixel);
+  color: #d9d5b2;
+  margin-right: auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.game-shell .game-hud .held-item-status :is(.held-use, .held-stow) {
+  height: 25px;
+  width: 27px;
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: #b4c19a;
+  flex: none;
+}
+.game-shell .game-hud .held-item-status button:hover:not(:disabled) {
+  background: #81956525;
+}
+.game-shell .game-hud .quickbar {
+  display: flex;
+  gap: 4px;
+  padding: 0;
+  border-width: 6px;
+  border-image-width: 11px;
+  align-items: center;
+}
+.game-shell .game-hud .quick-slot {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-width: 2px;
+  border-image-width: 4px;
+}
+.game-shell .game-hud .quick-slot > .item-icon {
+  width: 30px;
+  height: 30px;
+}
+.game-shell .game-hud :is(.backpack-slot, .craft-slot) > .icon {
+  width: 25px;
+  height: 25px;
+}
+.game-shell .game-hud .quickbar-divider {
+  width: 1px;
+  min-width: 1px;
+  height: 27px;
+  margin: 0;
+}
+.game-shell .game-hud .slot-number {
+  font-size: 9px;
+  top: 2px;
+  left: 3px;
+}
+.game-shell .game-hud .slot-count {
+  font-size: 11px;
+  bottom: 2px;
+  right: 3px;
+}
+.torch-timer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.torch-timer circle {
+  fill: none;
+  stroke: #e1b36e;
+  stroke-width: 1.3px;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+.game-shell .game-hud .interaction-prompt {
+  left: 50%;
+  bottom: 112px;
+  transform: translateX(-50%);
+  padding: 5px 8px;
+  gap: 7px;
+  max-width: min(280px, calc(100% - 24px));
+  background: #192d25e8;
+}
+.game-shell .game-hud .interaction-prompt > span > strong {
+  font: 13px var(--pixel);
+}
+.game-shell .game-hud .interaction-prompt > span > small {
+  display: none;
+}
+.game-shell .game-hud .interaction-prompt > kbd {
+  width: 24px;
+  min-width: 24px;
+  height: 23px;
+  min-height: 0;
+  font-size: 13px;
+}
+.game-shell .game-hud .interaction-dot {
+  display: none;
+}
+.game-shell .game-hud .touch-controls {
+  display: none;
+}
+
+/* The field map has its own generated frame and cartographic palette. */
+.app .map-dialog .modal-panel {
+  width: min(780px, calc(100vw - 28px));
+  max-height: calc(100svh - 24px);
+  padding: 8px 14px 10px;
+  border: 16px solid transparent;
+  border-image: var(--map-frame) 22 / 20px / 0 stretch;
+  background: #26382e;
+  box-shadow: 0 18px 70px #07160bd9;
+  image-rendering: pixelated;
+}
+.app .map-dialog .modal-panel::before {
+  display: none;
+}
+.app .map-dialog .modal-header {
+  margin: 0;
+  padding: 3px 0 11px;
+  align-items: center;
+}
+.app .map-dialog .modal-header h2 {
+  font: 500 30px var(--pixel);
+  color: #ece1ba;
+}
+.app .map-dialog .modal-header .eyebrow {
+  font-size: 8px;
+  letter-spacing: 1.8px;
+  color: #a8b397;
+}
+.map-dialog .modal-bottom-hint {
+  display: none;
+}
+.map-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0 11px;
+  border-top: 1px solid #a6af7f30;
+}
+.chart-progress {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font: 13px var(--pixel);
+  color: #b8c2a4;
+}
+.chart-progress b {
+  color: #e9d7a8;
+  font-weight: 500;
+}
+.map-navigation {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.map-navigation button {
+  width: 32px;
+  height: 32px;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #8b9b6e77;
+  background: #152a20;
+  font: 20px var(--pixel);
+  color: #dfd4a9;
+}
+.map-navigation button:hover:not(:disabled) {
+  background: #52623d;
+  border-color: #d3c388;
+}
+.map-navigation button:disabled {
+  opacity: 0.35;
+}
+.map-navigation output {
+  min-width: 35px;
+  text-align: center;
+  color: #c4c8a8;
+  font: 12px var(--pixel);
+}
+.app .map-dialog .expanded-map {
+  position: relative;
+  width: min(100%, calc(52svh * 9 / 7));
+  margin: 0 auto;
+  background: #24392e;
+  padding: 0;
+  border: 1px solid #88966b99;
+  box-shadow: 0 0 0 3px #11261b7a;
+  overflow: hidden;
+}
+.app .map-dialog .expanded-map canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+.app .map-dialog .map-north {
+  top: 10px;
+  right: 10px;
+  font: 14px var(--pixel);
+  color: #d6cf9d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  gap: 3px;
+}
+.app .map-dialog .map-north .icon {
+  transform: rotate(-90deg);
+}
+.app .map-dialog .map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px 16px;
+  padding: 13px 0 8px;
+  margin: 0;
+}
+.app .map-dialog .map-legend > span {
+  font: 12px var(--pixel);
+  color: #c4ccad;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.app .map-dialog .map-legend .uncharted-key i {
+  width: 10px;
+  height: 10px;
+  border: 1px solid #6b8266;
+  background: #293b34;
+}
+.chart-notes {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font: 11px/1.5 var(--pixel);
+  color: #a9b698;
+  border-top: 1px solid #a6af7f25;
+  padding-top: 9px;
+}
+.journal-objectives {
+  border: 1px solid #9bab7055;
+  background: #15281edb;
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  font: 14px var(--pixel);
+}
+.journal-objectives summary {
+  color: #e6d5a1;
+}
+.journal-objectives summary > span {
+  float: right;
+  color: #b7c296;
+  font-size: 12px;
+}
+.journal-objectives ul {
+  padding: 12px 0 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.journal-objectives li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #c9d0b3;
+}
+.journal-objectives li > span {
+  flex: 1;
+}
+.journal-objectives li > b {
+  font-size: 12px;
+  font-weight: 400;
+  color: #c9bf8a;
+}
+.journal-objectives li.complete > span {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+@media (max-width: 760px) {
+  .game-shell .game-hud .survivor-panel.vitals-panel {
+    top: 9px;
+    left: 9px;
+    width: 184px;
+    border-width: 7px;
+    padding: 2px 4px 4px;
+    gap: 4px;
+  }
+  .game-shell .game-hud .vitals-panel .health-pip,
+  .game-shell .game-hud .vitals-panel .health-pip .icon {
+    width: 10px;
+    height: 10px;
+  }
+  .game-shell .game-hud .vitals-details {
+    width: 27px;
+    height: 27px;
+  }
+  .game-shell .game-hud .vital-rows {
+    gap: 5px;
+  }
+  .game-shell .game-hud .time-weather {
+    top: 9px;
+    right: 9px;
+    left: auto;
+    transform: none;
+    align-items: flex-end;
+    max-width: calc(100vw - 210px);
+  }
+  .game-shell .game-hud .day-panel {
+    padding: 5px 7px;
+    gap: 6px;
+  }
+  .game-shell .game-hud .day-panel > .icon {
+    display: none;
+  }
+  .game-shell .game-hud .day-panel :is(time, .day-number) {
+    font-size: 11px;
+  }
+  .game-shell .game-hud .weather-chip {
+    padding-left: 5px;
+  }
+  .game-shell .game-hud .weather-chip > span {
+    display: none;
+  }
+  .game-shell .game-hud .map-tools {
+    top: 46px;
+    right: 9px;
+    width: 112px;
+  }
+  .game-shell .game-hud .game-top-buttons {
+    gap: 5px;
+  }
+  .game-shell .game-hud .hud-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .game-shell .game-hud .wolf-encounter {
+    position: fixed;
+    top: 86px;
+    right: 0;
+    width: calc(100vw - 18px);
+    max-width: 340px;
+    margin: 0;
+    white-space: normal;
+  }
+  .game-shell .game-hud .toast-stack {
+    top: 135px;
+    width: max-content;
+    max-width: min(340px, calc(100vw - 30px));
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .game-shell .game-hud .game-toast {
+    font-size: 12px;
+  }
+  .game-shell .game-hud .quickbar-wrap {
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  .game-shell .game-hud .quickbar {
+    gap: 3px;
+  }
+  .game-shell .game-hud .quick-slot {
+    width: 38px;
+    height: 38px;
+  }
+  .game-shell .game-hud .quick-slot > .item-icon {
+    width: 27px;
+    height: 27px;
+  }
+  .game-shell .game-hud :is(.backpack-slot, .craft-slot) > .icon {
+    width: 23px;
+    height: 23px;
+  }
+  .game-shell .game-hud .slot-number {
+    font-size: 8px;
+    left: 2px;
+  }
+  .game-shell .game-hud .slot-count {
+    font-size: 10px;
+    right: 2px;
+  }
+  .game-shell .game-hud .interaction-prompt {
+    bottom: 222px;
+    max-width: 225px;
+  }
+  .game-shell[data-hud='full'] .game-hud .survivor-panel.vitals-panel {
+    width: 184px;
+  }
+  .game-shell[data-hud='full'] .game-hud .toast-stack {
+    top: 184px;
+  }
+  .app .map-dialog .modal-panel {
+    width: calc(100vw - 20px);
+    border-width: 12px;
+    border-image-width: 13px;
+    padding: 5px 7px 8px;
+  }
+  .app .map-dialog .modal-header h2 {
+    font-size: 27px;
+  }
+  .map-toolbar {
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .map-navigation {
+    gap: 3px;
+  }
+  .map-navigation button {
+    width: 33px;
+    height: 33px;
+  }
+  .chart-notes {
+    font-size: 11px;
+  }
+}
+@media (max-width: 370px) {
+  .game-shell .game-hud .survivor-panel.vitals-panel {
+    left: 7px;
+    width: 174px;
+    padding-inline: 3px;
+  }
+  .game-shell .game-hud .vital-rows {
+    gap: 4px;
+  }
+  .game-shell .game-hud .vital-row {
+    grid-template-columns: 11px minmax(0, 1fr);
+    gap: 3px;
+  }
+  .game-shell .game-hud .vital-row > .icon {
+    width: 11px;
+    height: 11px;
+  }
+  .game-shell .game-hud .time-weather {
+    right: 7px;
+    max-width: 124px;
+  }
+  .game-shell .game-hud .day-panel {
+    gap: 5px;
+    padding: 5px 6px;
+  }
+  .game-shell .game-hud .map-tools {
+    right: 7px;
+  }
+  .game-shell .game-hud .quick-slot {
+    width: 32px;
+    height: 35px;
+  }
+  .game-shell .game-hud .quick-slot > .item-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .game-shell .game-hud :is(.backpack-slot, .craft-slot) > .icon {
+    width: 21px;
+    height: 21px;
+  }
+  .game-shell .game-hud .held-item-status {
+    padding-inline: 6px;
+  }
+  .game-shell .game-hud .held-item-status > strong {
+    font-size: 11px;
+  }
+  .map-navigation {
+    margin-left: auto;
+  }
+  .chart-progress {
+    font-size: 12px;
+  }
+  .app .map-dialog .map-legend {
+    gap: 8px 10px;
+  }
+}
+@media (pointer: coarse) {
+  .game-shell .game-hud .touch-controls {
+    display: flex;
+    left: 12px;
+    right: 12px;
+    bottom: 99px;
+    align-items: flex-end;
+  }
+  .game-shell .game-hud .touch-dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 38px);
+    grid-template-rows: repeat(3, 38px);
+    gap: 2px;
+  }
+  .game-shell .game-hud .touch-dpad .touch-key {
+    width: 38px;
+    height: 38px;
+  }
+  .game-shell .game-hud .touch-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 43px);
+    gap: 5px;
+  }
+  .game-shell .game-hud :is(.touch-primary, .touch-attack, .touch-e) {
+    width: 43px;
+    height: 43px;
+  }
+  .game-shell .game-hud .held-item-status .held-use {
+    display: none;
+  }
+  .game-shell .game-hud .held-item-status .held-stow {
+    width: 30px;
+    height: 28px;
+  }
+  .game-shell .game-hud .quick-slot .slot-tooltip {
+    display: none;
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .game-shell .game-hud .survivor-panel.vitals-panel {
+    top: 7px;
+    left: 9px;
+    width: 184px;
+  }
+  .game-shell .game-hud .time-weather {
+    top: 7px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    align-items: center;
+    max-width: 280px;
+  }
+  .game-shell .game-hud .map-tools {
+    top: 7px;
+    right: 9px;
+    width: 112px;
+  }
+  .game-shell .game-hud .minimap-panel {
+    display: none;
+  }
+  .game-shell .game-hud .wolf-encounter {
+    position: static;
+    max-width: 270px;
+    width: auto;
+    font-size: 12px;
+  }
+  .game-shell .game-hud .toast-stack {
+    top: 106px;
+    width: max-content;
+    max-width: min(330px, calc(100vw - 40px));
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .game-shell .game-hud .quickbar-wrap {
+    bottom: 7px;
+  }
+  .game-shell .game-hud .quick-slot {
+    width: 38px;
+    height: 38px;
+  }
+  .game-shell .game-hud .quick-slot > .item-icon {
+    width: 26px;
+    height: 26px;
+  }
+  .game-shell .game-hud .interaction-prompt {
+    bottom: 105px;
+  }
+  .game-shell .game-hud .touch-controls {
+    bottom: 17px;
+  }
+  .app .map-dialog .modal-panel {
+    padding-top: 0;
+    max-height: calc(100svh - 12px);
+  }
+  .app .map-dialog .modal-header {
+    padding-bottom: 6px;
+  }
+  .app .map-dialog .modal-header h2 {
+    font-size: 24px;
+  }
+  .app .map-dialog .expanded-map {
+    width: min(100%, calc(43svh * 9 / 7));
+  }
+  .app .map-dialog .map-legend {
+    padding-top: 7px;
+  }
+  .chart-notes {
+    padding-top: 5px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .torch-timer circle {
+    transition: none;
+  }
+}

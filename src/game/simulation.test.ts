@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CAMP, DAY_LENGTH, ITEMS, LEGACY_SAVE_KEY, SAVE_KEY, SPRING, WORLD } from './data';
+import { CAMP, DAY_LENGTH, ITEMS, LEGACY_SAVE_KEY, RESOURCE_HP, SAVE_KEY, SPRING, WORLD } from './data';
 import { Simulation, createGame, createWorld, inWater, weatherAt } from './simulation';
 import type { ItemId } from './types';
 import { clearGame, isGameState, loadGame, loadSettings, migrateGame, saveGame } from './storage';
@@ -53,19 +53,20 @@ describe('world generation', () => {
   });
 });
 describe('gathering and crafting', () => {
-  it('takes three chops to gather four wood and prevents key-spam exploits', () => {
+  it('takes six chops to gather four wood and prevents key-spam exploits', () => {
     const sim = createSim();
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree);
     sim.interact();
     sim.interact();
-    expect(sim.state.resources[0].hp).toBe(3);
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree);
     advance(sim, 0.35);
-    expect(sim.state.resources[0].hp).toBe(2);
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree - 1);
     expect(sim.state.inventory.wood).toBe(0);
     advance(sim, 0.35);
-    sim.interact();
-    advance(sim, 0.7);
-    sim.interact();
-    advance(sim, 0.35);
+    for (let chop = 0; chop < RESOURCE_HP.tree - 1; chop++) {
+      sim.interact();
+      advance(sim, 0.7);
+    }
     expect(sim.state.resources[0].hp).toBe(0);
     expect(sim.state.inventory.wood).toBe(4);
     expect(sim.state.gathered.wood).toBe(4);
@@ -322,15 +323,15 @@ describe('equipment and synchronized actions', () => {
     sim.interact();
     expect(sim.action?.kind).toBe('chop');
     advance(sim, 0.3);
-    expect(sim.state.resources[0].hp).toBe(3);
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree);
     advance(sim, 0.05);
-    expect(sim.state.resources[0].hp).toBe(2);
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree - 1);
     expect(sim.resourceAnimations.get(0)?.kind).toBe('hit');
     expect(sim.effects.some((e) => e.clip === 'wood-chips')).toBe(true);
     advance(sim, 0.5);
-    expect(sim.state.resources[0].hp).toBe(2);
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree - 1);
   });
-  it('uses a separate pickaxe animation to break a boulder in two strikes', () => {
+  it('uses a separate pickaxe animation to break a tougher boulder', () => {
     const sim = createSim();
     const rock = sim.state.resources.find((r) => r.kind === 'stone')!;
     sim.state.resources = [rock];
@@ -339,12 +340,14 @@ describe('equipment and synchronized actions', () => {
     sim.interact();
     expect(sim.state.equipped).toBe('pickaxe');
     expect(sim.action?.kind).toBe('mine');
-    advance(sim, 0.7);
-    expect(rock.hp).toBe(1);
-    expect(sim.state.inventory.stone).toBe(0);
-    sim.useHeld();
-    advance(sim, 0.35);
-    expect(rock.hp).toBe(0);
+    expect(rock.hp).toBe(RESOURCE_HP.stone);
+    for (let strike = 0; strike < RESOURCE_HP.stone; strike++) {
+      advance(sim, 0.7);
+      expect(rock.hp).toBe(RESOURCE_HP.stone - strike - 1);
+      expect(sim.state.inventory.stone).toBe(rock.hp > 0 ? 0 : 3);
+      sim.useHeld();
+      advance(sim, 0.05);
+    }
     expect(sim.state.inventory.stone).toBe(3);
     expect(sim.resourceAnimations.get(rock.id)?.kind).toBe('break');
     expect(sim.effects.some((e) => e.clip === 'stone-dust')).toBe(true);
@@ -358,7 +361,7 @@ describe('equipment and synchronized actions', () => {
     sim.equip('berries');
     expect(sim.interact()).toBe(false);
     expect(sim.action).toBeNull();
-    expect(rock.hp).toBe(2);
+    expect(rock.hp).toBe(RESOURCE_HP.stone);
     expect(sim.state.equipped).toBe('berries');
   });
   it('cancels before impact when changing equipment, but never duplicates a committed hit', () => {
@@ -367,7 +370,7 @@ describe('equipment and synchronized actions', () => {
     advance(sim, 0.2);
     sim.equip('water');
     advance(sim, 0.8);
-    expect(sim.state.resources[0].hp).toBe(3);
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree);
     expect(sim.action).toBeNull();
     sim.equip('hatchet');
     sim.interact();
@@ -375,14 +378,14 @@ describe('equipment and synchronized actions', () => {
     sim.equip('berries');
     expect(sim.interact()).toBe(false);
     advance(sim, 0.1);
-    expect(sim.state.resources[0].hp).toBe(2);
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree - 1);
   });
   it('does not gather a target that has moved out of reach before contact', () => {
     const sim = createSim();
     sim.interact();
     sim.state.player = { x: 500, y: 500 };
     advance(sim, 0.7);
-    expect(sim.state.resources[0].hp).toBe(3);
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree);
     expect(sim.state.inventory.wood).toBe(0);
   });
   it('freezes a pending action and impact while paused', () => {
@@ -395,10 +398,10 @@ describe('equipment and synchronized actions', () => {
     advance(sim, 2);
     expect(sim.action).toEqual(action);
     expect(sim.state.time).toBe(time);
-    expect(sim.state.resources[0].hp).toBe(3);
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree);
     sim.paused = false;
     advance(sim, 0.2);
-    expect(sim.state.resources[0].hp).toBe(2);
+    expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree - 1);
   });
   it('consumes one held item at contact, rejects overlapping uses, and clears empty hands', () => {
     const sim = createSim();
@@ -448,7 +451,7 @@ describe('equipment and synchronized actions', () => {
     resource.hp = 0;
     resource.readyAt = 0.05;
     advance(sim, 0.1);
-    expect(resource.hp).toBe(3);
+    expect(resource.hp).toBe(RESOURCE_HP.tree);
     expect(sim.resourceAnimations.get(resource.id)?.kind).toBe('regrow');
   });
   it('crafts a replacement pickaxe with its own recipe', () => {
@@ -563,5 +566,5 @@ it('prioritizes defense over held gathering input', () => {
   sim.keys.add(' ');
   sim.update(0.05);
   expect(sim.action?.kind).toBe('attack');
-  expect(sim.state.resources[0].hp).toBe(3);
+  expect(sim.state.resources[0].hp).toBe(RESOURCE_HP.tree);
 });

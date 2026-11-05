@@ -1,7 +1,7 @@
-import { clamp, distance, WORLD } from './data';
+import { CAMP, clamp, distance, WORLD } from './data';
 import type { Difficulty, GameState, Point, Wolf } from './types';
 
-export type WolfPhase = 'stalk' | 'circle' | 'windup' | 'lunge' | 'recover' | 'retreat' | 'hurt';
+export type WolfPhase = 'wander' | 'stalk' | 'circle' | 'windup' | 'lunge' | 'recover' | 'retreat' | 'hurt';
 export type WolfAttack = 'snap' | 'pounce';
 export interface WolfMind {
   attack: WolfAttack;
@@ -14,6 +14,12 @@ export interface WolfMind {
   moving: boolean;
   bitten: boolean;
   hitAt: number;
+  aware: boolean;
+  heading: number;
+  lastSeenAt: number;
+  lastSeen: Point;
+  roamTarget: Point;
+  roamUntil: number;
 }
 export interface FallenWolf extends Point {
   id: number;
@@ -39,6 +45,15 @@ export const WOLF_ATTACKS = {
 export const wolfHealth = (difficulty: Difficulty) =>
   difficulty === 'wild' ? 5 : difficulty === 'explorer' ? 3 : 4;
 export const wolfMaxHealth = (wolf: Wolf) => wolf.maxHp ?? Math.max(2, wolf.hp);
+export const STARTER_FIRE_SAFETY = 122;
+export function protectedByFire(state: GameState) {
+  return state.fires.some(
+    (fire) =>
+      fire.fuel > 0 &&
+      distance(fire, state.player) <
+        (distance(fire, CAMP) < 8 ? STARTER_FIRE_SAFETY : 40 + Math.min(60, fire.fuel) * 0.7),
+  );
+}
 const TAU = Math.PI * 2;
 const unit = (x: number, y: number) => {
   const length = Math.hypot(x, y);
@@ -52,16 +67,26 @@ export class WolfPack {
   fallen: FallenWolf[] = [];
   private nextAttack = 0;
   private lastAttacker = -1;
-  mind(wolf: Wolf, player: Point, time: number) {
+  mind(wolf: Wolf, _player: Point, time: number) {
     let mind = this.minds.get(wolf.id);
     if (!mind) {
+      const heading = (wolf.id % 997) * 2.399 + 2.1;
       mind = {
-        phase: 'stalk',
+        phase: 'wander',
         attack: 'snap',
         strikes: 0,
         startedAt: time,
-        target: { ...player },
-        flip: wolf.x < player.x,
+        target: { x: wolf.x, y: wolf.y },
+        flip: Math.cos(heading) > 0,
+        aware: false,
+        heading,
+        lastSeenAt: -100,
+        lastSeen: { x: wolf.x, y: wolf.y },
+        roamTarget: {
+          x: clamp(wolf.x + Math.cos(heading) * 190, 32, WORLD.width - 32),
+          y: clamp(wolf.y + Math.sin(heading) * 190, 40, WORLD.height - 32),
+        },
+        roamUntil: time + 8 + (wolf.id % 4),
         gait: 0,
         moving: false,
         bitten: false,
@@ -87,6 +112,9 @@ export class WolfPack {
     if (this.fallen.some((fallen) => fallen.id === wolf.id)) return;
     const mind = this.mind(wolf, player, now);
     mind.hitAt = now;
+    mind.aware = true;
+    mind.lastSeenAt = now;
+    mind.lastSeen = { ...player };
     this.phase(mind, 'hurt', now);
     mind.startedAt = now;
     wolf.cooldown = Math.max(wolf.cooldown, 1.0);
@@ -167,7 +195,52 @@ export class WolfPack {
     const travelled = distance(before, wolf);
     mind.gait += travelled;
     mind.moving = travelled > 0.001;
+    if (mind.moving) mind.heading = Math.atan2(wolf.y - before.y, wolf.x - before.x);
     if (Math.abs(wolf.x - before.x) > 0.01) mind.flip = wolf.x > before.x;
+  }
+  threats(state: GameState, torch: boolean, radius = 130) {
+    if (torch || protectedByFire(state) || state.weather !== 'wolves') return [];
+    return state.wolves.filter(
+      (wolf) => wolf.hp > 0 && distance(wolf, state.player) < radius && this.minds.get(wolf.id)?.aware,
+    );
+  }
+  private sees(wolf: Wolf, mind: WolfMind, player: Point, blocked: (point: Point) => boolean) {
+    const gap = distance(wolf, player);
+    if (gap > 112) return false;
+    const toward = unit(player.x - wolf.x, player.y - wolf.y);
+    if (gap > 84 && toward.x * Math.cos(mind.heading) + toward.y * Math.sin(mind.heading) < 0.15)
+      return false;
+    // Trunks, boulders, water and furniture break sight, not just movement.
+    const steps = Math.ceil(gap / 7);
+    for (let i = 1; i < steps; i++)
+      if (
+        blocked({
+          x: wolf.x + ((player.x - wolf.x) * i) / steps,
+          y: wolf.y + ((player.y - wolf.y) * i) / steps,
+        })
+      )
+        return false;
+    return true;
+  }
+  private wander(
+    wolf: Wolf,
+    mind: WolfMind,
+    now: number,
+    dt: number,
+    live: Wolf[],
+    blocked: (point: Point) => boolean,
+  ) {
+    this.phase(mind, 'wander', now);
+    if (distance(wolf, mind.roamTarget) < 12 || now >= mind.roamUntil) {
+      const heading = mind.heading + Math.sin(wolf.id * 1.7 + Math.floor(now / 8)) * 1.1;
+      mind.roamTarget = {
+        x: clamp(wolf.x + Math.cos(heading) * 210, 32, WORLD.width - 32),
+        y: clamp(wolf.y + Math.sin(heading) * 210, 40, WORLD.height - 32),
+      };
+      mind.roamUntil = now + 8 + (wolf.id % 4);
+    }
+    this.move(wolf, mind, mind.roamTarget, 25, dt, live, blocked);
+    if (!mind.moving) mind.roamUntil = Math.min(mind.roamUntil, now + 0.4);
   }
   update(
     state: GameState,
@@ -184,16 +257,32 @@ export class WolfPack {
     const ids = new Set(live.map((wolf) => wolf.id));
     for (const id of this.minds.keys()) if (!ids.has(id)) this.minds.delete(id);
     for (const wolf of live) this.mind(wolf, player, now);
-    const protectedFire = state.fires.find(
-      (fire) => fire.fuel > 0 && distance(fire, player) < 40 + Math.min(60, fire.fuel) * 0.7,
-    );
-    const protectedPlayer = !!protectedFire || torch || state.weather !== 'wolves';
+    const protectedPlayer = protectedByFire(state) || torch || state.weather !== 'wolves';
+    for (const wolf of live) {
+      const mind = this.minds.get(wolf.id)!;
+      if (protectedPlayer) {
+        // Firelight breaks a hunt, but a wolf that never noticed the survivor
+        // simply patrols past the clearing instead of orbiting the flames.
+        const wasAware = mind.aware;
+        mind.aware = false;
+        if (wasAware && mind.phase !== 'hurt') this.phase(mind, 'retreat', now);
+        else if (mind.phase !== 'hurt' && mind.phase !== 'retreat') this.phase(mind, 'wander', now);
+      } else if (this.sees(wolf, mind, player, blocked)) {
+        mind.aware = true;
+        mind.lastSeenAt = now;
+        mind.lastSeen = { ...player };
+      } else if (now - mind.lastSeenAt > 3 || distance(wolf, player) > 210) {
+        mind.aware = false;
+      }
+    }
     const active = [...this.minds.values()].some((mind) => mind.phase === 'windup' || mind.phase === 'lunge');
     const candidate =
       !protectedPlayer && !active && now >= this.nextAttack
         ? live
             .filter(
               (wolf) =>
+                this.minds.get(wolf.id)!.aware &&
+                now - this.minds.get(wolf.id)!.lastSeenAt < 0.35 &&
                 wolf.cooldown <= 0 &&
                 wolf.scared <= 0 &&
                 distance(wolf, player) < 96 &&
@@ -216,16 +305,32 @@ export class WolfPack {
       const attack = WOLF_ATTACKS[mind.attack];
       mind.moving = false;
       if (mind.phase === 'hurt' && age < 0.3) continue;
-      if (protectedPlayer || wolf.scared > 0) {
+      // A newly lit hearth can surround a patrolling wolf. Step clear of the
+      // flames even when it never saw the survivor, so it is never trapped.
+      const hot = state.fires.find((fire) => fire.fuel > 0 && distance(wolf, fire) < 36);
+      if (hot && mind.phase !== 'hurt') {
         this.phase(mind, 'retreat', now);
-        const center = protectedFire ?? player;
-        const angle = Math.atan2(wolf.y - center.y, wolf.x - center.x) + (wolf.id % 2 ? 1 : -1) * 0.3;
-        const radius = state.weather !== 'wolves' ? 235 : protectedPlayer ? 130 : 88;
-        const target = {
-          x: clamp(center.x + Math.cos(angle) * radius, 24, WORLD.width - 24),
-          y: clamp(center.y + Math.sin(angle) * radius, 32, WORLD.height - 24),
-        };
-        this.move(wolf, mind, target, 31, dt, live, blocked);
+        const away = unit(wolf.x - hot.x, wolf.y - hot.y);
+        this.move(wolf, mind, { x: wolf.x + away.x * 44, y: wolf.y + away.y * 44 }, 31, dt, live, blocked);
+        continue;
+      }
+      if (mind.phase === 'retreat' && !protectedPlayer) {
+        // Recovered from the light: go back to an ordinary patrol.
+        if (distance(wolf, player) > 70) this.phase(mind, 'wander', now);
+      }
+      if (mind.phase === 'retreat') {
+        const away = unit(wolf.x - player.x, wolf.y - player.y);
+        this.move(wolf, mind, { x: wolf.x + away.x * 50, y: wolf.y + away.y * 50 }, 31, dt, live, blocked);
+        continue;
+      }
+      if (protectedPlayer || !mind.aware) {
+        this.wander(wolf, mind, now, dt, live, blocked);
+        continue;
+      }
+      if (wolf.scared > 0) {
+        this.phase(mind, 'retreat', now);
+        const away = unit(wolf.x - player.x, wolf.y - player.y);
+        this.move(wolf, mind, { x: wolf.x + away.x * 40, y: wolf.y + away.y * 40 }, 31, dt, live, blocked);
         continue;
       }
       if (mind.phase === 'windup') {
@@ -264,7 +369,11 @@ export class WolfPack {
       // Distinct, slowly orbiting approach slots and separation keep a pack spread.
       const angle = (index * TAU) / Math.max(1, live.length) + now * 0.12;
       const radius = 57 + (index % 2) * 13;
-      const target = { x: player.x + Math.cos(angle) * radius, y: player.y + Math.sin(angle) * radius };
+      const center = mind.lastSeen;
+      const target =
+        now - mind.lastSeenAt > 0.35
+          ? center
+          : { x: center.x + Math.cos(angle) * radius, y: center.y + Math.sin(angle) * radius };
       this.phase(mind, distance(wolf, player) > 105 ? 'stalk' : 'circle', now);
       this.move(wolf, mind, target, mind.phase === 'stalk' ? 39 : 32, dt, live, blocked);
     }

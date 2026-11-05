@@ -83,7 +83,7 @@ export const ITEMS: Record<ItemId, { name: string; description: string; action?:
     },
     torch: {
       name: 'Pine torch',
-      description: 'A small light in a big forest. Keeps you warm and frightens wolves for 90 seconds.',
+      description: 'A small light in a big forest. Keeps you warm and frightens wolves for 35 seconds.',
       action: 'Light torch',
       category: 'SURVIVAL',
     },
@@ -210,6 +210,9 @@ export const WEATHER: Record<Weather, { name: string; description: string; icon:
     color: '#dba080',
   },
 };
+export const RESOURCE_HP = { tree: 6, stone: 4, berries: 1, fiber: 1, mushroom: 1 } as const;
+export const BERRY_COLLECT_TIME = 1.8;
+export const TORCH_DURATION = 35;
 export const QUICK_ITEMS: ItemId[] = ['hatchet', 'pickaxe', 'berries', 'water', 'bandage', 'torch'];
 export const DEFAULT_SETTINGS: Settings = {
   sound: true,
