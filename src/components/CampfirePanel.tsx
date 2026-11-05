@@ -27,7 +27,12 @@ export function CampfirePanel({
           <Icon name="close" size={16} />
         </button>
       </header>
-      <div className="hearth-panel" data-burning={fuel > 0} data-feeding={camp.feeding}>
+      <div
+        className="hearth-panel"
+        data-burning={fuel > 0}
+        data-feeding={camp.feeding}
+        data-seated={camp.seated}
+      >
         <div className="hearth-panel-heading">
           <span className="hearth-flame">
             <Icon name="fire" size={28} />
@@ -83,7 +88,11 @@ export function CampfirePanel({
           {camp.feeding && <i style={{ width: `${camp.progress * 100}%` }} />}
         </button>
         <p className="hearth-caption" aria-live="polite">
-          {camp.feeding ? 'One more log. A little more warmth.' : 'The forest carries on. Take a breath.'}
+          {camp.feeding
+            ? 'One more log. A little more warmth.'
+            : camp.seated
+              ? 'Seated on the camp bench. Let the forest carry on.'
+              : 'The forest carries on. Take a breath.'}
         </p>
         {saveIssue && (
           <p className="hearth-save-warning" role="status">

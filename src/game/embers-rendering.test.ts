@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as animation from './animation';
 import { audio } from './audio';
-import { DEFAULT_SETTINGS } from './data';
+import { CAMP, CAMP_BENCH, DEFAULT_SETTINGS } from './data';
 import { ForestFeedback } from './feedback';
 import { Renderer } from './renderer';
 import { createGame, Simulation } from './simulation';
@@ -10,6 +10,8 @@ import type { Settings } from './types';
 function canvasFixture(settings: Partial<Settings> = {}) {
   const fills: { style: string; args: number[] }[] = [];
   const target: Record<string, unknown> = {
+    globalAlpha: 1,
+    createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
     createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
     fillRect: vi.fn((...args: number[]) => fills.push({ style: String(target.fillStyle), args })),
   };
@@ -248,5 +250,116 @@ describe('real audio gains', () => {
       },
     );
     expect(await audio.unlock()).toBe(false);
+  });
+});
+
+describe('whole static camp states and chopping feedback', () => {
+  const names = ['campBench', 'seatedBench', 'pineStump', 'workbench'] as const;
+  afterEach(() => {
+    for (const name of names) delete animation.artImages[`object-${name}`];
+  });
+  const images = () =>
+    Object.fromEntries(
+      names.map((name) => {
+        const image = { naturalWidth: 48, naturalHeight: 42 } as HTMLImageElement;
+        animation.artImages[`object-${name}`] = image;
+        return [name, image];
+      }),
+    );
+  it('replaces both the empty bench and standing actor with one complete seated image', () => {
+    const { renderer, canvas, ctx, sim } = canvasFixture();
+    const sprites = images();
+    sim.state.player = { ...CAMP_BENCH };
+    sim.state.fires = [{ ...CAMP, id: 0, fuel: 40 }];
+    for (let i = 0; i < 80; i++) sim.update(0.01);
+    expect(sim.seated).toBe(true);
+    const draw = vi.spyOn(animation, 'drawAnimation').mockImplementation(() => {});
+    renderer.draw(sim, 0);
+    expect(canvas.dataset.spriteSheet).toBe('seated-bench');
+    expect(
+      vi.mocked(ctx.drawImage).mock.calls.filter(([image]) => image === sprites.seatedBench),
+    ).toHaveLength(1);
+    expect(vi.mocked(ctx.drawImage).mock.calls.some(([image]) => image === sprites.campBench)).toBe(false);
+    expect(draw.mock.calls.some(([, name]) => /^(idle|walk|feed)-/.test(name))).toBe(false);
+    sim.keys.add('d');
+    sim.update(0.01);
+    vi.mocked(ctx.drawImage).mockClear();
+    renderer.draw(sim, 0);
+    expect(vi.mocked(ctx.drawImage).mock.calls.some(([image]) => image === sprites.campBench)).toBe(true);
+    expect(vi.mocked(ctx.drawImage).mock.calls.some(([image]) => image === sprites.seatedBench)).toBe(false);
+    expect(canvas.dataset.spriteSheet).not.toBe('seated-bench');
+  });
+  it('draws the generated stump after the existing fall clip finishes', () => {
+    const { renderer, canvas, ctx, sim } = canvasFixture();
+    const sprites = images();
+    sim.state.resources = [
+      { id: 0, kind: 'tree', x: 540, y: 500, hp: 0, readyAt: 200, scale: 1, variant: 0 },
+    ];
+    renderer.draw(sim, 0);
+    expect(canvas.dataset.stumps).toBe('1');
+    expect(
+      vi
+        .mocked(ctx.drawImage)
+        .mock.calls.some(([image, , , w, h]) => image === sprites.pineStump && w === 26 && h === 22),
+    ).toBe(true);
+  });
+  it('plays the literal falling leaf clip, then hides it with either relevant preference', () => {
+    const { renderer, canvas, sim } = canvasFixture({ atmosphere: true });
+    sim.fallingLeaves = [{ x: 530, y: 450, startedAt: 19.7, duration: 2, drift: 4, phase: 0 }];
+    const draw = vi.spyOn(animation, 'drawAnimation').mockImplementation(() => {});
+    renderer.draw(sim, 0);
+    expect(canvas.dataset.chopLeaves).toBe('1');
+    expect(
+      draw.mock.calls.some(([, name, , , , options]) => name === 'leaf-drift' && options?.scale === 0.65),
+    ).toBe(true);
+    for (const settings of [
+      { atmosphere: false, reducedMotion: false },
+      { atmosphere: true, reducedMotion: true },
+    ]) {
+      Object.assign(renderer.settings, settings);
+      draw.mockClear();
+      renderer.draw(sim, 0);
+      expect(canvas.dataset.chopLeaves).toBe('0');
+      expect(
+        draw.mock.calls.some(([, name, , , , options]) => name === 'leaf-drift' && options?.scale === 0.65),
+      ).toBe(false);
+      expect(sim.fallingLeaves).toHaveLength(1);
+    }
+  });
+  it('keeps a pounce landing marker visible with reduced motion and scales the stronger health bar', () => {
+    const { renderer, ctx, sim } = canvasFixture({ reducedMotion: true });
+    const wolf = { id: 1, x: 590, y: 500, hp: 3, maxHp: 4, cooldown: 0, scared: 0 };
+    sim.state.wolves = [wolf];
+    const mind = sim.wolfPack.mind(wolf, sim.state.player, sim.state.time);
+    mind.phase = 'windup';
+    mind.attack = 'pounce';
+    mind.startedAt = sim.state.time - 0.3;
+    const draw = vi.spyOn(animation, 'drawAnimation').mockImplementation(() => {});
+    renderer.draw(sim, 0);
+    expect(ctx.strokeRect).toHaveBeenCalledWith(488, 493, 24, 14);
+    expect(ctx.fillRect).toHaveBeenCalledWith(580, 470, 15, 2);
+    expect(
+      draw.mock.calls.some(([, name, , , , options]) => name === 'wolf-alert' && options?.frame === 0),
+    ).toBe(true);
+  });
+  it('renders an honest placement ghost without creating or spending the workbench', () => {
+    const { renderer, canvas, ctx, sim } = canvasFixture();
+    const sprites = images();
+    sim.state.inventory.workbench = 1;
+    sim.equip('workbench');
+    sim.aim = { x: 540, y: 520 };
+    renderer.draw(sim, 0);
+    expect(canvas.dataset.placement).toBe('valid');
+    expect(canvas.dataset.workbenchCount).toBe('0');
+    expect(
+      vi
+        .mocked(ctx.drawImage)
+        .mock.calls.some(([image, , , w, h]) => image === sprites.workbench && w === 42 && h === 30),
+    ).toBe(true);
+    sim.aim = { ...sim.state.player };
+    renderer.draw(sim, 0);
+    expect(canvas.dataset.placement).toBe('blocked');
+    expect(sim.state.inventory.workbench).toBe(1);
+    expect(sim.state.workbenches).toEqual([]);
   });
 });

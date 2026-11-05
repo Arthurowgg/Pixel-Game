@@ -1,8 +1,11 @@
 import { clamp, distance, WORLD } from './data';
-import type { GameState, Point, Wolf } from './types';
+import type { Difficulty, GameState, Point, Wolf } from './types';
 
 export type WolfPhase = 'stalk' | 'circle' | 'windup' | 'lunge' | 'recover' | 'retreat' | 'hurt';
+export type WolfAttack = 'snap' | 'pounce';
 export interface WolfMind {
+  attack: WolfAttack;
+  strikes: number;
   phase: WolfPhase;
   startedAt: number;
   target: Point;
@@ -21,7 +24,21 @@ export const WOLF_WINDUP = 0.55;
 export const WOLF_LUNGE = 0.32;
 export const WOLF_RECOVERY = 0.85;
 export const WOLF_FADE = 1.25;
-export const WOLF_SPACING = 28;
+export const WOLF_SPACING = 32;
+export const WOLF_ATTACKS = {
+  snap: {
+    windup: WOLF_WINDUP,
+    lunge: WOLF_LUNGE,
+    recovery: WOLF_RECOVERY,
+    speed: 245,
+    damage: 12,
+    reach: 19,
+  },
+  pounce: { windup: 0.8, lunge: 0.42, recovery: 1.05, speed: 290, damage: 18, reach: 20 },
+} as const;
+export const wolfHealth = (difficulty: Difficulty) =>
+  difficulty === 'wild' ? 5 : difficulty === 'explorer' ? 3 : 4;
+export const wolfMaxHealth = (wolf: Wolf) => wolf.maxHp ?? Math.max(2, wolf.hp);
 const TAU = Math.PI * 2;
 const unit = (x: number, y: number) => {
   const length = Math.hypot(x, y);
@@ -40,6 +57,8 @@ export class WolfPack {
     if (!mind) {
       mind = {
         phase: 'stalk',
+        attack: 'snap',
+        strikes: 0,
         startedAt: time,
         target: { ...player },
         flip: wolf.x < player.x,
@@ -70,8 +89,8 @@ export class WolfPack {
     mind.hitAt = now;
     this.phase(mind, 'hurt', now);
     mind.startedAt = now;
-    wolf.cooldown = Math.max(wolf.cooldown, 1.15);
-    wolf.scared = 0.65;
+    wolf.cooldown = Math.max(wolf.cooldown, 1.0);
+    wolf.scared = 0.5;
     const away = unit(wolf.x - player.x, wolf.y - player.y);
     const next = { x: wolf.x + away.x * 7, y: wolf.y + away.y * 7 };
     const flip = mind.flip;
@@ -155,7 +174,7 @@ export class WolfPack {
     dt: number,
     torch: boolean,
     blocked: (point: Point) => boolean,
-    bite: (wolf: Wolf) => void,
+    bite: (wolf: Wolf, attack: WolfAttack) => void,
   ) {
     if (dt <= 0 || !Number.isFinite(dt)) return;
     const now = state.time,
@@ -177,7 +196,7 @@ export class WolfPack {
               (wolf) =>
                 wolf.cooldown <= 0 &&
                 wolf.scared <= 0 &&
-                distance(wolf, player) < 70 &&
+                distance(wolf, player) < 96 &&
                 !blocked(wolf) &&
                 !['hurt', 'recover'].includes(this.minds.get(wolf.id)!.phase),
             )
@@ -194,8 +213,9 @@ export class WolfPack {
       wolf.scared = Math.max(0, wolf.scared - dt);
       const mind = this.minds.get(wolf.id)!;
       const age = now - mind.startedAt;
+      const attack = WOLF_ATTACKS[mind.attack];
       mind.moving = false;
-      if (mind.phase === 'hurt' && age < 0.38) continue;
+      if (mind.phase === 'hurt' && age < 0.3) continue;
       if (protectedPlayer || wolf.scared > 0) {
         this.phase(mind, 'retreat', now);
         const center = protectedFire ?? player;
@@ -211,28 +231,30 @@ export class WolfPack {
       if (mind.phase === 'windup') {
         // Lock the landing point at the warning, so a moving survivor can dodge.
         mind.flip = mind.target.x > wolf.x;
-        if (age >= WOLF_WINDUP) this.phase(mind, 'lunge', now);
+        if (age >= attack.windup) this.phase(mind, 'lunge', now);
         continue;
       }
       if (mind.phase === 'lunge') {
-        this.move(wolf, mind, mind.target, 225, dt, live, blocked, true);
-        if (!mind.bitten && distance(wolf, player) < 19) {
+        this.move(wolf, mind, mind.target, attack.speed, dt, live, blocked, true);
+        if (!mind.bitten && distance(wolf, player) < attack.reach) {
           mind.bitten = true;
-          bite(wolf);
+          bite(wolf, mind.attack);
         }
-        if (mind.bitten || age >= WOLF_LUNGE || distance(wolf, mind.target) < 2) {
+        if (mind.bitten || age >= attack.lunge || distance(wolf, mind.target) < 2) {
           this.phase(mind, 'recover', now);
-          wolf.cooldown = state.difficulty === 'wild' ? 1.15 : 1.8;
-          this.nextAttack = now + WOLF_RECOVERY;
+          wolf.cooldown = state.difficulty === 'wild' ? 0.95 : 1.45;
+          this.nextAttack = now + attack.recovery * 0.85;
         }
         continue;
       }
-      if (mind.phase === 'recover' && age < WOLF_RECOVERY) {
+      if (mind.phase === 'recover' && age < attack.recovery) {
         const away = unit(wolf.x - player.x, wolf.y - player.y);
-        this.move(wolf, mind, { x: wolf.x + away.x * 15, y: wolf.y + away.y * 15 }, 12, dt, live, blocked);
+        this.move(wolf, mind, { x: wolf.x + away.x * 15, y: wolf.y + away.y * 15 }, 22, dt, live, blocked);
         continue;
       }
       if (wolf === candidate) {
+        mind.attack = distance(wolf, player) > 62 || mind.strikes % 3 === 2 ? 'pounce' : 'snap';
+        mind.strikes++;
         this.phase(mind, 'windup', now);
         mind.target = { ...player };
         mind.bitten = false;
@@ -244,7 +266,7 @@ export class WolfPack {
       const radius = 57 + (index % 2) * 13;
       const target = { x: player.x + Math.cos(angle) * radius, y: player.y + Math.sin(angle) * radius };
       this.phase(mind, distance(wolf, player) > 105 ? 'stalk' : 'circle', now);
-      this.move(wolf, mind, target, mind.phase === 'stalk' ? 31 : 25, dt, live, blocked);
+      this.move(wolf, mind, target, mind.phase === 'stalk' ? 39 : 32, dt, live, blocked);
     }
   }
 }

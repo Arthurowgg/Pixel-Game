@@ -21,6 +21,7 @@ import type { GameState, GameView, ItemId, Settings } from '../game/types';
 type Overlay =
   | 'inventory'
   | 'craft'
+  | 'workshop'
   | 'map'
   | 'journal'
   | 'pause'
@@ -47,6 +48,7 @@ export function GameShell({
 }) {
   const [sim] = useState(() => new Simulation(initial));
   const [input] = useState(() => new GameInput(sim.keys));
+  const workshopRef = useRef<number | undefined>(undefined);
   const trailReturn = useRef<Overlay>(null);
   const [view, setView] = useState<GameView>(() => sim.view());
   const [overlay, setOverlay] = useState<Overlay>(null);
@@ -78,6 +80,7 @@ export function GameShell({
       if (!readyRef.current && next !== null) return;
       if (next === 'condition' || next === 'fieldcraft')
         trailReturn.current = overlayRef.current === 'pause' ? 'pause' : null;
+      if (next !== 'workshop') workshopRef.current = undefined;
       overlayRef.current = next;
       input.clear();
       sim.target = null;
@@ -149,8 +152,9 @@ export function GameShell({
     const renderer = new Renderer(canvas, initial.seed, settingsRef.current);
     rendererRef.current = renderer;
     sim.onSound = audio.play;
-    sim.onOpenCrafting = () => {
-      open('craft');
+    sim.onOpenCrafting = (id) => {
+      workshopRef.current = id;
+      open('workshop');
       refresh();
     };
     const observer = new ResizeObserver(() => renderer.resize());
@@ -193,7 +197,7 @@ export function GameShell({
           total: WORLD_ART.length + 3,
           label: 'Terrain and campsite prepared',
         });
-        setLoadPhase('Setting the table. Lighting the path.');
+        setLoadPhase('Finding your bench. Lighting the path.');
         await nextPaint();
         if (!alive) return;
         renderer.draw(sim, performance.now());
@@ -250,7 +254,9 @@ export function GameShell({
         event.preventDefault();
         if (
           !overlayRef.current ||
-          ['inventory', 'craft', 'map', 'journal', 'condition', 'fieldcraft'].includes(overlayRef.current)
+          ['inventory', 'craft', 'workshop', 'map', 'journal', 'condition', 'fieldcraft'].includes(
+            overlayRef.current,
+          )
         )
           open(
             overlayRef.current === shortcuts[key]
@@ -333,6 +339,9 @@ export function GameShell({
     night = view.hour >= 20 || view.hour < 6;
   const tasks = [
     { label: 'Gather 8 pine wood', progress: view.gathered.wood || 0, goal: 8 },
+    { label: 'Gather 3 wild fiber', progress: view.gathered.fiber || 0, goal: 3 },
+    { label: 'Craft your workbench', progress: Number(view.crafted.includes('workbench')), goal: 1 },
+    { label: 'Place your workbench', progress: Math.min(1, view.workbenchCount), goal: 1 },
     { label: 'Collect 3 river stone', progress: view.gathered.stone || 0, goal: 3 },
     { label: 'Craft a forest shelter', progress: Number(view.crafted.includes('shelter')), goal: 1 },
     { label: 'See three sunrises', progress: view.nights, goal: 3 },
@@ -411,7 +420,13 @@ export function GameShell({
           refresh();
         }}
         onPointerMove={(event) => {
-          if (!input.owns(event.pointerId) || !rendererRef.current) return;
+          if (
+            !ready ||
+            overlay ||
+            !rendererRef.current ||
+            (!input.owns(event.pointerId) && sim.state.equipped !== 'workbench')
+          )
+            return;
           const rect = event.currentTarget.getBoundingClientRect();
           sim.aim = rendererRef.current.screenToWorld(event.clientX - rect.left, event.clientY - rect.top);
         }}
@@ -463,7 +478,9 @@ export function GameShell({
               <Icon name="wolfMark" size={21} />
               <span>
                 {view.wolfWindup
-                  ? 'A wolf is about to lunge.'
+                  ? view.wolfPounce
+                    ? 'Heavy pounce incoming.'
+                    : 'A wolf is about to lunge.'
                   : `${view.wolvesNear} ${view.wolvesNear === 1 ? 'wolf' : 'wolves'} on your trail.`}
               </span>
             </div>
@@ -728,7 +745,7 @@ export function GameShell({
         <div className="game-bottom-tools">
           <div className="tool-buttons">
             {[
-              ['craft', 'workbench', 'C', 'Crafting'],
+              ['craft', 'hammer', 'C', 'Handcraft'],
               ['map', 'map', 'M', 'Map'],
               ['journal', 'journal', 'J', 'Field journal'],
             ].map(([panel, icon, key, label]) => (
@@ -779,9 +796,10 @@ export function GameShell({
           }}
         />
       )}
-      {(overlay === 'inventory' || overlay === 'craft') && (
+      {(overlay === 'inventory' || overlay === 'craft' || overlay === 'workshop') && (
         <BackpackDialog
           tab={overlay}
+          workbenchId={workshopRef.current}
           view={view}
           sim={sim}
           onTab={open}

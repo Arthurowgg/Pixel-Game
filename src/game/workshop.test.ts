@@ -1,29 +1,36 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { atWorkbench, blocksWorkbench, MAX_CRAFT_BATCH, recipeStation } from './crafting';
-import { CAMP, RECIPES, WORKBENCH } from './data';
+import { CAMP, RECIPES } from './data';
 import registry from './generated-assets.json';
 import { createGame, Simulation } from './simulation';
 import { DIRECTIONS, GameInput, moveWithCollision, touchMovementKeys } from './movement';
 import { CLIPS, playerPose } from './animation';
 import { isGameState } from './storage';
 
+const WORKBENCH = { id: 0, x: 940, y: 738 };
+const placed = (sim: Simulation) => {
+  sim.state.workbenches = [{ ...WORKBENCH }];
+  sim.state.player = { x: 940, y: 758 };
+};
 const fresh = () => {
   const sim = new Simulation(createGame('Rowan', 'explorer', 42));
   Object.assign(sim.state.inventory, { wood: 60, stone: 30, fiber: 40, berries: 10, water: 5, mushroom: 3 });
   return sim;
 };
 
-describe('a real campsite crafting table', () => {
-  it('is available at the initial clearing without replacing the first gathering prompt', () => {
+describe('a player-built workbench', () => {
+  it('starts without a station or kit while preserving the first gathering prompt', () => {
     const sim = fresh();
-    expect(sim.view().workbenchNearby).toBe(true);
+    expect(sim.view().workbenchNearby).toBe(false);
+    expect(sim.state.workbenches).toEqual([]);
+    expect(sim.state.inventory.workbench).toBe(0);
     expect(sim.nearest()?.kind).toBe('tree');
-    expect(atWorkbench({ x: 200, y: 200 })).toBe(false);
+    expect(atWorkbench({ x: 200, y: 200 }, sim.state.workbenches)).toBe(false);
   });
   it('opens the workshop with E without consuming items or starting an animation', () => {
     const sim = fresh();
-    sim.state.player = { x: WORKBENCH.x, y: WORKBENCH.y + 20 };
+    placed(sim);
     const inventory = { ...sim.state.inventory };
     sim.onOpenCrafting = vi.fn();
     expect(sim.nearest()?.kind).toBe('workbench');
@@ -37,29 +44,32 @@ describe('a real campsite crafting table', () => {
     'requires the table for %s and rechecks before spending',
     (item) => {
       const sim = fresh();
-      expect(sim.canCraft(item)).toBe(true);
+      placed(sim);
+      expect(sim.canCraft(item)).toBe(false);
+      expect(sim.canCraft(item, 1, 0)).toBe(true);
       sim.state.player = { x: 500, y: 500 };
       const before = { ...sim.state.inventory };
-      expect(sim.craft(item)).toBe(false);
+      expect(sim.craft(item, 1, 0)).toBe(false);
       expect(sim.state.inventory).toEqual(before);
-      expect(sim.toasts.at(-1)?.text).toContain('crafting table');
+      expect(sim.toasts.at(-1)?.text).toContain('workbench');
       sim.state.player = { x: WORKBENCH.x, y: WORKBENCH.y + 20 };
       sim.state.fires = [];
-      expect(sim.craft(item)).toBe(true);
+      expect(sim.craft(item, 1, 0)).toBe(true);
     },
   );
   it('still allows basic field recipes anywhere, but keeps cooking tied to burning fire', () => {
     const sim = fresh();
     sim.state.player = { x: 300, y: 300 };
-    for (const item of ['campfire', 'bandage', 'torch'] as const) expect(sim.canCraft(item)).toBe(true);
+    for (const item of ['workbench', 'bandage', 'torch'] as const) expect(sim.canCraft(item)).toBe(true);
     expect(sim.canCraft('meal')).toBe(false);
-    expect(sim.canCraft('tea')).toBe(false);
+    expect(sim.canCraft('tea', 1, 0)).toBe(false);
+    placed(sim);
     sim.state.player = { ...CAMP };
     sim.state.fires[0].fuel = 0;
-    expect(sim.canCraft('tea')).toBe(false);
+    expect(sim.canCraft('tea', 1, 0)).toBe(false);
     sim.state.fires[0].fuel = 50;
-    expect(sim.canCraft('tea')).toBe(true);
-    expect(recipeStation(RECIPES.find((recipe) => recipe.id === 'shelter')!)).toBe('Crafting table');
+    expect(sim.canCraft('tea', 1, 0)).toBe(true);
+    expect(recipeStation(RECIPES.find((recipe) => recipe.id === 'shelter')!)).toBe('Workbench');
   });
   it('crafts a whole batch atomically with exact costs and one recipe discovery', () => {
     const sim = fresh();
@@ -92,9 +102,10 @@ describe('a real campsite crafting table', () => {
   });
   it('keeps the furniture solid and refuses to place a building through it', () => {
     const sim = fresh();
-    expect(blocksWorkbench(WORKBENCH)).toBe(true);
+    placed(sim);
+    expect(blocksWorkbench(WORKBENCH, sim.state.workbenches)).toBe(true);
     expect(sim.collision(WORKBENCH)).toBe(true);
-    expect(blocksWorkbench({ x: WORKBENCH.x, y: WORKBENCH.y + 20 })).toBe(false);
+    expect(blocksWorkbench({ x: WORKBENCH.x, y: WORKBENCH.y + 20 }, sim.state.workbenches)).toBe(false);
     sim.state.player = { x: WORKBENCH.x - 35, y: WORKBENCH.y - 18 };
     sim.state.inventory.campfire = 1;
     sim.state.resources = [];
@@ -102,9 +113,10 @@ describe('a real campsite crafting table', () => {
     expect(sim.use('campfire')).toBe(false);
     expect(sim.state.inventory.campfire).toBe(1);
   });
-  it('safely moves old saves out of the new table footprint without resetting their supplies', () => {
+  it('safely moves saves out of a placed workbench footprint without resetting their supplies', () => {
     const state = createGame('Existing camp', 'survivor', 42);
-    state.player = { ...WORKBENCH };
+    state.workbenches = [{ ...WORKBENCH }];
+    state.player = { x: WORKBENCH.x, y: WORKBENCH.y };
     state.inventory.wood = 23;
     const sim = new Simulation(state);
     expect(sim.collision(sim.state.player)).toBe(false);

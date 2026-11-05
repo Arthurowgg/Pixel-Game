@@ -129,6 +129,13 @@
       "width": 64,
       "height": 64,
       "source": "generated"
+    },
+    "satchelLinen": {
+      "file": "art/textures/satchel-linen.png",
+      "width": 64,
+      "height": 64,
+      "source": "generated",
+      "sourceAsset": "art/generated/roots-reclaimed/satchel-linen.png"
     }
   },
   "frames": {
@@ -164,12 +171,12 @@
       "slice": 8
     },
     "workshop": {
-      "file": "art/ui/workshop-frame.png",
+      "file": "art/ui/fieldwork-frame.png",
       "width": 192,
       "height": 128,
       "source": "generated",
-      "sourceAsset": "art/generated/hearth-workshop/workshop-frame.png",
-      "slice": 26
+      "sourceAsset": "art/generated/roots-reclaimed/fieldwork-frame.png",
+      "slice": 18
     },
     "settings": {
       "file": "art/ui/settings-frame.png",
@@ -185,6 +192,14 @@
       "height": 96,
       "source": "generated",
       "sourceAsset": "art/generated/embers-instinct/hearth-frame.png",
+      "slice": 20
+    },
+    "inventory": {
+      "file": "art/ui/satchel-frame.png",
+      "width": 192,
+      "height": 128,
+      "source": "generated",
+      "sourceAsset": "art/generated/roots-reclaimed/satchel-frame.png",
       "slice": 20
     }
   },
@@ -215,11 +230,43 @@
   "objects": {
     "workbench": {
       "file": "art/objects/workbench.png",
-      "width": 64,
-      "height": 44,
+      "width": 42,
+      "height": 30,
       "source": "generated",
-      "sourceAsset": "art/generated/hearth-workshop/workbench.png",
-      "anchor": [32, 39]
+      "sourceAsset": "art/generated/roots-reclaimed/workbench.png",
+      "anchor": [21, 26]
+    },
+    "campBench": {
+      "file": "art/objects/camp-bench.png",
+      "width": 48,
+      "height": 42,
+      "source": "generated",
+      "sourceAsset": "art/generated/roots-reclaimed/camp-bench.png",
+      "anchor": [24, 40]
+    },
+    "seatedBench": {
+      "file": "art/objects/seated-bench.png",
+      "width": 48,
+      "height": 42,
+      "source": "generated",
+      "sourceAsset": "art/generated/roots-reclaimed/seated-bench.png",
+      "anchor": [24, 40]
+    },
+    "pineStump": {
+      "file": "art/objects/pine-stump.png",
+      "width": 26,
+      "height": 22,
+      "source": "generated",
+      "sourceAsset": "art/generated/roots-reclaimed/pine-stump.png",
+      "anchor": [13, 19]
+    },
+    "campClearing": {
+      "file": "art/objects/camp-clearing.png",
+      "width": 240,
+      "height": 184,
+      "source": "generated",
+      "sourceAsset": "art/generated/roots-reclaimed/camp-clearing.png",
+      "anchor": [120, 92]
     }
   }
 }

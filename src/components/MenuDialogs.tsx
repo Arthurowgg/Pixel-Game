@@ -159,7 +159,7 @@ export function GuideDialog({ onClose }: { onClose: () => void }) {
                 'hammer',
                 '03',
                 'Make the forest your home.',
-                'Visit the crafting table east of your first fire. Press E or C, make a shelter with 10 wood and 6 fiber, then place the kit from your backpack.',
+                'Make a workbench with 6 wood and 3 fiber in Handcraft (C). Place it, interact with E, then build a shelter from 10 wood and 6 fiber.',
               ],
               [
                 'water',
@@ -220,7 +220,7 @@ export function GuideDialog({ onClose }: { onClose: () => void }) {
               [
                 ['B', 'C'],
                 'Make something of it',
-                'B opens your backpack. C opens the workshop. Use E at the camp table.',
+                'B opens your satchel. C makes basic supplies by hand. Interact with a placed workbench using E for the full workshop.',
               ],
               [['M', 'J'], 'Know where you stand', 'M opens the map. J opens your field journal.'],
               [['ESC'], 'Take a breather', 'Pause your journey. The forest can wait.'],

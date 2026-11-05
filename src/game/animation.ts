@@ -47,7 +47,7 @@ export const WORLD_ART = [
   ...Object.entries(generatedAssets.objects).map(([name, asset]) => ({
     name: `object-${name}`,
     file: asset.file,
-    label: 'Crafting table',
+    label: name === 'workbench' ? 'Workbench' : name === 'seatedBench' ? 'Seated camp state' : 'Forest props',
   })),
 ];
 export async function loadArt(onProgress?: (progress: LoadProgress) => void, signal?: AbortSignal) {

@@ -2,8 +2,9 @@ import type { ItemId, Recipe, Settings, Weather } from './types';
 
 export const WORLD = { width: 1800, height: 1400 };
 export const CAMP = { x: 900, y: 740 };
-/** Permanent campsite furniture; present in new worlds and existing saves. */
-export const WORKBENCH = { x: 940, y: 738 };
+/** The camp has a resting bench, never a free crafting station. */
+export const CAMP_BENCH = { x: 878, y: 716 };
+export const SPAWN = { x: 900, y: 796 };
 export const POND = { x: 1220, y: 660, rx: 110, ry: 76 };
 export const SPRING = { x: 1098, y: 660 };
 export const DAY_LENGTH = 180;
@@ -70,7 +71,7 @@ export const ITEMS: Record<ItemId, { name: string; description: string; action?:
     tea: {
       name: 'Berry tea',
       description:
-        'A steaming campfire brew. Restores 25 thirst and 24 warmth. Brew with two berries and one water beside a burning fire.',
+        'A steaming campfire brew. Restores 25 thirst and 24 warmth. Brew at a workbench near a burning fire, using two berries and one water.',
       action: 'Drink berry tea',
       category: 'SUPPLY',
     },
@@ -98,6 +99,13 @@ export const ITEMS: Record<ItemId, { name: string; description: string; action?:
       action: 'Place campfire',
       category: 'CAMP',
     },
+    workbench: {
+      name: 'Workbench',
+      description:
+        'A small field workshop you build yourself. Hold it and place it on clear ground, then interact with it to make equipment, camp kits and food.',
+      action: 'Place workbench',
+      category: 'CAMP',
+    },
     shelter: {
       name: 'Forest shelter',
       description: 'A roof against the rain and cold. Place it nearby, then stay close for protection.',
@@ -106,6 +114,13 @@ export const ITEMS: Record<ItemId, { name: string; description: string; action?:
     },
   };
 export const RECIPES: Recipe[] = [
+  {
+    id: 'workbench',
+    name: 'Workbench',
+    description: 'A few planks. A place for your next idea.',
+    cost: { wood: 6, fiber: 3 },
+    category: 'camp',
+  },
   {
     id: 'pickaxe',
     needsWorkbench: true,
@@ -116,6 +131,7 @@ export const RECIPES: Recipe[] = [
   },
   {
     id: 'campfire',
+    needsWorkbench: true,
     name: 'Campfire',
     description: 'Warm hands. Safe nights. A place to start.',
     cost: { wood: 5, stone: 3 },
@@ -145,6 +161,7 @@ export const RECIPES: Recipe[] = [
   },
   {
     id: 'meal',
+    needsWorkbench: true,
     name: 'Forest stew',
     description: 'A warm meal makes all the difference.',
     cost: { berries: 3, mushroom: 1 },
@@ -153,6 +170,7 @@ export const RECIPES: Recipe[] = [
   },
   {
     id: 'tea',
+    needsWorkbench: true,
     name: 'Berry tea',
     description: 'A little warmth to carry into the cold.',
     cost: { berries: 2, water: 1 },

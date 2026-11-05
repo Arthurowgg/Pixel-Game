@@ -1,4 +1,5 @@
-import { WolfPack } from './wolves';
+import { WolfPack, wolfHealth, WOLF_ATTACKS } from './wolves';
+import { blocksCampBench, hasCampBench, routeToBench } from './camp';
 import { facingDirection, movementVector, moveWithCollision } from './movement';
 import { atWorkbench, blocksWorkbench, maxCraftable, validCraftQuantity } from './crafting';
 import {
@@ -10,7 +11,8 @@ import {
   RECIPES,
   SPRING,
   WORLD,
-  WORKBENCH,
+  CAMP_BENCH,
+  SPAWN,
   clamp,
   distance,
   random,
@@ -22,6 +24,7 @@ import type {
   WorldEffect,
   Difficulty,
   FloatText,
+  FallingLeaf,
   GameState,
   GameToast,
   GameView,
@@ -106,7 +109,7 @@ export function createGame(
     name: name.trim().slice(0, 20) || 'Wanderer',
     difficulty,
     time: 0,
-    player: { x: 900, y: 790 },
+    player: { ...SPAWN },
     facing: 1,
     direction: 'down',
     equipped: 'hatchet',
@@ -128,14 +131,22 @@ export function createGame(
       shelter: 0,
       nuts: 0,
       tea: 0,
+      workbench: 0,
     },
     resources: createWorld(seed),
     fires: [{ ...CAMP, id: 0, fuel: 80 }],
     shelters: [],
+    workbenches: [],
     wolves: [],
     gathered: {},
     crafted: [],
-    journal: [{ time: 0, text: 'A clearing. A fading campfire. A place to begin.', kind: 'discovery' }],
+    journal: [
+      {
+        time: 0,
+        text: 'A worn clearing, a campfire and a resting bench. The workshop is mine to build.',
+        kind: 'discovery',
+      },
+    ],
     nights: 0,
     weather: 'clear',
     status: 'playing',
@@ -160,6 +171,7 @@ export class Simulation {
   state: GameState;
   keys = new Set<string>();
   particles: Particle[] = [];
+  fallingLeaves: FallingLeaf[] = [];
   floating: FloatText[] = [];
   toasts: GameToast[] = [];
   paused = false;
@@ -175,6 +187,12 @@ export class Simulation {
   wolfPack = new WolfPack();
   aim: Point | null = null;
   campFocus: number | null = null;
+  seated = false;
+  private campApproach: { fireId: number; steps: Point[] } | null = null;
+  private settingCampRoute = false;
+  get approachingCamp() {
+    return this.campApproach !== null;
+  }
   feedingFire: Fire | null = null;
   private campStill = 0;
   private dismissedFire: number | null = null;
@@ -184,27 +202,42 @@ export class Simulation {
     return this.destination;
   }
   set target(point: Point | null) {
+    if (!this.settingCampRoute) this.campApproach = null;
+    if (point && !this.settingCampRoute) {
+      this.seated = false;
+      this.campFocus = null;
+      this.campStill = 0;
+    }
     this.destination = point && Number.isFinite(point.x) && Number.isFinite(point.y) ? { ...point } : null;
     this.targetAxis = null;
   }
   onSound?: (
     sound: 'gather' | 'craft' | 'hit' | 'eat' | 'step' | 'notice' | 'chop' | 'mine' | 'swish',
   ) => void;
-  onOpenCrafting?: () => void;
+  onOpenCrafting?: (workbenchId: number) => void;
   private toastId = 0;
   private lastStep = 0;
   private rng: () => number;
   constructor(state: GameState) {
     this.state = state;
     state.wolves = state.wolves.filter((wolf) => wolf.hp > 0);
-    // A pre-table save can have its feet inside the new furniture. Move only that
-    // overlap to the nearest free edge rather than trapping or resetting the survivor.
-    if (blocksWorkbench(state.player)) {
+    // Resolve only real, saved furniture overlaps (and the newly added camp
+    // bench), never invent a free station when resuming an old expedition.
+    const furniture = [
+      ...state.workbenches.map((bench) => ({ ...bench, halfX: 17, halfY: 7 })),
+      { x: CAMP_BENCH.x, y: CAMP_BENCH.y - 10, halfX: 18, halfY: 5 },
+    ];
+    for (const piece of furniture) {
+      if (
+        Math.abs(state.player.x - piece.x) >= piece.halfX ||
+        Math.abs(state.player.y - piece.y) >= piece.halfY
+      )
+        continue;
       const exits = [
-        { x: state.player.x, y: WORKBENCH.y + 16 },
-        { x: state.player.x, y: WORKBENCH.y - 16 },
-        { x: WORKBENCH.x - 32, y: state.player.y },
-        { x: WORKBENCH.x + 32, y: state.player.y },
+        { x: state.player.x, y: piece.y + piece.halfY + 3 },
+        { x: state.player.x, y: piece.y - piece.halfY - 3 },
+        { x: piece.x - piece.halfX - 3, y: state.player.y },
+        { x: piece.x + piece.halfX + 3, y: state.player.y },
       ].sort((a, b) => distance(a, state.player) - distance(b, state.player));
       const free = exits.find((point) => !this.collision(point));
       if (free) state.player = free;
@@ -227,7 +260,7 @@ export class Simulation {
     return this.state.fires.some((f) => f.fuel > 0 && distance(f, this.state.player) < 82);
   }
   get workbenchNearby() {
-    return atWorkbench(this.state.player);
+    return atWorkbench(this.state.player, this.state.workbenches);
   }
   get shelterNearby() {
     return this.state.shelters.some((s) => distance(s, this.state.player) < 56);
@@ -250,7 +283,9 @@ export class Simulation {
     const hearth = this.state.fires
       .filter((fire) => distance(fire, p) < 40)
       .sort((a, b) => distance(a, p) - distance(b, p))[0];
-    const tableCloser = hearth && distance(WORKBENCH, p) < Math.min(48, distance(hearth, p));
+    const tableCloser =
+      hearth &&
+      this.state.workbenches.some((bench) => distance(bench, p) < Math.min(48, distance(hearth, p)));
     if (hearth && !tableCloser)
       return {
         kind: 'fire',
@@ -299,14 +334,16 @@ export class Simulation {
           label: 'Rest under shelter',
           detail: 'Recover stamina · stay warm',
         });
-    if (distance(p, WORKBENCH) < 48)
-      candidates.push({
-        kind: 'workbench',
-        id: 0,
-        distance: distance(p, WORKBENCH),
-        label: 'Use crafting table',
-        detail: 'Tools, shelter & supplies · open workshop',
-      });
+    for (const bench of this.state.workbenches) {
+      if (distance(p, bench) < 48)
+        candidates.push({
+          kind: 'workbench',
+          id: bench.id,
+          distance: distance(p, bench),
+          label: 'Use workbench',
+          detail: 'Equipment, camp kits & cooking · open workshop',
+        });
+    }
     candidates.sort((a, b) => a.distance - b.distance);
     return candidates[0] || null;
   }
@@ -366,6 +403,7 @@ export class Simulation {
     impact = 1 / 3,
   ) {
     if (this.action || this.state.status !== 'playing') return false;
+    if (kind !== 'feed') this.leaveCamp();
     this.action = {
       kind,
       item,
@@ -402,7 +440,14 @@ export class Simulation {
   }
   interact() {
     const s = this.state;
-    if (s.status !== 'playing' || this.paused || this.action || s.time - s.lastInteract < 0.68) return false;
+    if (
+      s.status !== 'playing' ||
+      this.paused ||
+      this.action ||
+      this.campApproach ||
+      s.time - s.lastInteract < 0.68
+    )
+      return false;
     const near = this.nearest();
     if (!near) {
       this.notify('Get a little closer to a tree, plant, stone, or campfire.', 'info');
@@ -411,13 +456,20 @@ export class Simulation {
     }
     s.lastInteract = s.time;
     if (near.kind === 'workbench') {
-      this.face(WORKBENCH);
+      const bench = s.workbenches.find((value) => value.id === near.id)!;
+      this.leaveCamp();
+      this.face(bench);
       this.target = null;
-      this.onOpenCrafting?.();
+      this.onOpenCrafting?.(bench.id);
       return true;
     }
     if (near.kind === 'fire') {
       const fire = s.fires.find((candidate) => candidate.id === near.id)!;
+      if (!this.campUnsafe && hasCampBench(fire) && this.campFocus !== fire.id) {
+        this.dismissedFire = null;
+        this.restAtFire(fire);
+        return true;
+      }
       if (!this.campUnsafe) {
         this.campFocus = fire.id;
         this.dismissedFire = null;
@@ -454,7 +506,7 @@ export class Simulation {
       this.notify(
         s.inventory[tool]
           ? `Equip your ${ITEMS[tool].name.toLowerCase()} first.`
-          : `You need a ${ITEMS[tool].name.toLowerCase()}. Craft one at the camp table.`,
+          : `You need a ${ITEMS[tool].name.toLowerCase()}. Make one at a workbench.`,
         'warning',
       );
       return false;
@@ -467,6 +519,12 @@ export class Simulation {
   leaveCamp() {
     this.dismissedFire = this.campFocus;
     this.campFocus = null;
+    this.seated = false;
+    if (this.campApproach) {
+      this.destination = null;
+      this.targetAxis = null;
+    }
+    this.campApproach = null;
     this.campStill = 0;
     if (this.action?.kind === 'feed') {
       this.action = null;
@@ -513,44 +571,101 @@ export class Simulation {
       s.wolves.some((wolf) => wolf.hp > 0 && distance(wolf, s.player) < 105) ||
       s.needs.health < 30 ||
       s.needs.hunger < 12 ||
-      s.needs.thirst < 12
+      s.needs.thirst < 12 ||
+      s.needs.warmth < 12
     );
+  }
+  private followCampRoute(point: Point) {
+    this.settingCampRoute = true;
+    this.target = point;
+    this.settingCampRoute = false;
+  }
+  private restAtFire(fire: Fire) {
+    if (hasCampBench(fire)) {
+      const route = routeToBench(
+        this.state.player,
+        (point) =>
+          this.collision(point) ||
+          this.state.fires.some((value) => value.fuel > 0 && distance(value, point) < 16),
+      );
+      if (route?.length) {
+        this.campApproach = { fireId: fire.id, steps: route };
+        this.followCampRoute(route[0]);
+        this.campFocus = null;
+        return;
+      }
+      this.seated = !!route && distance(this.state.player, CAMP_BENCH) < 1;
+    }
+    this.campFocus = fire.id;
+    this.face(fire);
   }
   private updateCamp(dt: number) {
     const s = this.state;
+    const direction = movementVector(this.keys);
+    const unsafe = this.campUnsafe;
+    if (unsafe || direction.x || direction.y || (this.action && this.action.kind !== 'feed')) {
+      if (unsafe && this.action?.kind === 'feed' && !this.action.impacted) this.leaveCamp();
+      this.campFocus = null;
+      this.seated = false;
+      this.campStill = 0;
+      if (this.campApproach) {
+        this.campApproach = null;
+        this.destination = null;
+      }
+      return;
+    }
+    if (this.campApproach) {
+      const route = this.campApproach;
+      const fire = s.fires.find((value) => value.id === route.fireId);
+      if (!fire) {
+        this.leaveCamp();
+        return;
+      }
+      if (distance(s.player, route.steps[0]) < 0.01) route.steps.shift();
+      if (!route.steps.length) {
+        this.campApproach = null;
+        this.destination = null;
+        this.seated = true;
+        this.campFocus = fire.id;
+        this.face(fire);
+        this.moving = false;
+      } else if (!this.target) this.followCampRoute(route.steps[0]);
+      return;
+    }
     const near = s.fires
       .filter((fire) => distance(fire, s.player) < 40)
       .sort((a, b) => distance(a, s.player) - distance(b, s.player))[0];
     if (!near || near.id !== this.dismissedFire) this.dismissedFire = null;
-    const direction = movementVector(this.keys);
-    const unsafe = this.campUnsafe;
-    const tableCloser = near && distance(WORKBENCH, s.player) < Math.min(48, distance(near, s.player));
-    if (unsafe && this.action?.kind === 'feed' && !this.action.impacted) this.leaveCamp();
-    if (
-      !near ||
-      tableCloser ||
-      direction.x ||
-      direction.y ||
-      this.moving ||
-      this.target ||
-      unsafe ||
-      (this.action && this.action.kind !== 'feed')
-    ) {
+    const tableCloser =
+      near &&
+      s.workbenches.some((bench) => distance(bench, s.player) < Math.min(48, distance(near, s.player)));
+    if (!near || tableCloser || this.moving || this.target) {
       this.campFocus = null;
+      this.seated = false;
       this.campStill = 0;
       return;
     }
     if (this.dismissedFire === near.id) return;
     this.campStill += dt;
-    if (this.campStill >= 0.65 && this.campFocus !== near.id) {
-      this.campFocus = near.id;
-      this.face(near);
-    }
+    if (this.campStill >= 0.65 && this.campFocus !== near.id) this.restAtFire(near);
   }
   private harvest(resource: Resource) {
     const s = this.state;
     if (resource.hp <= 0 || distance(s.player, resource) > 53) return;
     resource.hp--;
+    if (resource.kind === 'tree') {
+      const count = resource.hp <= 0 ? 14 : 7;
+      for (let i = 0; i < count; i++)
+        this.fallingLeaves.push({
+          x: resource.x + (this.rng() - 0.5) * 38 * resource.scale,
+          y: resource.y - (30 + this.rng() * 35) * resource.scale,
+          startedAt: s.time,
+          duration: 1.5 + this.rng() * 1.2,
+          drift: (this.rng() - 0.5) * 22,
+          phase: this.rng() * Math.PI * 2,
+        });
+      this.fallingLeaves = this.fallingLeaves.slice(-70);
+    }
     this.swing = 0.25;
     this.resourceAnimations.set(resource.id, { kind: 'hit', startedAt: s.time });
     const effect =
@@ -597,28 +712,32 @@ export class Simulation {
   private clearUnavailableEquipment() {
     if (this.state.equipped && !this.available(this.state.equipped)) this.state.equipped = null;
   }
-  maxCraftable(item: ItemId) {
+  maxCraftable(item: ItemId, workbenchId?: number) {
     const recipe = RECIPES.find((candidate) => candidate.id === item);
     return recipe
       ? maxCraftable(recipe, {
           inventory: this.state.inventory,
           fireNearby: this.fireNearby,
-          workbenchNearby: this.workbenchNearby,
+          workbenchNearby:
+            workbenchId !== undefined && atWorkbench(this.state.player, this.state.workbenches, workbenchId),
         })
       : 0;
   }
-  canCraft(item: ItemId, quantity = 1) {
+  canCraft(item: ItemId, quantity = 1, workbenchId?: number) {
     return (
-      this.state.status === 'playing' && validCraftQuantity(quantity) && this.maxCraftable(item) >= quantity
+      this.state.status === 'playing' &&
+      validCraftQuantity(quantity) &&
+      this.maxCraftable(item, workbenchId) >= quantity
     );
   }
-  craft(item: ItemId, quantity = 1) {
+  craft(item: ItemId, quantity = 1, workbenchId?: number) {
     if (this.state.status !== 'playing' || !validCraftQuantity(quantity)) return false;
     const recipe = RECIPES.find((r) => r.id === item);
-    if (!recipe || !this.canCraft(item, quantity)) {
+    if (!recipe || !this.canCraft(item, quantity, workbenchId)) {
       this.notify(
-        recipe?.needsWorkbench && !this.workbenchNearby
-          ? 'Return to the crafting table at your first camp to make this.'
+        recipe?.needsWorkbench &&
+          (workbenchId === undefined || !atWorkbench(this.state.player, this.state.workbenches, workbenchId))
+          ? 'Interact with a placed workbench to make this.'
           : recipe?.needsFire && !this.fireNearby
             ? 'Come closer to a burning campfire to cook.'
             : 'Gather a few more supplies first.',
@@ -637,7 +756,7 @@ export class Simulation {
       'craft',
     );
     this.notify(
-      `${recipe.name} crafted${quantity > 1 ? ` ×${quantity}` : ''}. ${item === 'shelter' || item === 'campfire' ? 'Use it from your backpack to place it.' : 'Find it in your backpack.'}`,
+      `${recipe.name} crafted${quantity > 1 ? ` ×${quantity}` : ''}. ${item === 'shelter' || item === 'campfire' || item === 'workbench' ? 'Use it from your backpack to place it.' : 'Find it in your backpack.'}`,
     );
     this.onSound?.('craft');
     return true;
@@ -645,9 +764,18 @@ export class Simulation {
   private placementBlocked(p: Point) {
     const s = this.state;
     return (
+      !Number.isFinite(p.x) ||
+      !Number.isFinite(p.y) ||
       inWater(p, 16) ||
-      blocksWorkbench(p, 22) ||
-      s.resources.some((r) => r.hp > 0 && (r.kind === 'tree' || r.kind === 'stone') && distance(r, p) < 24) ||
+      p.x < 32 ||
+      p.x > WORLD.width - 32 ||
+      p.y < 45 ||
+      p.y > WORLD.height - 32 ||
+      blocksWorkbench(p, s.workbenches, 22) ||
+      blocksCampBench(p, 22) ||
+      s.resources.some(
+        (r) => (r.kind === 'tree' || (r.hp > 0 && r.kind === 'stone')) && distance(r, p) < 24,
+      ) ||
       s.fires.some((f) => distance(f, p) < 35) ||
       s.shelters.some((sh) => distance(sh, p) < 48)
     );
@@ -680,9 +808,25 @@ export class Simulation {
       return resource ? this.gatherResource(resource) : this.attack(aim);
     }
     if (item === 'wood' && this.nearest()?.kind === 'fire') return this.interact();
-    return this.use(item);
+    return this.use(item, aim);
   }
-  use(item: ItemId) {
+  get placementPreview() {
+    if (this.state.equipped !== 'workbench' || !this.available('workbench') || this.action || this.seated)
+      return null;
+    const point = this.aim ?? this.defaultPlacement();
+    return {
+      ...point,
+      valid:
+        this.state.workbenches.length < 100 &&
+        distance(this.state.player, point) >= 24 &&
+        distance(this.state.player, point) <= 65 &&
+        !this.placementBlocked(point),
+    };
+  }
+  private defaultPlacement() {
+    return { x: this.state.player.x + (this.state.facing < 0 ? -38 : 38), y: this.state.player.y + 20 };
+  }
+  use(item: ItemId, aim: Point | null = null) {
     const s = this.state;
     if (s.status !== 'playing' || this.action) return false;
     if (!this.available(item)) {
@@ -704,12 +848,21 @@ export class Simulation {
       return true;
     }
     let placement: Point | null = null;
-    if (item === 'campfire' || item === 'shelter') {
+    if (item === 'workbench' && s.workbenches.length >= 100) {
+      this.notify('Your forest already has enough workbenches.', 'info');
+      return false;
+    }
+    if (item === 'campfire' || item === 'shelter' || item === 'workbench') {
       placement = {
         x: clamp(s.player.x + (s.facing < 0 ? -35 : 35), 30, WORLD.width - 30),
         y: clamp(s.player.y + 18, 40, WORLD.height - 30),
       };
-      if (this.placementBlocked(placement)) {
+      if (item === 'workbench') placement = aim ? { ...aim } : this.defaultPlacement();
+      if (
+        this.placementBlocked(placement) ||
+        distance(s.player, placement) > 65 ||
+        distance(s.player, placement) < 24
+      ) {
         this.notify('Find an open patch of ground to place this.', 'warning');
         return false;
       }
@@ -727,15 +880,24 @@ export class Simulation {
     return this.beginAction(kind, item, () => {
       if (!s.inventory[item]) return;
       if (placement) {
-        if (this.placementBlocked(placement) || distance(s.player, placement) > 65) {
+        if (
+          (item === 'workbench' && s.workbenches.length >= 100) ||
+          this.placementBlocked(placement) ||
+          distance(s.player, placement) > 65
+        ) {
           this.notify('That spot is no longer clear. Your kit is still in your backpack.', 'warning');
           return;
         }
         if (item === 'campfire') s.fires.push({ ...placement, id: s.fires.length, fuel: 100 });
+        else if (item === 'workbench')
+          s.workbenches.push({
+            ...placement,
+            id: Math.max(-1, ...s.workbenches.map((bench) => bench.id)) + 1,
+          });
         else s.shelters.push(placement);
         this.effect('build-dust', placement);
         this.log(
-          `Built a ${item === 'shelter' ? 'forest shelter' : 'new campfire'}. This place feels a little more like home.`,
+          `Built a ${item === 'shelter' ? 'forest shelter' : item === 'workbench' ? 'field workbench' : 'new campfire'}. This place feels a little more like home.`,
           'milestone',
         );
       }
@@ -779,6 +941,7 @@ export class Simulation {
         torch: 'A light in your hands. Your torch burns for 90 seconds.',
         campfire: 'Your campfire is ready. Keep it fed with wood.',
         shelter: 'Home is where you make it. Shelter built.',
+        workbench: 'Your workbench is ready. Interact with it to open the full workshop.',
       };
       this.notify(messages[item] || 'Ready.');
       this.onSound?.('eat');
@@ -851,7 +1014,8 @@ export class Simulation {
       p.x > WORLD.width - 16 ||
       p.y > WORLD.height - 16 ||
       inWater(p, 5) ||
-      blocksWorkbench(p)
+      blocksWorkbench(p, this.state.workbenches) ||
+      blocksCampBench(p)
     )
       return true;
     return this.state.resources.some(
@@ -881,8 +1045,10 @@ export class Simulation {
     if (dx || dy) this.target = null;
     else if (this.target) {
       const remaining = { x: this.target.x - s.player.x, y: this.target.y - s.player.y };
-      if (Math.max(Math.abs(remaining.x), Math.abs(remaining.y)) < 0.000001) this.target = null;
-      else {
+      if (Math.max(Math.abs(remaining.x), Math.abs(remaining.y)) < 0.000001) {
+        this.destination = null;
+        this.targetAxis = null;
+      } else {
         // Finish one straight leg before turning. Re-selecting the dominant axis
         // each frame would form a staircase that still looks like diagonal travel.
         this.targetAxis ??= Math.abs(remaining.x) > Math.abs(remaining.y) ? 'x' : 'y';
@@ -916,7 +1082,10 @@ export class Simulation {
       }
     }
     const travelled = distance(before, s.player);
-    if (this.target && intent && dt > 0 && travelled < 0.000001) this.target = null;
+    if (this.target && intent && dt > 0 && travelled < 0.000001) {
+      this.target = null;
+      this.campStill = -1;
+    }
     this.moving = travelled > 0.0001;
     this.sprinting = this.moving && sprint;
     if (this.moving) {
@@ -933,7 +1102,7 @@ export class Simulation {
     if (this.keys.has(' ')) this.attack();
     else if (this.keys.has('primary') && (s.equipped === 'hatchet' || s.equipped === 'pickaxe'))
       this.useHeld(this.aim);
-    else if (this.keys.has('e') && this.campFocus === null) this.interact();
+    else if (this.keys.has('e') && this.campFocus === null && !this.campApproach) this.interact();
     const weather = weatherAt(s.time);
     if (weather !== s.weather) {
       s.weather = weather;
@@ -980,7 +1149,8 @@ export class Simulation {
           s.wolves.push({
             id: Math.floor(s.time) * 10 + i,
             ...spawn,
-            hp: 2,
+            hp: wolfHealth(s.difficulty),
+            maxHp: wolfHealth(s.difficulty),
             cooldown: 1,
             scared: 0,
           });
@@ -1014,8 +1184,9 @@ export class Simulation {
       dt,
       this.torchActive,
       (point) => this.collision(point) || s.fires.some((fire) => fire.fuel > 0 && distance(fire, point) < 35),
-      () => {
-        n.health = clamp(n.health - 7 * factor);
+      (_wolf, attack) => {
+        n.health = clamp(n.health - WOLF_ATTACKS[attack].damage * factor);
+        n.stamina = clamp(n.stamina - (attack === 'pounce' ? 14 : 6));
         this.hitFlash = 0.35;
         this.burst(s.player, '#cf846d');
         this.onSound?.('hit');
@@ -1042,6 +1213,7 @@ export class Simulation {
     }
     this.hitFlash = Math.max(0, this.hitFlash - dt);
     this.swing = Math.max(0, this.swing - dt);
+    this.fallingLeaves = this.fallingLeaves.filter((leaf) => s.time - leaf.startedAt < leaf.duration);
     this.particles = this.particles.filter((p) => p.life > 0);
     for (const p of this.particles) {
       p.x += p.vx * dt;
@@ -1077,6 +1249,7 @@ export class Simulation {
       toasts: [...this.toasts],
       fireNearby: this.fireNearby,
       workbenchNearby: this.workbenchNearby,
+      workbenchCount: s.workbenches.length,
       fireFuel: nearestFire?.fuel || 0,
       camp: hearth
         ? {
@@ -1087,11 +1260,15 @@ export class Simulation {
             ),
             canFeed: s.inventory.wood > 0 && hearth.fuel <= 80 && !this.action,
             feeding,
+            seated: this.seated,
             progress: feeding ? Math.min(1, (s.time - this.action!.startedAt) / this.action!.duration) : 0,
           }
         : null,
       wolvesNear: s.wolves.filter((wolf) => wolf.hp > 0 && distance(wolf, s.player) < 130).length,
       wolfWindup: [...this.wolfPack.minds.values()].some((mind) => mind.phase === 'windup'),
+      wolfPounce: [...this.wolfPack.minds.values()].some(
+        (mind) => mind.phase === 'windup' && mind.attack === 'pounce',
+      ),
       shelterNearby: this.shelterNearby,
       torchActive: this.torchActive,
       journal: [...s.journal],

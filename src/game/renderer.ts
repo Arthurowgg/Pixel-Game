@@ -1,6 +1,6 @@
-import { WOLF_FADE, WOLF_LUNGE, WOLF_WINDUP } from './wolves';
-import { CAMP, POND, SPRING, WORLD, WORKBENCH, clamp, distance, random } from './data';
-import type { GameState, Resource, Settings } from './types';
+import { WOLF_FADE, WOLF_ATTACKS, wolfMaxHealth } from './wolves';
+import { CAMP, POND, SPRING, WORLD, CAMP_BENCH, clamp, distance, random } from './data';
+import type { GameState, Point, Resource, Settings } from './types';
 import {
   artImages,
   CLIPS,
@@ -97,9 +97,18 @@ export class Renderer {
       ctx.fillStyle = '#7b7950';
       ctx.fillRect(x, y - 10, 4, 20);
     }
-    pixelEllipse(ctx, CAMP.x, CAMP.y + 28, 105, 88, '#566342');
-    pixelEllipse(ctx, CAMP.x, CAMP.y + 28, 87, 73, '#686d47');
-    pixelEllipse(ctx, CAMP.x, CAMP.y + 28, 68, 59, '#74744c');
+    const clearing = artImages['object-campClearing'];
+    if (clearing?.naturalWidth) {
+      const asset = generatedAssets.objects.campClearing;
+      ctx.drawImage(
+        clearing,
+        CAMP.x - asset.anchor[0],
+        CAMP.y + 12 - asset.anchor[1],
+        asset.width,
+        asset.height,
+      );
+      this.canvas.dataset.campGround = 'generated';
+    }
     for (let i = 0; i < 3200; i++) {
       const x = Math.floor(this.rng() * WORLD.width),
         y = Math.floor(this.rng() * WORLD.height),
@@ -138,32 +147,8 @@ export class Renderer {
       ctx.fillStyle = '#c4b986';
       ctx.fillRect(x, y - 1, 2, 2);
     }
-    // Fallen logs and a worn camping rug give the starting clearing a little history.
-    ctx.fillStyle = '#433f2e';
-    ctx.fillRect(858, 752, 24, 10);
-    ctx.fillRect(920, 754, 25, 10);
-    ctx.fillStyle = '#7d6544';
-    ctx.fillRect(858, 751, 24, 6);
-    ctx.fillRect(920, 753, 25, 6);
-    ctx.fillStyle = '#a28757';
-    ctx.fillRect(858, 752, 4, 5);
-    ctx.fillRect(941, 754, 4, 5);
-    ctx.fillStyle = '#584f37';
-    ctx.fillRect(871, 715, 22, 12);
-    ctx.fillStyle = '#8f7d50';
-    ctx.fillRect(871, 714, 22, 9);
-    ctx.fillStyle = '#b19c6a';
-    ctx.fillRect(875, 714, 3, 9);
-    ctx.fillRect(887, 714, 3, 9);
-    // Small bark breaks and frayed rug stitching keep the campsite from looking flat.
-    ctx.fillStyle = '#56452f';
-    for (const x of [864, 870, 877, 924, 932, 937]) ctx.fillRect(x, 754, 3, 1);
-    ctx.fillStyle = '#cfb98088';
-    for (let x = 873; x < 892; x += 4) {
-      ctx.fillRect(x, 715, 1, 1);
-      ctx.fillRect(x, 721, 1, 1);
-    }
   }
+
   private shadow(x: number, y: number, width = 15) {
     pixelEllipse(this.ctx, x + 4, y + 2, width, 5, '#162a253e', 2);
   }
@@ -182,12 +167,7 @@ export class Renderer {
           draw('pine-fall', age, resource.scale);
           return;
         }
-        ctx.fillStyle = '#4c3f2c';
-        ctx.fillRect(x - 5, y - 6, 10, 8);
-        ctx.fillStyle = '#a18a59';
-        ctx.fillRect(x - 5, y - 7, 10, 3);
-        ctx.fillStyle = '#645337';
-        ctx.fillRect(x - 2, y - 7, 4, 2);
+        this.prop('pineStump', { x, y });
       } else if (resource.kind === 'stone') {
         if (age < 2 / 3) draw('rock-break', age);
         else {
@@ -240,10 +220,36 @@ export class Renderer {
         );
     }
   }
+  private prop(name: keyof typeof generatedAssets.objects, point: Point, alpha = 1) {
+    const image = artImages[`object-${name}`],
+      asset = generatedAssets.objects[name];
+    if (!image?.naturalWidth) return;
+    this.ctx.save();
+    this.ctx.globalAlpha *= alpha;
+    this.ctx.drawImage(
+      image,
+      Math.round(point.x - asset.anchor[0]),
+      Math.round(point.y - asset.anchor[1]),
+      asset.width,
+      asset.height,
+    );
+    this.ctx.restore();
+  }
   private survivor(sim: Simulation) {
     const ctx = this.ctx,
       p = sim.state.player,
       pose = playerPose(sim, this.settings.reducedMotion);
+    if (sim.seated) {
+      this.canvas.dataset.spriteSheet = 'seated-bench';
+      this.canvas.dataset.animation = 'bench-seated';
+      this.canvas.dataset.frame = '0';
+      this.canvas.dataset.heldItem = sim.state.equipped || 'none';
+      this.canvas.dataset.facing = 'down';
+      this.canvas.dataset.gaitDistance = sim.gaitDistance.toFixed(2);
+      this.shadow(CAMP_BENCH.x, CAMP_BENCH.y, 20);
+      this.prop('seatedBench', CAMP_BENCH);
+      return;
+    }
     const hand = pose.clip.hands![pose.frame];
     const hx = hand[0] - pose.clip.anchor[0],
       hy = hand[1] - pose.clip.anchor[1];
@@ -276,7 +282,7 @@ export class Renderer {
       } else if (item === 'hatchet' || item === 'pickaxe') {
         drawCarriedTool(ctx, item);
       } else {
-        const size = ['wood', 'shelter', 'campfire'].includes(item) ? 18 : 14;
+        const size = ['wood', 'shelter', 'campfire', 'workbench'].includes(item) ? 18 : 14;
         drawItem(ctx, item, -Math.floor(size / 2), -Math.floor(size * 0.6), size);
       }
       // The grip stays in front of the item, not painted onto the item itself.
@@ -336,6 +342,17 @@ export class Renderer {
     this.canvas.dataset.wolfCount = String(s.wolves.length);
     this.canvas.dataset.campFocus = sim.campFocus === null ? 'none' : String(sim.campFocus);
     this.canvas.dataset.feeding = String(sim.action?.kind === 'feed');
+    this.canvas.dataset.seated = String(sim.seated);
+    this.canvas.dataset.campApproach = String(sim.approachingCamp);
+    this.canvas.dataset.workbenchCount = String(s.workbenches.length);
+    this.canvas.dataset.workbench = s.workbenches.length ? 'generated' : 'none';
+    this.canvas.dataset.stumps = String(
+      s.resources.filter((resource) => resource.kind === 'tree' && resource.hp <= 0).length,
+    );
+    this.canvas.dataset.wolfAttack = [...sim.wolfPack.minds.values()]
+      .filter((mind) => ['windup', 'lunge'].includes(mind.phase))
+      .map((mind) => mind.attack)
+      .join(' ');
 
     // Pixel ripples on the pond.
     ctx.fillStyle = '#7ea99b55';
@@ -348,7 +365,7 @@ export class Renderer {
     if (sim.campFocus === null && near && near.kind !== 'water' && near.kind !== 'shelter') {
       const target =
         near.kind === 'workbench'
-          ? WORKBENCH
+          ? s.workbenches.find((bench) => bench.id === near.id)
           : near.kind === 'fire'
             ? s.fires.find((f) => f.id === near.id)
             : s.resources.find((r) => r.id === near.id);
@@ -373,30 +390,36 @@ export class Renderer {
         r.y < this.camera.y + h + 85
       )
         draws.push({ y: r.y, draw: () => this.resource(r, sim) });
-    draws.push({
-      y: WORKBENCH.y,
-      draw: () => {
-        const asset = generatedAssets.objects.workbench;
-        const image = artImages['object-workbench'];
-        this.shadow(WORKBENCH.x, WORKBENCH.y, 28);
-        if (image?.naturalWidth) {
+    for (const bench of s.workbenches)
+      draws.push({
+        y: bench.y,
+        draw: () => {
+          this.shadow(bench.x, bench.y, 19);
           const behind =
-            Math.abs(s.player.x - WORKBENCH.x) < 31 &&
-            s.player.y < WORKBENCH.y &&
-            s.player.y > WORKBENCH.y - 34;
-          if (behind) ctx.globalAlpha = 0.5;
-          ctx.drawImage(
-            image,
-            WORKBENCH.x - asset.anchor[0],
-            WORKBENCH.y - asset.anchor[1],
-            asset.width,
-            asset.height,
-          );
-          ctx.globalAlpha = 1;
-          this.canvas.dataset.workbench = 'generated';
-        }
-      },
-    });
+            Math.abs(s.player.x - bench.x) < 23 && s.player.y < bench.y && s.player.y > bench.y - 26;
+          this.prop('workbench', bench, behind ? 0.45 : 1);
+        },
+      });
+    if (!sim.seated)
+      draws.push({
+        y: CAMP_BENCH.y - 3,
+        draw: () => {
+          this.shadow(CAMP_BENCH.x, CAMP_BENCH.y - 3, 20);
+          this.prop('campBench', CAMP_BENCH);
+        },
+      });
+    const placement = sim.placementPreview;
+    this.canvas.dataset.placement = placement ? (placement.valid ? 'valid' : 'blocked') : 'none';
+    if (placement)
+      draws.push({
+        y: placement.y,
+        draw: () => {
+          this.prop('workbench', placement, 0.55);
+          ctx.strokeStyle = placement.valid ? '#bbca8e' : '#d28a70';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(Math.round(placement.x) - 20, Math.round(placement.y) - 7, 40, 14);
+        },
+      });
     for (const fire of s.fires)
       draws.push({
         y: fire.y,
@@ -459,20 +482,22 @@ export class Renderer {
           const mind = sim.wolfPack.minds.get(wolf.id);
           const phase = mind?.phase ?? 'stalk';
           const age = mind ? s.time - mind.startedAt : 0;
+          const attack = WOLF_ATTACKS[mind?.attack ?? 'snap'];
+          const pounce = mind?.attack === 'pounce';
           const running = !!mind?.moving;
           const frame = this.settings.reducedMotion
             ? phase === 'lunge'
               ? 4
               : 0
             : phase === 'lunge'
-              ? Math.min(7, Math.floor((age / WOLF_LUNGE) * 8))
+              ? Math.min(7, Math.floor((age / attack.lunge) * 8))
               : running
                 ? Math.floor((mind?.gait ?? 0) / 4) % 8
                 : 0;
           this.shadow(wolf.x, wolf.y, running && frame >= 4 && frame <= 6 ? 15 : 19);
           if (phase === 'windup') {
             // Ground brackets and a filling warning are readable with motion off.
-            ctx.strokeStyle = '#edb677';
+            ctx.strokeStyle = pounce ? '#f2b189' : '#edb677';
             ctx.lineWidth = 1;
             ctx.strokeRect(Math.round(wolf.x - 17), Math.round(wolf.y - 7), 34, 12);
             ctx.fillStyle = '#20281c';
@@ -481,25 +506,53 @@ export class Renderer {
             ctx.fillRect(
               Math.round(wolf.x - 10),
               Math.round(wolf.y - 35),
-              Math.round(20 * Math.min(1, age / WOLF_WINDUP)),
+              Math.round(20 * Math.min(1, age / attack.windup)),
               2,
             );
             ctx.fillRect(Math.round(wolf.x - 1), Math.round(wolf.y - 47), 2, 7);
             ctx.fillRect(Math.round(wolf.x - 1), Math.round(wolf.y - 38), 2, 2);
+            if (pounce && mind) {
+              // A static landing mark communicates the stronger, longer attack,
+              // including when reduced motion is enabled. It never tracks a dodge.
+              ctx.strokeRect(Math.round(mind.target.x - 12), Math.round(mind.target.y - 7), 24, 14);
+              for (let i = 1; i < 7; i++)
+                ctx.fillRect(
+                  Math.round(wolf.x + ((mind.target.x - wolf.x) * i) / 7),
+                  Math.round(wolf.y + ((mind.target.y - wolf.y) * i) / 7),
+                  1,
+                  1,
+                );
+            }
           }
           ctx.save();
           if (phase === 'hurt' && age < 0.12 && this.settings.damageFlash && !this.settings.reducedMotion)
             ctx.globalAlpha = 0.65;
-          drawAnimation(ctx, running || phase === 'lunge' ? 'wolf-run' : 'wolf-alert', wolf.x, wolf.y, 0, {
-            flip: mind?.flip ?? wolf.x < s.player.x,
-            frame,
-          });
+          const lift =
+            pounce && phase === 'lunge' && !this.settings.reducedMotion
+              ? Math.round(Math.sin(Math.min(1, age / attack.lunge) * Math.PI) * 5)
+              : 0;
+          drawAnimation(
+            ctx,
+            running || phase === 'lunge' ? 'wolf-run' : 'wolf-alert',
+            wolf.x,
+            wolf.y - lift,
+            0,
+            {
+              flip: mind?.flip ?? wolf.x < s.player.x,
+              frame,
+            },
+          );
           ctx.restore();
-          if (wolf.hp < 2) {
+          if (wolf.hp < wolfMaxHealth(wolf)) {
             ctx.fillStyle = '#18231e';
             ctx.fillRect(Math.round(wolf.x - 10), Math.round(wolf.y - 30), 20, 3);
             ctx.fillStyle = '#c9826c';
-            ctx.fillRect(Math.round(wolf.x - 10), Math.round(wolf.y - 30), Math.round((20 * wolf.hp) / 2), 2);
+            ctx.fillRect(
+              Math.round(wolf.x - 10),
+              Math.round(wolf.y - 30),
+              Math.round((20 * wolf.hp) / wolfMaxHealth(wolf)),
+              2,
+            );
           }
         },
       });
@@ -511,8 +564,10 @@ export class Renderer {
       // the fire. No new limbs, poses, or animation-sheet pixels are fabricated.
       const pose = playerPose(sim, this.settings.reducedMotion);
       const hand = pose.clip.hands![pose.frame];
-      const fromX = s.player.x + (hand[0] - pose.clip.anchor[0]) * (pose.flip ? -1 : 1);
-      const fromY = s.player.y + hand[1] - pose.clip.anchor[1] + 3;
+      const fromX = sim.seated
+        ? CAMP_BENCH.x + 4
+        : s.player.x + (hand[0] - pose.clip.anchor[0]) * (pose.flip ? -1 : 1);
+      const fromY = sim.seated ? CAMP_BENCH.y - 14 : s.player.y + hand[1] - pose.clip.anchor[1] + 3;
       const raw = clamp((s.time - sim.action.startedAt) / sim.action.impactAt, 0, 1);
       const progress = this.settings.reducedMotion ? 0 : raw * raw * (3 - 2 * raw);
       const x = fromX + (sim.feedingFire.x - fromX) * progress;
@@ -524,6 +579,18 @@ export class Renderer {
         flip: effect.flip,
         reducedMotion: this.settings.reducedMotion,
       });
+    const leaves = this.settings.atmosphere && !this.settings.reducedMotion ? sim.fallingLeaves : [];
+    this.canvas.dataset.chopLeaves = String(leaves.length);
+    for (const leaf of leaves) {
+      const age = s.time - leaf.startedAt,
+        progress = age / leaf.duration;
+      const x = leaf.x + leaf.drift * age + Math.sin(leaf.phase + age * 4) * 5;
+      const y = leaf.y + 18 * age + 7 * age * age;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, (1 - progress) * 3);
+      drawAnimation(ctx, 'leaf-drift', x, y, age + leaf.phase, { scale: 0.65 });
+      ctx.restore();
+    }
     this.atmosphere.air(ctx, sim, this.camera, w, h, this.settings);
     const feedback = this.feedback.air(ctx, sim, this.camera, w, h, this.settings);
     this.canvas.dataset.impactFlashes = String(feedback.impacts);
@@ -684,7 +751,8 @@ export function drawMap(
   };
   for (const fire of state.fires) marker(fire.x, fire.y, '#dca36b', expanded ? 4 : 2, 'CAMPFIRE');
   for (const sh of state.shelters) marker(sh.x, sh.y, '#b9bd82', expanded ? 3 : 2);
-  marker(WORKBENCH.x, WORKBENCH.y, '#c3bd87', expanded ? 4 : 2, 'CRAFTING TABLE', true);
+  for (const bench of state.workbenches)
+    marker(bench.x, bench.y, '#c3bd87', expanded ? 4 : 2, 'WORKBENCH', true);
   marker(SPRING.x, SPRING.y, '#91c2c0', expanded ? 4 : 2, 'THE SPRING');
   marker(state.player.x, state.player.y, '#f3ebce', expanded ? 3 : 2);
   if (!expanded) {

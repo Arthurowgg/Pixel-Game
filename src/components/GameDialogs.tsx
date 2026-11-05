@@ -1,12 +1,13 @@
 import { CraftingDialog } from './CraftingDialog';
+import { SatchelDialog } from './SatchelDialog';
 import { PixelPreview } from './PixelPreview';
-import { useEffect, useRef, useState } from 'react';
-import { Icon, ItemIcon, Key } from './Icon';
+import { useEffect, useRef } from 'react';
+import { Icon } from './Icon';
 import { Modal } from './Modal';
-import { ITEMS, clock } from '../game/data';
+import { clock } from '../game/data';
 import { drawMap } from '../game/renderer';
 import type { Simulation } from '../game/simulation';
-import type { GameView, ItemId } from '../game/types';
+import type { GameView } from '../game/types';
 
 export function BackpackDialog({
   tab,
@@ -16,190 +17,37 @@ export function BackpackDialog({
   onClose,
   onRefresh,
   onMap,
+  workbenchId,
 }: {
-  tab: 'inventory' | 'craft';
+  tab: 'inventory' | 'craft' | 'workshop';
   view: GameView;
   sim: Simulation;
-  onTab: (tab: 'inventory' | 'craft') => void;
+  onTab: (tab: 'inventory' | 'craft' | 'workshop') => void;
   onClose: () => void;
   onRefresh: () => void;
   onMap: () => void;
+  workbenchId?: number;
 }) {
-  const [selected, setSelected] = useState<ItemId>('berries');
-  const [filter, setFilter] = useState('all');
-  const [feedback, setFeedback] = useState('');
-  if (tab === 'craft')
-    return (
-      <CraftingDialog
-        view={view}
-        sim={sim}
-        onBackpack={() => onTab('inventory')}
-        onClose={onClose}
-        onRefresh={onRefresh}
-        onMap={onMap}
-      />
-    );
-  const total = Object.entries(view.inventory).filter(([, count]) => count > 0).length;
-  const items = (Object.keys(ITEMS) as ItemId[]).filter(
-    (id) =>
-      filter === 'all' ||
-      (filter === 'resources'
-        ? ITEMS[id].category === 'RESOURCE'
-        : filter === 'tools'
-          ? ITEMS[id].category === 'TOOL'
-          : ['FOOD', 'SUPPLY', 'MEDICINE'].includes(ITEMS[id].category)),
-  );
-  const use = () => {
-    const used = sim.use(selected);
-    onRefresh();
-    setFeedback(sim.toasts.at(-1)?.text || '');
-    if (used) onClose();
-  };
-  return (
-    <Modal
-      title="Your satchel"
-      eyebrow="SUPPLIES FOR THE TRAIL"
+  return tab === 'inventory' ? (
+    <SatchelDialog
+      view={view}
+      sim={sim}
+      onCraft={() => onTab('craft')}
       onClose={onClose}
-      className="inventory-dialog"
-    >
-      <div className="dialog-tabs inventory-tabs">
-        <button
-          className="active"
-          onClick={() => {
-            onTab('inventory');
-            setFeedback('');
-          }}
-        >
-          <Icon name="pack" size={16} />
-          Backpack<Key>B</Key>
-        </button>
-        <button
-          onClick={() => {
-            onTab('craft');
-            setFeedback('');
-          }}
-        >
-          <Icon name="hammer" size={16} />
-          Crafting<Key>C</Key>
-        </button>
-      </div>
-      <>
-        <div className="inventory-filter">
-          <div>
-            {[
-              ['all', 'All'],
-              ['resources', 'Resources'],
-              ['supplies', 'Supplies'],
-              ['tools', 'Tools'],
-            ].map(([id, label]) => (
-              <button className={filter === id ? 'active' : ''} key={id} onClick={() => setFilter(id)}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <span>
-            {total} / {Object.keys(ITEMS).length} TYPES
-          </span>
-        </div>
-        <div className="inventory-grid">
-          {items.map((id) => (
-            <button
-              className={`inventory-slot ${selected === id ? 'selected' : ''} ${!view.inventory[id] ? 'empty' : ''}`}
-              key={id}
-              onClick={() => {
-                setSelected(id);
-                setFeedback('');
-              }}
-              title={ITEMS[id].name}
-              aria-label={`${ITEMS[id].name}, ${view.inventory[id]} in backpack`}
-              aria-pressed={selected === id}
-            >
-              {view.equipped === id && <em className="inventory-held">IN HAND</em>}
-              <ItemIcon item={id} size={38} />
-              <span>{ITEMS[id].name}</span>
-              <b>{view.inventory[id] || '–'}</b>
-            </button>
-          ))}
-        </div>
-        <div className="item-detail">
-          <div className="item-detail-title">
-            <ItemIcon item={selected} size={44} />
-            <div>
-              <span className="eyebrow">{ITEMS[selected].category}</span>
-              <h3>{ITEMS[selected].name}</h3>
-            </div>
-            <span className="detail-count">×{view.inventory[selected]}</span>
-          </div>
-          <p>{ITEMS[selected].description}</p>
-          <div className="inventory-item-actions">
-            <button
-              className="button button-primary full-width"
-              disabled={!sim.available(selected)}
-              onClick={() => {
-                if (sim.equip(selected)) {
-                  onRefresh();
-                  onClose();
-                }
-              }}
-            >
-              <Icon name="pack" size={15} />
-              <span>Hold {ITEMS[selected].name.toLowerCase()}</span>
-            </button>
-            {ITEMS[selected].category === 'TOOL' ? (
-              <p className="tool-use-hint">
-                <Key>E</Key> gather <span>·</span> <Key>LEFT CLICK</Key> swing <span>·</span> <Key>SPACE</Key>{' '}
-                defend
-              </p>
-            ) : ITEMS[selected].action ? (
-              <button
-                className="button button-secondary full-width"
-                disabled={!sim.available(selected) || !!view.action}
-                onClick={use}
-              >
-                {ITEMS[selected].action}
-                <Icon name="arrow" size={14} />
-              </button>
-            ) : (
-              <button className="button button-secondary full-width" onClick={() => onTab('craft')}>
-                <Icon name="hammer" size={15} />
-                Use in crafting
-              </button>
-            )}
-          </div>
-          <div className="slot-assignment">
-            <span>PIN TO YOUR POCKETS</span>
-            <div>
-              {view.hotbar.map((item, index) => (
-                <button
-                  key={index}
-                  className={item === selected ? 'assigned' : ''}
-                  aria-label={`Pin ${ITEMS[selected].name} to slot ${index + 1}`}
-                  aria-pressed={item === selected}
-                  title={`Slot ${index + 1}: ${item ? ITEMS[item].name : 'Empty'}`}
-                  onClick={() => {
-                    sim.assignSlot(index, selected);
-                    onRefresh();
-                    setFeedback(`${ITEMS[selected].name} pinned to pocket ${index + 1}.`);
-                  }}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </>
-      {feedback && (
-        <div className="inventory-feedback" role="status">
-          <Icon name="check" size={13} />
-          {feedback}
-        </div>
-      )}
-      <div className="world-paused-note">
-        <Icon name="pause" size={10} />
-        THE FOREST IS PAUSED WHILE YOU’RE HERE.
-      </div>
-    </Modal>
+      onRefresh={onRefresh}
+    />
+  ) : (
+    <CraftingDialog
+      key={tab}
+      view={view}
+      sim={sim}
+      workbenchId={tab === 'workshop' ? workbenchId : undefined}
+      onBackpack={() => onTab('inventory')}
+      onHandcraft={() => onTab('craft')}
+      onClose={onClose}
+      onRefresh={onRefresh}
+      onMap={onMap}
+    />
   );
 }
 export function MapDialog({
@@ -237,7 +85,7 @@ export function MapDialog({
           ref={ref}
           width={600}
           height={420}
-          aria-label="Map of the forest showing your position, campfires, crafting table, and the spring"
+          aria-label="Map of the forest showing your position, campfires, placed workbenches, and the spring"
         />
         <span className="map-north">
           N<Icon name="arrow" size={14} />
@@ -259,7 +107,7 @@ export function MapDialog({
         </span>
         <span>
           <i className="legend-workbench" />
-          Crafting table
+          Workbench
         </span>
         <span>
           <i className="legend-water" />
@@ -273,8 +121,8 @@ export function MapDialog({
       <div className="guide-tip">
         <Icon name="leaf" size={17} />
         <p>
-          The crafting table is just east of your first campfire. Fresh spring water waits northeast of camp.
-          The rest is yours to discover.
+          Only workbenches you place appear on the map. Craft one by hand with C. Fresh spring water waits
+          northeast of camp. The rest is yours to discover.
         </p>
       </div>
     </Modal>

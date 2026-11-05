@@ -125,7 +125,7 @@ describe('render-only forest feedback', () => {
 
 describe('camp-interface image provenance', () => {
   it('finishes all inventory icons with actual generated sources', () => {
-    expect(Object.values(ITEM_ATLAS.items)).toHaveLength(15);
+    expect(Object.values(ITEM_ATLAS.items)).toHaveLength(16);
     expect(Object.values(ITEM_ATLAS.items).every((item) => item.source === 'generated')).toBe(true);
     for (const item of ['bandage', 'torch', 'meal', 'campfire', 'shelter'] as const) {
       expect(ITEM_ATLAS.items[item].sourceAsset).toBe(`art/generated/camp-ui/${item}.png`);

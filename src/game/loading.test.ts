@@ -152,7 +152,7 @@ describe('honest, shared, retryable asset loading', () => {
       expect.arrayContaining([
         'art/loading/forest-arrival.png',
         'art/loading/camp-arrival.png',
-        'art/ui/workshop-frame.png',
+        'art/ui/fieldwork-frame.png',
         'art/animations/survivor.png',
         'art/forest-menu.webp',
         'art/item-sprites.png',

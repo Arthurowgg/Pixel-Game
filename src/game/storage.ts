@@ -94,13 +94,23 @@ export function isGameState(value: unknown): value is GameState {
     return false;
   if (!Array.isArray(value.shelters) || !value.shelters.every(point)) return false;
   if (
+    !Array.isArray(value.workbenches) ||
+    value.workbenches.length > 100 ||
+    !value.workbenches.every(
+      (bench) => object(bench) && point(bench) && Number.isInteger(bench.id) && finite(bench.id),
+    ) ||
+    new Set(value.workbenches.map((bench) => bench.id)).size !== value.workbenches.length
+  )
+    return false;
+  if (
     !Array.isArray(value.wolves) ||
     !value.wolves.every(
       (w) =>
         object(w) &&
         point(w) &&
         finite(w.id) &&
-        finite(w.hp, 0, 2) &&
+        finite(w.hp, 0, w.maxHp === undefined ? 2 : Number(w.maxHp)) &&
+        (w.maxHp === undefined || (Number.isInteger(w.maxHp) && finite(w.maxHp, 2, 6))) &&
         finite(w.cooldown, -1e9) &&
         finite(w.scared, -1e9),
     )
@@ -154,19 +164,23 @@ export function migrateGame(value: unknown): GameState | null {
   if (!object(value) || !object(value.inventory)) return null;
   // Existing v2 saves predate the forager items. Only absent new fields default;
   // explicit invalid values and missing original items must still be rejected.
-  const inventory = { nuts: 0, tea: 0, ...value.inventory };
+  const inventory = { nuts: 0, tea: 0, workbench: 0, ...value.inventory };
+  // An absent old permanent station is not gifted back: new progression starts
+  // with handcraft. Explicitly invalid station data is never replaced.
+  const workbenches = Object.hasOwn(value, 'workbenches') ? value.workbenches : [];
   if (value.version === 2) {
     const direction =
       typeof value.direction === 'string' && Object.hasOwn(LEGACY_DIRECTIONS, value.direction)
         ? LEGACY_DIRECTIONS[value.direction]
         : value.direction;
-    const upgraded = { ...value, inventory, direction };
+    const upgraded = { ...value, inventory, direction, workbenches };
     return isGameState(upgraded) ? upgraded : null;
   }
   if (value.version !== 1) return null;
   const upgraded: unknown = {
     ...value,
     version: 2,
+    workbenches,
     inventory: { ...inventory, pickaxe: 1 },
     direction: value.facing === -1 ? 'left' : 'down',
     equipped: Number(value.inventory.hatchet) > 0 ? 'hatchet' : null,

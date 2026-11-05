@@ -278,7 +278,7 @@ try {
   await noOverflow(page);
   await screenshot(page, 'campfire-desktop');
   passed(
-    'Standing by the fire reveals live fuel and exactly one large log action, hides the clutter, and does not pause the world',
+    'Sitting on the camp bench reveals live fuel and exactly one large log action, hides the clutter, and does not pause the world',
   );
 
   await page.getByRole('button', { name: 'Add one pine log', exact: true }).click();
@@ -416,6 +416,8 @@ try {
   await expect(mobile.locator('.touch-primary')).toBeVisible();
   await mobile.locator('.touch-e').tap();
   await expect(mobile.locator('.campfire-scene')).toBeVisible();
+  await expect(mobile.locator('.hearth-supply-line b')).toHaveText('2');
+  await mobile.getByRole('button', { name: 'Add one pine log', exact: true }).tap();
   await expect(mobile.locator('.hearth-supply-line b')).toHaveText('1');
   await mobile.waitForTimeout(1200);
   await expect(mobile.locator('.hearth-supply-line b')).toHaveText('1');

@@ -330,11 +330,12 @@ describe('a quiet, live hearth with one log action', () => {
     sim.leaveCamp();
     expect(playerPose(sim).item).toBe('hatchet');
   });
-  it('does not steal the nearby crafting-table interaction', () => {
+  it('does not steal the nearby placed-workbench interaction', () => {
     const sim = fresh();
     sim.state.player = { x: 940, y: 758 };
     sim.state.fires = [{ ...CAMP, id: 0, fuel: 60 }];
     sim.onOpenCrafting = vi.fn();
+    sim.state.workbenches = [{ id: 0, x: 940, y: 738 }];
     for (const x of [940, 925, 955]) {
       sim.state.player.x = x;
       advance(sim, 2);

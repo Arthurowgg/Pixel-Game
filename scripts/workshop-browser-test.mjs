@@ -151,7 +151,8 @@ try {
   await page.unroute('**/art/animations/forest.png');
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-gait-distance', '0.00');
-  await expect(page.locator('.game-canvas')).toHaveAttribute('data-workbench', 'generated');
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-workbench', 'none');
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-workbench-count', '0');
   await expect(page.locator('.game-canvas')).toBeFocused();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   passed(
@@ -198,27 +199,28 @@ try {
   await page.evaluate(() => {
     const state = JSON.parse(localStorage.getItem('wildpine.save.v2'));
     state.player = { x: 940, y: 758 };
+    state.workbenches = [{ id: 0, x: 940, y: 738 }];
     Object.assign(state.inventory, { wood: 50, stone: 30, fiber: 30, berries: 10, mushroom: 3, water: 5 });
     state.lastInteract = -10;
     localStorage.setItem('wildpine.save.v2', JSON.stringify(state));
   });
   await enter(page);
-  await expect(page.locator('.interaction-prompt')).toContainText('Use crafting table');
+  await expect(page.locator('.interaction-prompt')).toContainText('Use workbench');
   await screenshot(page, 'camp-workbench');
   await page.keyboard.press('e');
-  await expect(page.getByRole('heading', { name: 'The camp workshop', exact: true })).toBeVisible();
-  await expect(page.locator('.workshop-station-tags')).toContainText('Table ready');
+  await expect(page.getByRole('heading', { name: 'Your workbench', exact: true })).toBeVisible();
+  await expect(page.locator('.workshop-station-tags')).toContainText('Workbench ready');
   await expect(page.locator('.workshop-station-tags')).toContainText('Fire burning');
-  await expect(page.locator('.workshop-recipe')).toHaveCount(7);
+  await expect(page.locator('.workshop-recipe')).toHaveCount(8);
   await noOverflow(page);
   expect(
     await page
       .locator('.crafting-dialog .modal-panel')
       .evaluate((node) => getComputedStyle(node).borderImageSlice),
-  ).toBe('26');
+  ).toBe('18');
   await screenshot(page, 'workshop-desktop');
   passed(
-    'The generated solid crafting table is in the world, exposes an E prompt, and opens the full workshop',
+    'The generated solid placed workbench is in the world, exposes an E prompt, and opens the full workshop',
   );
 
   await page.getByRole('textbox', { name: 'Find a recipe', exact: true }).fill('tea');
@@ -234,7 +236,7 @@ try {
   await expect(page.getByRole('tab', { name: 'All', exact: true })).toBeFocused();
   await expect(page.getByRole('tab', { name: 'All', exact: true })).toHaveAttribute('aria-selected', 'true');
   await page.getByRole('checkbox', { name: 'Ready to craft', exact: true }).check();
-  await expect(page.locator('.workshop-recipe')).toHaveCount(7);
+  await expect(page.locator('.workshop-recipe')).toHaveCount(8);
   await page.getByRole('checkbox', { name: 'Ready to craft', exact: true }).uncheck();
   passed(
     'Recipe search, empty states, keyboard categories, and ready-only filtering all work without stale craft actions',
@@ -299,7 +301,7 @@ try {
     else await route.continue();
   });
   await recovery.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(recovery.getByRole('alert')).toContainText('Crafting table');
+  await expect(recovery.getByRole('alert')).toContainText('Workbench');
   await expect(recovery.locator('.loading-kicker')).toHaveText('THE PATH BACK HOME');
   await expect(recovery.locator('.game-hud')).toBeHidden();
   expect(await saved(recovery)).toEqual(state);
@@ -389,38 +391,38 @@ try {
     'One real touch steers only four ways; the center, outside edge, and empty corners never cause diagonal or stuck movement',
   );
 
-  await mobile.getByRole('button', { name: 'Crafting', exact: true }).click();
-  await mobile.locator('.workshop-recipe').filter({ hasText: 'Forest shelter' }).click();
-  await expect(mobile.getByRole('button', { name: 'Craft forest shelter +1', exact: true })).toBeDisabled();
-  await expect(mobile.locator('.workshop-requirement')).toContainText('Return to the crafting table');
+  await mobile.getByRole('button', { name: 'Handcraft', exact: true }).click();
+  await expect(mobile.getByRole('heading', { name: 'Handcraft', exact: true })).toBeVisible();
+  await expect(mobile.locator('.workshop-recipe')).toHaveCount(3);
+  await expect(mobile.getByRole('tab', { name: 'Cooking', exact: true })).toHaveCount(0);
+  await expect(mobile.locator('.workshop-recipe').filter({ hasText: 'Forest shelter' })).toHaveCount(0);
   await noOverflow(mobile);
-  await screenshot(mobile, 'workshop-mobile-away');
-  await mobile.getByRole('button', { name: 'Show on map', exact: false }).click();
-  await expect(mobile.locator('.map-legend')).toContainText('Crafting table');
+  await screenshot(mobile, 'handcraft-mobile-away');
+  await mobile.keyboard.press('Escape');
+  await mobile.keyboard.press('m');
+  await expect(mobile.locator('.map-legend')).toContainText('Workbench');
   await screenshot(mobile, 'workbench-map');
   await mobile.keyboard.press('Escape');
-  await mobile.getByRole('button', { name: 'Crafting', exact: true }).click();
-  await mobile.getByRole('tab', { name: 'Cooking', exact: true }).click();
-  await expect(mobile.getByRole('button', { name: 'Craft forest stew +1', exact: true })).toBeDisabled();
-  await expect(mobile.locator('.workshop-requirement')).toContainText('burning campfire');
+  await mobile.getByRole('button', { name: 'Handcraft', exact: true }).click();
   await mobile.getByRole('tab', { name: 'Trail kit', exact: true }).click();
   await mobile.locator('.workshop-recipe').filter({ hasText: 'Pine torch' }).click();
   await expect(mobile.getByRole('button', { name: 'Craft pine torch +1', exact: true })).toBeEnabled();
   passed(
-    'Away from camp, table/fire requirements are enforced, hand crafting remains available, and the table is marked on the map',
+    'Away from the station, the hand menu contains only three essentials; cooking/equipment stay locked and placed workbenches appear on the map',
   );
 
   await quit(mobile);
   await mobile.evaluate(() => {
     const state = JSON.parse(localStorage.getItem('wildpine.save.v2'));
     state.player = { x: 940, y: 758 };
+    state.workbenches = [{ id: 0, x: 940, y: 738 }];
     state.lastInteract = -10;
     state.fires = [{ x: 900, y: 740, id: 0, fuel: 80 }];
     localStorage.setItem('wildpine.save.v2', JSON.stringify(state));
   });
   await enter(mobile);
   await mobile.locator('.touch-e').tap();
-  await expect(mobile.getByRole('heading', { name: 'The camp workshop', exact: true })).toBeVisible();
+  await expect(mobile.getByRole('heading', { name: 'Your workbench', exact: true })).toBeVisible();
   await mobile.getByRole('textbox', { name: 'Find a recipe', exact: true }).fill('shelter');
   await expect(mobile.locator('.workshop-recipe')).toHaveCount(1);
   await mobile.getByRole('button', { name: 'Craft forest shelter +1', exact: true }).scrollIntoViewIfNeeded();

@@ -3,7 +3,14 @@ import { Modal } from './Modal';
 import { Icon, ItemIcon, Key } from './Icon';
 import { ITEMS, RECIPES } from '../game/data';
 import { assetUrl } from '../game/assets';
-import { maxCraftable, recipeStation, RECIPE_BENEFITS, stationReady } from '../game/crafting';
+import {
+  atWorkbench,
+  handRecipes,
+  maxCraftable,
+  recipeStation,
+  RECIPE_BENEFITS,
+  stationReady,
+} from '../game/crafting';
 import type { Simulation } from '../game/simulation';
 import type { GameView, ItemId, Recipe } from '../game/types';
 
@@ -22,6 +29,8 @@ export function CraftingDialog({
   view,
   sim,
   onBackpack,
+  onHandcraft,
+  workbenchId,
   onClose,
   onRefresh,
   onMap,
@@ -29,26 +38,35 @@ export function CraftingDialog({
   view: GameView;
   sim: Simulation;
   onBackpack: () => void;
+  onHandcraft: () => void;
+  workbenchId?: number;
   onClose: () => void;
   onRefresh: () => void;
   onMap: () => void;
 }) {
   const id = useId();
-  const [selected, setSelected] = useState<ItemId>('campfire');
+  const workshop = workbenchId !== undefined;
+  const catalog = workshop ? RECIPES : handRecipes(RECIPES);
+  const categories = workshop ? CATEGORIES : CATEGORIES.filter(([key]) => key !== 'cooking');
+  const context = {
+    ...view,
+    workbenchNearby: workshop && atWorkbench(view.player, sim.state.workbenches, workbenchId),
+  };
+  const [selected, setSelected] = useState<ItemId>(workshop ? 'pickaxe' : 'workbench');
   const [category, setCategory] = useState<Category>('all');
   const [query, setQuery] = useState('');
   const [readyOnly, setReadyOnly] = useState(false);
   const [requested, setRequested] = useState(1);
   const [feedback, setFeedback] = useState('');
   const [crafted, setCrafted] = useState<ItemId | null>(null);
-  const recipes = RECIPES.filter(
+  const recipes = catalog.filter(
     (recipe) =>
       inCategory(recipe, category) &&
       `${recipe.name} ${recipe.description}`.toLowerCase().includes(query.trim().toLowerCase()) &&
-      (!readyOnly || maxCraftable(recipe, view) > 0),
+      (!readyOnly || maxCraftable(recipe, context) > 0),
   );
   const recipe = recipes.find((entry) => entry.id === selected) || recipes[0];
-  const maximum = recipe ? maxCraftable(recipe, view) : 0;
+  const maximum = recipe ? maxCraftable(recipe, context) : 0;
   const quantity = Math.min(requested, Math.max(1, maximum));
   const choose = (item: ItemId) => {
     setSelected(item);
@@ -56,12 +74,12 @@ export function CraftingDialog({
     setFeedback('');
     setCrafted(null);
   };
-  const activeStation = recipe ? stationReady(recipe, view) : false;
+  const activeStation = recipe ? stationReady(recipe, context) : false;
   return (
     <Modal
-      title="The camp workshop"
-      eyebrow="HEARTH & HAND · A LITTLE INGENUITY"
-      className="crafting-dialog"
+      title={workshop ? 'Your workbench' : 'Handcraft'}
+      eyebrow={workshop ? 'ROOTS & REFUGE · A WORKSHOP OF YOUR OWN' : 'TRAIL ESSENTIALS · MADE BY HAND'}
+      className={`crafting-dialog fieldwork-dialog ${workshop ? 'at-workbench' : 'by-hand'}`}
       wide
       onClose={onClose}
     >
@@ -69,33 +87,65 @@ export function CraftingDialog({
         <button onClick={onBackpack}>
           <Icon name="pack" size={18} /> Backpack <Key>B</Key>
         </button>
-        <button className="active" aria-current="page">
-          <Icon name="workbench" size={20} /> Crafting <Key>C</Key>
+        <button
+          className={!workshop ? 'active' : ''}
+          aria-current={!workshop ? 'page' : undefined}
+          onClick={onHandcraft}
+        >
+          <Icon name="hammer" size={18} /> Handcraft <Key>C</Key>
         </button>
+        {workshop && (
+          <button className="active" aria-current="page">
+            <Icon name="workbench" size={20} /> Workbench
+          </button>
+        )}
       </div>
       <div className="workshop-station">
-        <img src={assetUrl('art/objects/workbench.png')} alt="" width={88} height={61} />
+        <div className="fieldwork-prop">
+          <img src={assetUrl('art/objects/workbench.png')} alt="" width={84} height={60} />
+        </div>
         <div>
-          <strong>
-            {view.workbenchNearby
-              ? 'A good place to make something.'
-              : 'A little ingenuity, wherever you are.'}
-          </strong>
+          <strong>{workshop ? 'Made by you. Built to last.' : 'Start with your hands.'}</strong>
           <p>
-            {view.workbenchNearby
-              ? 'Your camp table is in reach. Lay out your supplies.'
-              : 'Make trail essentials by hand. Tools and shelter need your camp table.'}
+            {workshop
+              ? 'Equipment, camp kits and good food. Put your supplies to work.'
+              : 'A torch, a bandage, a workbench. The rest begins at your own workshop.'}
           </p>
         </div>
         <div className="workshop-station-tags" aria-label="Available crafting stations">
-          <span className={view.workbenchNearby ? 'available' : ''}>
-            <Icon name="workbench" size={16} /> {view.workbenchNearby ? 'Table ready' : 'Table out of reach'}
-          </span>
-          <span className={view.fireNearby ? 'available' : ''}>
-            <Icon name="fire" size={14} /> {view.fireNearby ? 'Fire burning' : 'No burning fire'}
-          </span>
+          {workshop ? (
+            <>
+              <span className={context.workbenchNearby ? 'available' : ''}>
+                <Icon name="workbench" size={16} />
+                {context.workbenchNearby ? 'Workbench ready' : 'Out of reach'}
+              </span>
+              <span className={view.fireNearby ? 'available' : ''}>
+                <Icon name="fire" size={14} />
+                {view.fireNearby ? 'Fire burning' : 'No burning fire'}
+              </span>
+            </>
+          ) : (
+            <span className="available">
+              <Icon name="pack" size={16} /> No station needed
+            </span>
+          )}
         </div>
       </div>
+      {!workshop && (
+        <div className="fieldwork-progression">
+          <Icon name="workbench" size={25} />
+          <span>
+            {view.workbenchCount
+              ? 'Your full recipes are at your placed workbench. Interact with it to begin.'
+              : 'Build your first workbench: 6 pine wood + 3 wild fiber. Hold it, place it, then interact.'}
+          </span>
+          {view.workbenchCount > 0 && (
+            <button onClick={onMap}>
+              Show on map <Icon name="arrow" size={13} />
+            </button>
+          )}
+        </div>
+      )}
       <div className="workshop-filters">
         <label className="workshop-search">
           <Icon name="compass" size={18} />
@@ -121,21 +171,21 @@ export function CraftingDialog({
           onKeyDown={(event) => {
             if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
             event.preventDefault();
-            const current = CATEGORIES.findIndex(([key]) => key === category);
+            const current = categories.findIndex(([key]) => key === category);
             const next =
-              CATEGORIES[
+              categories[
                 event.key === 'Home'
                   ? 0
                   : event.key === 'End'
-                    ? 3
-                    : (current + (event.key === 'ArrowRight' ? 1 : 3)) % 4
+                    ? categories.length - 1
+                    : (current + (event.key === 'ArrowRight' ? 1 : categories.length - 1)) % categories.length
               ][0];
             setCategory(next);
             setRequested(1);
             event.currentTarget.querySelector<HTMLButtonElement>(`[data-category="${next}"]`)?.focus();
           }}
         >
-          {CATEGORIES.map(([key, label]) => (
+          {categories.map(([key, label]) => (
             <button
               key={key}
               role="tab"
@@ -152,14 +202,15 @@ export function CraftingDialog({
               }}
             >
               {label}
-              <small>{RECIPES.filter((entry) => inCategory(entry, key)).length}</small>
+              <small>{catalog.filter((entry) => inCategory(entry, key)).length}</small>
             </button>
           ))}
         </div>
       </div>
       <div className="workshop-list-heading">
         <span>
-          {recipes.length} {recipes.length === 1 ? 'RECIPE' : 'RECIPES'} IN YOUR FIELD NOTES
+          {recipes.length} {recipes.length === 1 ? 'RECIPE' : 'RECIPES'}{' '}
+          {workshop ? 'AT THIS WORKBENCH' : 'MADE BY HAND'}
         </span>
         <label>
           <input
@@ -181,8 +232,8 @@ export function CraftingDialog({
           aria-labelledby={`${id}-${category}`}
         >
           {recipes.map((entry) => {
-            const ready = maxCraftable(entry, view) > 0,
-              station = stationReady(entry, view);
+            const ready = maxCraftable(entry, context) > 0,
+              station = stationReady(entry, context);
             return (
               <button
                 key={entry.id}
@@ -201,8 +252,10 @@ export function CraftingDialog({
                       ? 'Ready to craft'
                       : !station
                         ? entry.needsFire
-                          ? 'Fire required'
-                          : 'Table required'
+                          ? context.workbenchNearby
+                            ? 'Fire required'
+                            : 'Workbench required'
+                          : 'Workbench required'
                         : 'Missing supplies'}
                   </span>
                 </span>
@@ -283,17 +336,17 @@ export function CraftingDialog({
                 size={18}
               />
               <span>
-                {recipe.needsWorkbench
-                  ? view.workbenchNearby
-                    ? 'Crafting table in reach'
-                    : 'Return to the crafting table at your first camp.'
+                {recipe.needsWorkbench && !context.workbenchNearby
+                  ? 'Interact with your placed workbench to make this.'
                   : recipe.needsFire
                     ? view.fireNearby
-                      ? 'Burning campfire in reach'
-                      : 'Move closer to a burning campfire to cook.'
-                    : 'No station needed. Make this anywhere.'}
+                      ? 'Workbench + burning fire ready'
+                      : 'A burning fire must also be nearby to cook.'
+                    : recipe.needsWorkbench
+                      ? 'Your workbench is in reach.'
+                      : 'No station needed. Make this anywhere.'}
               </span>
-              {recipe.needsWorkbench && !view.workbenchNearby && (
+              {recipe.needsWorkbench && !context.workbenchNearby && (
                 <button onClick={onMap}>
                   Show on map <Icon name="arrow" size={12} />
                 </button>
@@ -332,7 +385,7 @@ export function CraftingDialog({
               aria-label={`Craft ${recipe.name.toLowerCase()} +${quantity}`}
               disabled={maximum < quantity}
               onClick={() => {
-                if (sim.craft(recipe.id, quantity)) {
+                if (sim.craft(recipe.id, quantity, workbenchId)) {
                   setCrafted(recipe.id);
                   setRequested(1);
                 }
@@ -364,6 +417,8 @@ export function CraftingDialog({
             <button
               onClick={() => {
                 if (sim.equip(crafted)) {
+                  if (crafted === 'workbench')
+                    sim.notify('Choose a clear spot, then left-click to place your workbench.', 'info');
                   onRefresh();
                   onClose();
                 }

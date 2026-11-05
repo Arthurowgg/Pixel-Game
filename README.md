@@ -16,6 +16,20 @@ npm run build     # Strict TypeScript checks + a root-path production build
 npm run preview   # Serve that build
 ```
 
+## Roots & Refuge · v0.9 · art batch 7
+
+- **Earn your Workbench.** There is no free starter station or kit. Gather **6 pine wood + 3 wild fiber**, open **C**, and make one by hand. Equip the kit, aim at clear ground, and explicitly place it. A green/red ghost previews the footprint; the kit is spent once, at contact. Workbenches are smaller, solid, individually saved, and marked on the map. The original liked Workbench icon is unchanged.
+- **Two distinct crafting paths.** **C always opens Handcraft**: Workbench, torch, and bandage only. **E at your placed Workbench** opens the full workshop. Pickaxe, campfire, shelter, stew, and tea require that specific station in reach; cooking also needs a burning fire. The new wood/iron menu retains search, categories, exact material counts, batch quantities, and useful feedback.
+- **A working satchel, not just a new skin.** Owned-item tiles, optional missing items, live category/quantity counts, search, three sorting modes, selected-item details, recipe uses, explicit hold/use actions, and six drag/drop pockets. Pinning also works by tap or keyboard; each pocket can be cleared without discarding anything. The dedicated frame and linen texture differ from the workshop and other menus. Layouts support narrow phones and short landscape screens.
+- **A remade starting clearing.** New generated ground and a matching empty/resting bench. Stand safely by the first fire or interact to walk to the bench in collision-checked cardinal legs, then genuinely sit. Movement, other actions, danger, and critical needs cancel the approach/rest. The live hearth still has one big log action; fuel and time never pause. Reopening the bench with E does not silently spend a log.
+- **Visible chopping aftermath.** A generated pine stump remains after the existing fall clip. Chopping releases bounded, short-lived leaves using the existing leaf animation. Atmosphere-off and reduced-motion settings hide the extra leaf motion without changing rewards.
+- **Harder, still dodgeable wolves.** New packs have **3 / 4 / 5 health** on Explorer / Survivor / Wild. Quick snaps and heavier pounces have distinct warnings, locked targets, and recovery. A pounce gets a longer 0.8-second tell and a landing marker; pack spacing, one attacker at a time, fire/torch protection, and interruptible attacks remain.
+- **Progress and controls preserved.** Existing saves gain empty Workbench fields without receiving a station or losing supplies. All 16 items remain manually holdable. No diagonal movement, no automatic tool selection, F remains unbound, and only The Forest is playable. Field notes now guide gathering fiber, making and placing a Workbench before the shelter.
+
+**Eight standalone generated images, nine generation calls** (one seated-source revision), below the ten-call cap. The newly approved sitting exception is **one complete AI-drawn survivor-and-bench static state**, paired with an empty bench—not assembled limbs, a rig, or a new animation sheet. Existing actor/tool sheets and both animation manifests are preserved. New bite/fallen-wolf poses and genuinely crouching gathering remain deferred.
+
+The earlier release notes below are historical. This version supersedes the free starter table, station access through C, and standing-only camp behavior described there.
+
 ## Ember & Instinct · v0.8 · art batch 6
 
 - **A more readable wolf pack.** Wolves spread into separate approach slots, avoid obstacles and each other, and take turns attacking. A 0.55-second wind-up locks the landing point; the following lunge can be dodged. Hits interrupt their intent, push them back without tunnelling through obstacles, and leave brief defeat feedback. Fires and held burning torches still discourage them. Wolves can escape old collision overlaps or a newly placed fire instead of getting stuck.
@@ -123,22 +137,22 @@ Start a new adventure, choose a name and difficulty, and survive **three nights*
 
 ## Controls
 
-| Key / input       | Action                                                                 |
-| ----------------- | ---------------------------------------------------------------------- |
-| WASD / arrow keys | Move in four directions; the last pressed direction wins               |
-| Right-click       | Walk to a point in two straight legs; obstacles stop the route         |
-| Shift + movement  | Sprint                                                                 |
-| Left-click        | Attack or use the held item; hold to repeat equipped tool swings       |
-| E                 | General interaction: gather, refill, use the table, or add one log     |
-| 1–6               | Hold the assigned pocket item without consuming it                     |
-| Space             | Defend with the held item; an axe/pickaxe hits harder than empty hands |
-| X                 | Stow the held item                                                     |
-| B / I             | Backpack; hold any owned item and assign pockets                       |
-| C                 | Camp workshop                                                          |
-| M                 | Map                                                                    |
-| J                 | Field journal                                                          |
-| H                 | Your condition and recovery advice                                     |
-| Esc               | Pause / close a panel                                                  |
+| Key / input       | Action                                                                  |
+| ----------------- | ----------------------------------------------------------------------- |
+| WASD / arrow keys | Move in four directions; the last pressed direction wins                |
+| Right-click       | Walk to a point in two straight legs; obstacles stop the route          |
+| Shift + movement  | Sprint                                                                  |
+| Left-click        | Attack or use the held item; hold to repeat equipped tool swings        |
+| E                 | General interaction: gather, refill, use a Workbench, rest/feed at fire |
+| 1–6               | Hold the assigned pocket item without consuming it                      |
+| Space             | Defend with the held item; an axe/pickaxe hits harder than empty hands  |
+| X                 | Stow the held item                                                      |
+| B / I             | Backpack; hold any owned item and assign pockets                        |
+| C                 | Handcraft (Workbench, torch, bandage)                                   |
+| M                 | Map                                                                     |
+| J                 | Field journal                                                           |
+| H                 | Your condition and recovery advice                                      |
+| Esc               | Pause / close a panel                                                   |
 
 **F is unbound.** Hold E to repeat resource gathering, but not log feeding. Trees and boulders require the matching tool to be **manually equipped**.
 
@@ -149,11 +163,11 @@ Right-click the ground to walk toward it along one axis, then the other. Left-cl
 ### A good first day
 
 1. Equip your axe with **1**, then left-click or hold **E** beside a pine to collect wood and pine nuts. Select **2** before mining boulders. Gather plants with **E**. Tools never switch themselves.
-2. Keep spare wood for the campfire. Stand close and still, then add a log with **E** or the large hearth button. Stay there until the log lands; moving early cancels it without spending wood.
-3. Visit the **crafting table east of your first campfire**. Craft a shelter with **10 wood + 6 fiber**, then use the kit from your backpack or hold it and left-click on open ground.
+2. Keep spare wood for the campfire. Stand close and still to approach the bench and sit. Use the large hearth button (or E once resting) to add a log. Stay until contact; moving early cancels it without spending wood.
+3. Make a **Workbench with 6 wood + 3 fiber** in **C / Handcraft**. Hold and place the kit on clear ground near camp. Press **E at that station** to craft equipment and camp kits, including a shelter for **10 wood + 6 fiber**.
 4. Select **3**, then left-click to eat berries; select **4**, then left-click to drink. Refill bottles at the spring northeast of camp.
-5. Brew **berry tea** beside a burning campfire with **2 berries + 1 water** when you need warmth and a drink. Pine nuts make a small trail snack.
-6. Stay in the firelight when wolves arrive. Their warning marks a committed lunge: move aside, then swing your equipped axe toward the wolf. Two tool hits defeat one.
+5. Use your **Workbench with a burning fire nearby** to brew **berry tea for 2 berries + 1 water**. Pine nuts make a small trail snack.
+6. Stay in the firelight when wolves arrive. Move sideways during a snap/pounce warning, then swing your equipped axe at the recovering wolf. New Survivor wolves take four tool contacts to defeat; old saved wolves retain their original health.
 
 ## Saves and privacy
 
@@ -161,7 +175,7 @@ Adventures save every five seconds, on opening a panel, on leaving the page, and
 
 Saves, preferences, and history live only in this browser's `localStorage`. They do not sync between devices, profiles, or origins; the development preview and GitHub Pages have separate storage. Invalid saves are rejected safely. Storage failures appear in the HUD instead of crashing the game.
 
-The current format is **`wildpine.save.v2`**, including held equipment, facing direction, and pocket assignments. Valid **v1** expeditions upgrade automatically, keeping progress and receiving a pickaxe. Earlier v2 inventories also upgrade safely with empty nuts/tea slots; existing quantities and pocket assignments are preserved. Old diagonal facings also migrate to up/down now that movement is cardinal-only. The legacy copy is removed only after a successful v2 write. Pending actions are not serialized: reloading never replays a hit or spends an item whose use had not reached its contact frame.
+The current format is **`wildpine.save.v2`**, including held equipment, facing direction, pocket assignments, and placed workbenches. Valid **v1** expeditions upgrade automatically, keeping progress and receiving a pickaxe. Earlier v2 inventories also upgrade safely with empty nuts/tea/Workbench slots and an empty station list; existing quantities and pocket assignments are preserved. Old diagonal facings also migrate to up/down now that movement is cardinal-only. The legacy copy is removed only after a successful v2 write. Pending actions are not serialized: reloading never replays a hit or spends an item whose use had not reached its contact frame.
 
 ## GitHub Pages
 
@@ -212,7 +226,9 @@ src/
     vitals.ts                Meter states and recovery advice
     movement.ts              Cardinal input priority, substep collision, thumb input, safe gait
     loading.ts               Shared decoded-image cache, real progress, timeout/retry
-    crafting.ts              Station requirements and safe batch-crafting limits
+    crafting.ts              Station identity/reach, hand recipes, safe batch limits
+    camp.ts                  Solid bench and collision-checked cardinal seat routes
+    inventory.ts             Owned/missing item search, categories and sorting
     item-atlas.json          Shared held-item / HUD atlas rectangles
     generated-assets.json    Generated icons, frames, textures, scenes, and props
     animation-manifest.json  Generated clip/anchor/frame metadata
@@ -229,15 +245,17 @@ src/
   loading.css                Opening / world-entry loading scenes
   workshop.css               Framed, responsive camp workshop
   embers.css                 Dedicated pixel settings and live hearth interfaces
+  roots.css                  Dynamic satchel and handcraft/workbench layouts
 public/art/
   keyframes/                 Normalized image-generated key poses and props
   animations/                Seventeen active sheets + documented manifest
-  item-sprites.png           Shared fifteen-item inventory / held atlas
+  item-sprites.png           Shared sixteen-item inventory / held atlas
   generated/forager-batch/    Normalized standalone AI item / UI / texture art
   generated/camp-ui/          Final item icons, HUD frame, navigation, sparkle
   generated/trail-ui/         Three frame families and seven status/menu glyphs
   generated/hearth-workshop/  Two loading scenes, table, frame, and two emblems
   generated/embers-instinct/  Settings/hearth frames and five interface glyphs
+  generated/roots-reclaimed/  Workbench, two bench states, stump, ground, frames, linen
   loading/                   Full-screen generated arrival panoramas
   objects/                   Generated world props
   ui/                        Generated interface bitmaps
@@ -250,42 +268,44 @@ scripts/
   build_camp_ui_assets.py     Camp-interface art stage
   build_trail_ui_assets.py    Trail frame / status icon stage
   build_hearth_assets.py     Loading / workshop stage
-  build_embers_assets.py     Latest settings / hearth stage (run last)
+  build_embers_assets.py     Settings / hearth stage
+  build_roots_assets.py      Latest standalone camp / satchel stage (run last)
   browser-test.mjs           Thirty-two gameplay / UI end-to-end scenarios
   workshop-browser-test.mjs  Thirteen loading / workshop / touch regression scenarios
   embers-browser-test.mjs    Sixteen settings / input / combat / campfire scenarios
+  roots-browser-test.mjs     Eleven progression / satchel / sitting / touch scenarios
   browser-helpers.mjs        Shared headless Chromium launcher
   check-pages-build.mjs      Production subpath/asset validation
 ```
 
 ## Art and reproducibility
 
-Five original AI-generated images established the style: the forest campsite background, pine, survivor, wolf, and campfire. Eight additional generations supplied empty-handed front/side/back/work poses, a wolf stride, an alternate flame, a boulder, and a berry bush, using the existing art as references. The first polish batch added ten more: four survivor action poses, four wolf gait poses, an axe, and a pickaxe. The forager batch adds ten standalone item, UI, and terrain images. The campfire-interface batch adds ten more: the remaining five item icons, three navigation glyphs, a UI frame, and an impact sprite. Trail & Camp adds three functional frame designs and seven status/menu glyphs. Hearth & Hand adds six standalone loading/workshop images. Ember & Instinct adds seven standalone settings/hearth images.
+Five original AI-generated images established the style: the forest campsite background, pine, survivor, wolf, and campfire. Eight additional generations supplied empty-handed front/side/back/work poses, a wolf stride, an alternate flame, a boulder, and a berry bush, using the existing art as references. The first polish batch added ten more: four survivor action poses, four wolf gait poses, an axe, and a pickaxe. The forager batch adds ten standalone item, UI, and terrain images. The campfire-interface batch adds ten more: the remaining five item icons, three navigation glyphs, a UI frame, and an impact sprite. Trail & Camp adds three functional frame designs and seven status/menu glyphs. Hearth & Hand adds six standalone loading/workshop images. Ember & Instinct adds seven standalone settings/hearth images. Roots & Refuge adds eight standalone prop, camp-state, ground, frame, and linen images using nine calls; the existing Workbench glyph is reused as the sixteenth item icon.
 
-Generated sources are keyed, palette-normalized, and resized with **nearest-neighbor** sampling. The animation builders combine those key poses with pixel-rigged limbs, frame-specific hand anchors, foliage warping, and hand-coded effects. Complete axe/pickaxe poses are precomposited into individual 4 × 2 action sheets. Gameplay uses actual source rectangles from the packed sheets—not just bobbing static sprites. Left-facing poses mirror right-facing ones; all clips advance on simulation time, and reduced motion removes ambient cycling while preserving clear action poses.
+Generated sources are keyed, palette-normalized, and resized with **nearest-neighbor** sampling. The **historical** animation builders combined key poses with pixel-rigged limbs, frame-specific hand anchors, foliage warping, and hand-coded effects. They remain for provenance only and must not run under the current no-new-rigging agreement. Complete axe/pickaxe poses are precomposited into individual 4 × 2 action sheets. Gameplay uses actual source rectangles from the packed sheets—not just bobbing static sprites. Left-facing poses mirror right-facing ones; all clips advance on simulation time, and reduced motion removes ambient cycling while preserving clear action poses.
 
-See **[`public/art/animations/README.md`](public/art/animations/README.md)** for sheet dimensions and metadata. Processed keyframes and sheets are checked in, so CI and players need neither Python nor an image-generation service. All inventory icons, eighteen UI glyphs, seven frame families, the crafting table, two loading scenes, the impact sprite, and the forest-floor tile now use generated art. Other UI glyphs, some world props/shelter details, atmospheric effects, and future-biome thumbnails still include hand-coded or procedural artwork; they are not presented as newly generated assets. Fonts are bundled through Fontsource; their original SIL Open Font License notices are included in [`public/licenses/`](public/licenses/).
+See **[`public/art/animations/README.md`](public/art/animations/README.md)** for sheet dimensions and metadata. Processed keyframes and sheets are checked in, so CI and players need neither Python nor an image-generation service. All inventory icons, eighteen UI glyphs, eight active frame families, the Workbench, bench states, pine stump, camp clearing, two loading scenes, impact sprite, forest-floor tile, and satchel linen now use generated art. Other UI glyphs, some world props/shelter details, atmospheric effects, and future-biome thumbnails still include hand-coded or procedural artwork; they are not presented as newly generated assets. Fonts are bundled through Fontsource; their original SIL Open Font License notices are included in [`public/licenses/`](public/licenses/).
 
 To rebuild the current standalone assets from the supplied normalized inputs without touching animations:
 
 ```sh
 python -m venv .venv
 .venv/bin/python -m pip install Pillow
-.venv/bin/python scripts/build_embers_assets.py --normalized-only
+.venv/bin/python scripts/build_roots_assets.py --normalized-only
 npm run format
 ```
 
-On Windows, use `.venv\Scripts\python` instead. The Ember & Instinct builder only prepares static assets; it never constructs animation frames. Omitting `--normalized-only` also processes local raw generation outputs when present in `.art-originals/embers-instinct/`. Rebuilding only from the supplied keyframes has been checked to reproduce the PNGs byte-for-byte.
+On Windows, use `.venv\Scripts\python` instead. The Roots & Refuge builder only prepares static assets; it never constructs animation frames. Omitting `--normalized-only` also processes local raw generation outputs when present in `.art-originals/roots-reclaimed/`. Rebuilding only from the supplied keyframes has been checked to reproduce the PNGs byte-for-byte.
 
-For a full **static-only** rebuild, run `build_inventory_assets.py --normalized-only`, `build_camp_ui_assets.py --normalized-only`, `build_trail_ui_assets.py --normalized-only`, `build_hearth_assets.py --normalized-only`, and **`build_embers_assets.py --normalized-only` last**. Older stages overwrite the registry. Historical animation builders remain for provenance, but must not be run under the current no-new-rigged-frames agreement. No animation builder was run for the forager, campfire-interface, Trail & Camp, Hearth & Hand, or Ember & Instinct batches. Raw generations, local GIF previews, screenshots, dependencies, and build outputs are intentionally excluded from Git.
+For a full **static-only** rebuild, run `build_inventory_assets.py --normalized-only`, `build_camp_ui_assets.py --normalized-only`, `build_trail_ui_assets.py --normalized-only`, `build_hearth_assets.py --normalized-only`, `build_embers_assets.py --normalized-only`, and **`build_roots_assets.py --normalized-only` last**. Older stages overwrite the registry. Historical animation builders remain for provenance, but must not be run under the current no-new-rigged-frames agreement. No animation builder was run for the forager, campfire-interface, Trail & Camp, Hearth & Hand, Ember & Instinct, or Roots & Refuge batches. Raw generations, local GIF previews, screenshots, dependencies, and build outputs are intentionally excluded from Git.
 
 ## Checks
 
 ```sh
-npm test               # 229 unit tests
+npm test               # 279 unit tests
 npm run build          # Strict TypeScript + Vite production build
 npm run build:pages    # Build /Pixel-Game/ and verify asset paths
-npm run test:browser   # 61 browser scenarios; start the dev server first
+npm run test:browser   # 72 browser scenarios; start the dev server first
 npm audit
 ```
 
@@ -298,3 +318,5 @@ The runner uses the Chromium dependency on Linux, or an existing Chrome installa
 The loading/workshop regressions additionally exercise delayed bundles and images, honest completion counts, corrupt/stalled requests, retry/cache reuse, cancellation, no simulation during entry, station reach, atomic batch costs, old-save table overlap, mobile workshop use, real thumb dragging, and decoded head-pixel consistency across the retained walking cells.
 
 Ember & Instinct regressions exercise staggered pack attacks, dodging, separation, collision/overlap recovery, manual-tool requirements, forgiving aimed contact, runtime-only defeat feedback, one-log contact/cancellation, non-pausing camp focus, E reopening/dismissal, dangerous/critical camp states, preference migration, actual renderer flags and viewport coordinates, real Web Audio gains, settings keyboard/touch navigation, reset/fullscreen failures, and HUD/input restoration. Actor image hashes are checked separately against the previous release; no animation builder is run.
+
+Roots & Refuge adds real gather→craft→place→interact progression, explicit station identity checks, additive save migration, occupancy/cap-safe placement, dynamic stock/search/sorting, real HTML drag/drop and keyboard/touch pinning, whole seated-state replacement, cardinal approach cancellation, leaf visibility/expiry, stronger wolf health, and locked pounce damage/dodging. Narrow-phone coverage includes **320 × 568**, alongside 390 × 844 and 844 × 390 landscape.

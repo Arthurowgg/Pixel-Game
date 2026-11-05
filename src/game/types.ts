@@ -13,7 +13,8 @@ export type ItemId =
   | 'campfire'
   | 'shelter'
   | 'nuts'
-  | 'tea';
+  | 'tea'
+  | 'workbench';
 export type Direction = 'down' | 'right' | 'up' | 'left';
 export type ActionKind =
   'chop' | 'mine' | 'forage' | 'eat' | 'drink' | 'bandage' | 'build' | 'light' | 'feed' | 'refill' | 'attack';
@@ -55,9 +56,19 @@ export interface Fire extends Point {
   id: number;
   fuel: number;
 }
+export interface Workbench extends Point {
+  id: number;
+}
+export interface FallingLeaf extends Point {
+  startedAt: number;
+  duration: number;
+  drift: number;
+  phase: number;
+}
 export interface Wolf extends Point {
   id: number;
   hp: number;
+  maxHp?: number;
   cooldown: number;
   scared: number;
 }
@@ -89,6 +100,7 @@ export interface GameState {
   resources: Resource[];
   fires: Fire[];
   shelters: Point[];
+  workbenches: Workbench[];
   wolves: Wolf[];
   gathered: Record<string, number>;
   crafted: ItemId[];
@@ -136,6 +148,7 @@ export interface CampView {
   canFeed: boolean;
   feeding: boolean;
   progress: number;
+  seated: boolean;
 }
 export interface GameView {
   time: number;
@@ -153,10 +166,12 @@ export interface GameView {
   toasts: GameToast[];
   fireNearby: boolean;
   workbenchNearby: boolean;
+  workbenchCount: number;
   fireFuel: number;
   camp: CampView | null;
   wolvesNear: number;
   wolfWindup: boolean;
+  wolfPounce: boolean;
   shelterNearby: boolean;
   torchActive: boolean;
   journal: JournalEntry[];

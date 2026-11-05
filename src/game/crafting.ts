@@ -1,5 +1,4 @@
-import { WORKBENCH } from './data';
-import type { ItemId, Point, Recipe } from './types';
+import type { ItemId, Point, Recipe, Workbench } from './types';
 
 export interface CraftingContext {
   inventory: Record<ItemId, number>;
@@ -7,16 +6,24 @@ export interface CraftingContext {
   workbenchNearby: boolean;
 }
 export const MAX_CRAFT_BATCH = 99;
-export const WORKBENCH_REACH = 72;
-export function atWorkbench(point: Point) {
-  return Math.hypot(point.x - WORKBENCH.x, point.y - WORKBENCH.y) < WORKBENCH_REACH;
+export const WORKBENCH_REACH = 56;
+export function atWorkbench(point: Point, benches: readonly Workbench[], id?: number) {
+  return benches.some(
+    (bench) =>
+      (id === undefined || bench.id === id) &&
+      Math.hypot(point.x - bench.x, point.y - bench.y) < WORKBENCH_REACH,
+  );
 }
-export function blocksWorkbench(point: Point, padding = 0) {
-  return Math.abs(point.x - WORKBENCH.x) < 24 + padding && Math.abs(point.y - WORKBENCH.y) < 9 + padding;
+export function blocksWorkbench(point: Point, benches: readonly Workbench[], padding = 0) {
+  return benches.some(
+    (bench) => Math.abs(point.x - bench.x) < 17 + padding && Math.abs(point.y - bench.y) < 7 + padding,
+  );
 }
 export function recipeStation(recipe: Recipe) {
-  return recipe.needsFire ? 'Burning campfire' : recipe.needsWorkbench ? 'Crafting table' : 'By hand';
+  return recipe.needsFire ? 'Workbench + burning fire' : recipe.needsWorkbench ? 'Workbench' : 'By hand';
 }
+export const handRecipes = (recipes: readonly Recipe[]) =>
+  recipes.filter((recipe) => !recipe.needsWorkbench && !recipe.needsFire);
 export function stationReady(
   recipe: Recipe,
   context: Pick<CraftingContext, 'fireNearby' | 'workbenchNearby'>,
@@ -40,6 +47,7 @@ export function validCraftQuantity(quantity: number) {
   return Number.isInteger(quantity) && quantity >= 1 && quantity <= MAX_CRAFT_BATCH;
 }
 export const RECIPE_BENEFITS: Partial<Record<ItemId, string>> = {
+  workbench: 'Hold and place it on clear ground. Interact with your workbench to unlock the full workshop.',
   pickaxe: 'Two strikes break a boulder. Hold it with 2, or pin it to any pocket.',
   campfire: 'Place your kit on clear ground. Burn wood for warmth, cooking, and a little safety.',
   shelter: 'Build your kit in an open spot. Stay close to keep out of the cold and rain.',

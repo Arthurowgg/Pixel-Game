@@ -5,7 +5,10 @@ import type { LoadProgress } from '../game/loading';
 import type { GameState } from '../game/types';
 
 const TIPS = [
-  ['A place to begin', 'The crafting table at your first camp turns found supplies into tools and shelter.'],
+  [
+    'A place to begin',
+    'The camp has a fire and a resting bench. Build your first workbench by hand to unlock the full workshop.',
+  ],
   [
     'Travel light. Stay ready.',
     'Your pockets hold anything. Choose with 1–6, then left-click to use what you’re holding.',

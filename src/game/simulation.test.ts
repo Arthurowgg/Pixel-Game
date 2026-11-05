@@ -11,6 +11,11 @@ function createSim() {
   return new Simulation(createGame('Robin', 'survivor', 12345));
 }
 
+const placedWorkbench = (sim: Simulation) => {
+  sim.state.workbenches = [{ id: 0, x: 940, y: 738 }];
+  sim.state.player = { x: 940, y: 758 };
+};
+
 beforeEach(() => {
   const store = new Map<string, string>();
   vi.stubGlobal('localStorage', {
@@ -67,17 +72,19 @@ describe('gathering and crafting', () => {
   });
   it('does not spend supplies if a recipe cannot be crafted', () => {
     const sim = createSim();
+    placedWorkbench(sim);
     sim.state.inventory.wood = 4;
     sim.state.inventory.stone = 3;
     const before = { ...sim.state.inventory };
-    expect(sim.craft('campfire')).toBe(false);
+    expect(sim.craft('campfire', 1, 0)).toBe(false);
     expect(sim.state.inventory).toEqual(before);
   });
   it('crafts exactly one item and consumes the exact recipe', () => {
     const sim = createSim();
+    placedWorkbench(sim);
     sim.state.inventory.wood = 10;
     sim.state.inventory.stone = 3;
-    expect(sim.craft('campfire')).toBe(true);
+    expect(sim.craft('campfire', 1, 0)).toBe(true);
     expect(sim.state.inventory.wood).toBe(5);
     expect(sim.state.inventory.stone).toBe(0);
     expect(sim.state.inventory.campfire).toBe(1);
@@ -85,18 +92,20 @@ describe('gathering and crafting', () => {
   });
   it('requires a burning campfire to cook a meal', () => {
     const sim = createSim();
+    placedWorkbench(sim);
     sim.state.player = { x: 200, y: 200 };
     sim.state.inventory.mushroom = 1;
-    expect(sim.craft('meal')).toBe(false);
+    expect(sim.craft('meal', 1, 0)).toBe(false);
     sim.state.player = { ...CAMP };
-    expect(sim.craft('meal')).toBe(true);
+    expect(sim.craft('meal', 1, 0)).toBe(true);
     expect(sim.state.inventory.meal).toBe(1);
   });
   it('can build a shelter from a crafted kit on open ground', () => {
     const sim = createSim();
+    placedWorkbench(sim);
     sim.state.inventory.wood = 10;
     sim.state.inventory.fiber = 6;
-    expect(sim.craft('shelter')).toBe(true);
+    expect(sim.craft('shelter', 1, 0)).toBe(true);
     sim.state.player = { x: 885, y: 800 };
     expect(sim.use('shelter')).toBe(true);
     expect(sim.state.shelters).toHaveLength(0);
@@ -146,7 +155,7 @@ describe('survival systems', () => {
     sim.state.player = { ...CAMP };
     sim.state.fires[0].fuel = 50;
     sim.state.inventory.wood = 2;
-    sim.interact();
+    sim.feedFire(0);
     advance(sim, 0.7);
     expect(sim.state.fires[0].fuel).toBeCloseTo(85, 0);
     expect(sim.state.inventory.wood).toBe(1);
@@ -444,8 +453,9 @@ describe('equipment and synchronized actions', () => {
   });
   it('crafts a replacement pickaxe with its own recipe', () => {
     const sim = createSim();
+    placedWorkbench(sim);
     Object.assign(sim.state.inventory, { wood: 3, stone: 3, fiber: 1, pickaxe: 0 });
-    expect(sim.craft('pickaxe')).toBe(true);
+    expect(sim.craft('pickaxe', 1, 0)).toBe(true);
     expect(sim.state.inventory.pickaxe).toBe(1);
     expect(sim.state.inventory.wood + sim.state.inventory.stone + sim.state.inventory.fiber).toBe(0);
   });
@@ -517,10 +527,11 @@ describe('equipment saves and legacy migration', () => {
 describe('construction and equipment edge cases', () => {
   it('stows a held material when crafting spends its final unit, even while paused', () => {
     const sim = createSim();
+    placedWorkbench(sim);
     Object.assign(sim.state.inventory, { wood: 3, stone: 3, fiber: 1 });
     sim.equip('wood');
     sim.paused = true;
-    sim.craft('pickaxe');
+    sim.craft('pickaxe', 1, 0);
     expect(sim.state.equipped).toBeNull();
     expect(isGameState(sim.state)).toBe(true);
   });

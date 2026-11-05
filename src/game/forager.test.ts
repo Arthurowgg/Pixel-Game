@@ -17,8 +17,8 @@ describe('forager supplies', () => {
     expect(sim.state.inventory.nuts).toBe(0);
     expect(sim.state.inventory.tea).toBe(0);
     expect(sim.state.hotbar).toEqual(['hatchet', 'pickaxe', 'berries', 'water', 'bandage', 'torch']);
-    expect(Object.keys(ITEMS)).toHaveLength(15);
-    expect(RECIPES).toHaveLength(7);
+    expect(Object.keys(ITEMS)).toHaveLength(16);
+    expect(RECIPES).toHaveLength(8);
   });
   it('awards one portion of pine nuts only on the third tree impact, never on key spam', () => {
     const sim = fresh();
@@ -57,16 +57,17 @@ describe('forager supplies', () => {
   });
   it('only brews tea beside a burning fire and deducts the exact recipe', () => {
     const sim = fresh();
+    sim.state.workbenches = [{ id: 0, x: 940, y: 738 }];
     sim.state.player = { x: 200, y: 200 };
     const before = { ...sim.state.inventory };
-    expect(sim.craft('tea')).toBe(false);
+    expect(sim.craft('tea', 1, 0)).toBe(false);
     expect(sim.state.inventory).toEqual(before);
     sim.state.player = { ...CAMP };
     sim.state.fires[0].fuel = 0;
-    expect(sim.craft('tea')).toBe(false);
+    expect(sim.craft('tea', 1, 0)).toBe(false);
     expect(sim.state.inventory).toEqual(before);
     sim.state.fires[0].fuel = 80;
-    expect(sim.craft('tea')).toBe(true);
+    expect(sim.craft('tea', 1, 0)).toBe(true);
     expect(sim.state.inventory.berries).toBe(before.berries - 2);
     expect(sim.state.inventory.water).toBe(before.water - 1);
     expect(sim.state.inventory.tea).toBe(1);
@@ -74,13 +75,14 @@ describe('forager supplies', () => {
   });
   it('rejects tea recipes with missing ingredients without spending the other ingredient', () => {
     const sim = fresh();
+    sim.state.workbenches = [{ id: 0, x: 940, y: 738 }];
     sim.state.player = { ...CAMP };
     sim.state.inventory.berries = 1;
-    expect(sim.craft('tea')).toBe(false);
+    expect(sim.craft('tea', 1, 0)).toBe(false);
     expect(sim.state.inventory.water).toBe(3);
     sim.state.inventory.berries = 3;
     sim.state.inventory.water = 0;
-    expect(sim.craft('tea')).toBe(false);
+    expect(sim.craft('tea', 1, 0)).toBe(false);
     expect(sim.state.inventory.berries).toBe(3);
   });
   it('uses tea as a drink and restores thirst and warmth once', () => {
@@ -174,7 +176,7 @@ describe('generated static assets', () => {
         readFileSync(`public/${entry.sourceAsset}`).equals(readFileSync(`public/art/item-${item}.png`)),
       ).toBe(true);
     }
-    expect(Object.values(ITEM_ATLAS.items).filter((item) => item.source === 'generated')).toHaveLength(15);
+    expect(Object.values(ITEM_ATLAS.items).filter((item) => item.source === 'generated')).toHaveLength(16);
     expect(
       Object.values(ITEM_ATLAS.items).filter((item) => item.source === 'original-pixel-art'),
     ).toHaveLength(0);

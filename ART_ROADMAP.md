@@ -4,7 +4,32 @@
 
 After the whole-sheet-generation limitation was explained, the user approved **separate AI-generated item, texture, and UI images**, up to ten per batch, with **animation-sheet generation on hold**.
 
-Do not create more rigged poses or synthetic animation frames. Complete AI-drawn animation sheets can be cropped and integrated if supplied. The requested whole-sheet animation overhaul is **not complete**. Player movement is now cardinal-only: the user explicitly removed diagonal movement in v0.7.1. Eight-direction movement/art is no longer a pending feature for the current controls. Existing animation sheets from earlier work remain in the game; the latest static-art batches do not redraw or reconstruct them. Batches 4–6 correct runtime playback, carrying, collision, and input without constructing frames.
+Do not create more rigged poses or synthetic animation frames. Complete AI-drawn animation sheets can be cropped and integrated if supplied. The requested whole-sheet animation overhaul is **not complete**. Player movement is now cardinal-only: the user explicitly removed diagonal movement in v0.7.1. Eight-direction movement/art is no longer a pending feature for the current controls. Existing animation sheets from earlier work remain in the game; the latest static-art batches do not redraw or reconstruct them. Batches 4–7 correct runtime playback, carrying, collision, and input without constructing frames.
+
+## Batch 7 · Roots & Refuge · v0.9 · eight images, nine calls
+
+**9/10 image-generation calls used.** No additional calls are needed for this pass. Eight distinct standalone images were retained; one additional generation revised the seated source's framing. No multi-asset grid or animation sheet was generated.
+
+The user explicitly reversed the earlier standing-only decision **for sitting only**: a complete AI-drawn seated survivor **together with the bench** and a matching empty bench are approved. No assembled limbs, sitting transitions, new wolf bite/fallen poses, or crouching sheets are implied.
+
+| AI-generated image               | Runtime integration                                                             |
+| -------------------------------- | ------------------------------------------------------------------------------- |
+| Smaller wooden Workbench         | 42 × 30, anchor 21/26; replaces the world prop, not its liked icon              |
+| Complete seated survivor + bench | 48 × 42, anchor 24/40; replaces the standing actor and empty bench while seated |
+| Matching empty bench             | 48 × 42, same source crop/scale/anchor as the occupied state                    |
+| Pine stump                       | 26 × 22, anchor 13/19; follows the existing fall clip                           |
+| Worn satchel frame               | 192 × 128, inset 20; dedicated dynamic inventory                                |
+| Wood/iron fieldwork frame        | 192 × 128, inset 18; handcraft and Workbench                                    |
+| Camp clearing                    | 240 × 184, anchor 120/92; replaces the old rectangular log/rug decorations      |
+| Satchel linen                    | 64 × 64; subtle tiled menu backing                                              |
+
+The original Workbench glyph is unchanged. Its nearest-neighbor 16 × 16 copy occupies the previously empty final atlas cell; all prior 15 cells are preserved. Packing a static item atlas is not drawing a new animation sheet.
+
+Sources: `.art-originals/roots-reclaimed/` (ignored); normalized inputs: `public/art/generated/roots-reclaimed/`. Run **`scripts/build_roots_assets.py --normalized-only` last**, after the older static builders. It only keys, crops, nearest-resizes, palette-reduces, and packs/copies static art. The final seated source touches its top/bottom edges; normalization adds transparent padding only, never invented anatomy.
+
+Gameplay: no free station; three hand recipes; five station-required recipes; explicit saved station identity/reach; a real ghost/contact placement loop; owned-item/search/filter/sort satchel and six drag/drop/tap/keyboard pockets; safe cardinal approach to the actual seated state; generated stump and timed leaf feedback; stronger health plus distinct snap/pounce attacks with dodgeable locked targets. Existing controls, settings, saves, loaders, and actor/tool sheets remain intact.
+
+Historical batch notes below describe the choices at that time. This batch supersedes their free-station and standing-only camp descriptions.
 
 ## Batch 6 · Ember & Instinct · v0.8 · seven accepted images
 

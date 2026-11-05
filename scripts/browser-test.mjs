@@ -58,7 +58,7 @@ try {
   await page.getByRole('textbox', { name: 'Find an item', exact: true }).fill('not-a-forest-item');
   await expect(page.getByRole('status')).toContainText('No supplies match');
   await page.getByRole('tab', { name: 'Camp recipes', exact: true }).click();
-  await expect(page.locator('.fieldcraft-recipes > article')).toHaveCount(7);
+  await expect(page.locator('.fieldcraft-recipes > article')).toHaveCount(8);
   await expect(page.getByText('10 pine wood', { exact: true })).toBeVisible();
   await screenshot(page, 'fieldcraft-recipes');
   await page.keyboard.press('ArrowLeft');
@@ -68,7 +68,7 @@ try {
   );
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Fieldcraft', exact: true })).toBeFocused();
-  passed('The new fieldcraft menu filters supplies, explains item use, and shows all seven exact recipes');
+  passed('The new fieldcraft menu filters supplies, explains item use, and shows all eight exact recipes');
 
   await page.getByRole('button', { name: 'Survival guide', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
@@ -232,6 +232,7 @@ try {
   await page.keyboard.up('e');
   await page.keyboard.press('b');
   await expect(page.getByRole('button', { name: 'Pine wood, 4 in backpack', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Wild berries, 3 in backpack', exact: true }).click();
   await page.getByRole('button', { name: 'Eat berries', exact: true }).click();
   await page.waitForTimeout(800);
   await page.keyboard.press('b');
@@ -243,7 +244,7 @@ try {
   await expect(page.getByRole('button', { name: 'Spring water, 2 in backpack', exact: true })).toBeVisible();
   await screenshot(page, 'inventory');
   await page.keyboard.press('c');
-  await expect(page.getByRole('button', { name: 'Craft campfire +1', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Craft workbench +1', exact: true })).toBeDisabled();
   await page.keyboard.press('Escape');
   passed('Keyboard gathering, backpack consumption, and missing-material recipe gates work');
 
@@ -277,11 +278,12 @@ try {
   await checkpoint(page, () => {
     const s = JSON.parse(localStorage.getItem('wildpine.save.v2'));
     Object.assign(s.inventory, { wood: 50, stone: 30, fiber: 30, berries: 10, mushroom: 3 });
-    s.player = { x: 900, y: 780 };
-    s.resources = s.resources.filter((r) => r.id !== 0);
+    s.player = { x: 940, y: 758 };
+    s.workbenches = [{ id: 0, x: 940, y: 738 }];
+    s.resources = [];
     localStorage.setItem('wildpine.save.v2', JSON.stringify(s));
   });
-  await page.keyboard.press('c');
+  await page.keyboard.press('e');
   await page.locator('.recipe-row').filter({ hasText: 'Forest shelter' }).click();
   await page.getByRole('button', { name: 'Craft forest shelter +1', exact: true }).click();
   await page.keyboard.press('b');
@@ -377,6 +379,7 @@ try {
     shelter: 'Forest shelter',
     nuts: 'Pine nuts',
     tea: 'Berry tea',
+    workbench: 'Workbench',
   };
   for (const [id, name] of Object.entries(itemNames)) {
     await page.keyboard.press('b');
@@ -412,7 +415,7 @@ try {
   expect((await saved(page)).inventory.berries).toBe(2);
   expect((await saved(page)).hotbar[5]).toBe('wood');
   passed(
-    'All 15 items can be held; pocket selection, arbitrary slot pinning, left-click use, and stowing work without accidental consumption',
+    'All 16 items can be held; pocket selection, arbitrary slot pinning, left-click use, and stowing work without accidental consumption',
   );
 
   await checkpoint(page, () => {
@@ -498,8 +501,10 @@ try {
   await checkpoint(page, () => {
     const s = JSON.parse(localStorage.getItem('wildpine.save.v2'));
     s.time = 0;
+    s.lastInteract = -10;
     s.weather = 'clear';
-    s.player = { x: 900, y: 780 };
+    s.player = { x: 940, y: 758 };
+    s.workbenches = [{ id: 0, x: 940, y: 738 }];
     s.fires = [{ id: 0, x: 900, y: 740, fuel: 80 }];
     s.resources = [];
     s.wolves = [];
@@ -513,7 +518,7 @@ try {
     s.equipped = 'hatchet';
     localStorage.setItem('wildpine.save.v2', JSON.stringify(s));
   });
-  await page.keyboard.press('c');
+  await page.keyboard.press('e');
   await page.getByRole('button', { name: /^Berry tea/ }).click();
   await page.getByRole('button', { name: /^Craft berry tea/ }).click();
   await expect(page.locator('.workshop-feedback')).toContainText('Berry tea crafted');

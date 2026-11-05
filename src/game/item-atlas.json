@@ -120,6 +120,14 @@
       "h": 16,
       "source": "generated",
       "sourceAsset": "art/generated/forager-batch/tea.png"
+    },
+    "workbench": {
+      "x": 112,
+      "y": 16,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/ui/workbench-icon.png"
     }
   }
 }

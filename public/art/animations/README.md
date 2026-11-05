@@ -35,7 +35,17 @@ All of these sheets use **4 columns × 2 rows**. Left-facing player poses mirror
 | `camp.png`         | 96 × 64 | Shelter cloth and construction                                      |
 | `held.png`         | 24 × 32 | Held burning torch                                                  |
 
-`wildlife.png` is retained as an original build-stage artifact, but the runtime no longer loads it. The new wolf sheets replace its clips. The inventory has its own **`../item-sprites.png`** atlas with all 15 items, described by `../item-sprites.json`. Both the Canvas held-item renderer and the SVG-backed HUD icons crop that shared bitmap. All fifteen item icons now come from generated artwork. The inventory/UI pipelines are `scripts/build_camp_ui_assets.py` and `scripts/build_trail_ui_assets.py`, `scripts/build_hearth_assets.py`, and the final `scripts/build_embers_assets.py`, independent of animation generation.
+`wildlife.png` is retained as an original build-stage artifact, but the runtime no longer loads it. The new wolf sheets replace its clips. The inventory has its own **`../item-sprites.png`** atlas with all 16 items, described by `../item-sprites.json`. Both the Canvas held-item renderer and the SVG-backed HUD icons crop that shared bitmap. All sixteen item icons come from generated artwork; the Workbench reuses its existing glyph. The inventory/UI pipelines are `scripts/build_camp_ui_assets.py` and `scripts/build_trail_ui_assets.py`, `scripts/build_hearth_assets.py`, `scripts/build_embers_assets.py`, and the final `scripts/build_roots_assets.py`, independent of animation generation.
+
+## Whole seated camp state and stronger attacks · v0.9
+
+The 17 active sheets, inactive wildlife artifact, all existing actor/tool sources, and both animation manifests are unchanged. **No new animation builder or rigging was used.**
+
+The approved sitting exception is `../objects/seated-bench.png`: one complete AI-drawn survivor-and-bench static image, not an assembled body or cropped animation frame. Its matching empty `camp-bench.png` shares a 48 × 42 canvas and 24/40 anchor, derived from the same source crop/scale. A collision-checked cardinal approach ends at the seat; the whole occupied image replaces both the empty bench and standing survivor. Movement/actions/danger cancel seating. Log feeding moves the complete log icon from the seated hand location without animating or reconstructing limbs. Other campfires without this bench retain standing rest.
+
+Chopping releases timed, bounded instances of the **existing `leaf-drift` clip**; after the existing pine-fall clip, the new generated stump persists until regrowth. Atmosphere-off/reduced-motion hides drifting leaves. Snap/pounce attacks still play whole existing wolf cells. The pounce adds a longer warning, a fixed landing marker, and up to five pixels of whole-sprite lift, disabled by reduced motion. Health bars use the wolf's persisted maximum health. No new bite, fallen-wolf, or crouching poses have been supplied.
+
+The v0.8 section below is historical; its standing-only camp restriction was explicitly superseded for this one complete static seated state.
 
 ## Runtime combat/camp feedback · v0.8
 
@@ -95,9 +105,10 @@ python scripts/build_camp_ui_assets.py --normalized-only
 python scripts/build_trail_ui_assets.py --normalized-only
 python scripts/build_hearth_assets.py --normalized-only
 python scripts/build_embers_assets.py --normalized-only
+python scripts/build_roots_assets.py --normalized-only
 npm run format
 ```
 
-Requires Pillow. The final Ember & Instinct stage restores the settings/hearth registry after the loading/workshop and older static stages. No animation builder was used for art batches 2–6, and all 18 existing animation PNGs, including the inactive wildlife artifact, retain their pre-batch hashes.
+Requires Pillow. The final Roots & Refuge stage restores the camp/satchel registry and Workbench atlas entry after the older static stages. No animation builder was used for art batches 2–7, and all 18 existing animation PNGs, including the inactive wildlife artifact, retain their pre-batch hashes.
 
-The leaves, ripples, sun shafts, canopy shadows, and ground microtextures are procedural pixel/lighting work—not additional image generations. Remaining prop/UI and whole-sheet animation work is tracked in `ART_ROADMAP.md` at the repository root.
+Leaf motion/playback, ripples, sun shafts, canopy shadows, and ground microtextures reuse existing artwork or procedural pixel/lighting work—not additional image generations. Remaining prop/UI and whole-sheet animation work is tracked in `ART_ROADMAP.md` at the repository root.

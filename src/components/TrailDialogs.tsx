@@ -72,7 +72,8 @@ export function ConditionDialog({ view, onClose }: { view: GameView; onClose: ()
 
 const WHERE: Record<ItemId, string> = {
   hatchet: 'Already in your starting kit. Three strikes fell a pine.',
-  pickaxe: 'In your starting kit, or craft a replacement at the camp table. Two strikes break a boulder.',
+  pickaxe:
+    'In your starting kit, or craft a replacement at your placed workbench. Two strikes break a boulder.',
   wood: 'Chop a pine: 4 wood and 1 portion of pine nuts.',
   stone: 'Mine a boulder with your pickaxe.',
   fiber: 'Gather wild grasses, or collect berries for a little extra fiber.',
@@ -80,12 +81,13 @@ const WHERE: Record<ItemId, string> = {
   water: 'Use E at the spring northeast of your first camp. Bottles refill to 5.',
   mushroom: 'Gather golden mushrooms from the forest floor.',
   nuts: 'One portion drops when a pine is felled.',
-  tea: 'Brew at a burning campfire: 2 berries and 1 water.',
+  tea: 'Brew at a workbench near a burning fire: 2 berries and 1 water.',
   bandage: 'Craft from 3 fiber and 1 berry. One is included in your starting kit.',
   torch: 'Craft from 3 wood and 2 fiber. Light it, then keep it in hand.',
-  meal: 'Cook 3 berries and 1 mushroom beside a burning fire.',
-  campfire: 'Craft the kit, then place it in an open clearing.',
-  shelter: 'Craft the kit at your camp table, then build it in an open clearing.',
+  meal: 'Use a workbench near a burning fire: 3 berries and 1 mushroom.',
+  campfire: 'Make the kit at your workbench, then place it in an open clearing.',
+  workbench: 'Build by hand, place on clear ground, then interact for advanced recipes.',
+  shelter: 'Craft the kit at your placed workbench, then build it in an open clearing.',
 };
 
 export function FieldcraftDialog({ onClose }: { onClose: () => void }) {
