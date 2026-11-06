@@ -1,5 +1,22 @@
 # Art polish · batch progress
 
+## Batch 10 · Undergrowth · v0.11.0 · six shipped images, nine calls
+
+**9/10 image-generation calls used.** Every call produced one standalone prop on a flat magenta sheet; nothing was generated as a grid, a sheet or a rigged limb. Three calls were re-rolls: the first fern read as a dark blob at 22 × 18, and the first two wildflower sheets either smeared or grew a stray outline loop around a blossom. The clover tuft was added after the palette was settled.
+
+| AI-generated image    | Runtime integration                                                        |
+| --------------------- | -------------------------------------------------------------------------- |
+| Mushroom cluster      | 18 × 14, `objects.mushrooms`; fairy ring, log shelves, scattered in groves |
+| Fern frond (3rd try)  | 22 × 18, `objects.fern`; groves, trail verges, pond margins                |
+| Wildflowers (3rd try) | 18 × 14, `objects.wildflowers`; clearing rims and trail verges             |
+| Clover tuft           | 20 × 13, `objects.clover`; the commonest low ground cover                  |
+| Mossy boulder         | 20 × 15, `objects.mossBoulder`; by the waystones, sparse elsewhere         |
+| Marsh reeds           | 16 × 22, `objects.reeds`; pond shoreline only                              |
+
+Placement lives in `src/game/decor.ts`: a 58 px jittered grid weighted by `groveDensity`, `trailDistance` and `inClearing`, plus the composed spots. It is keyed on the save seed and cached per seed, so props are identical across reloads and old saves pick them up without a migration.
+
+Sources: `.art-originals/decor-pass/` (ignored); normalized input: `public/art/generated/decor-pass/`. Run **`scripts/build_decor_assets.py` after batches 8–9**: it keys the magenta sheet, crops, area-downsamples, reduces to 16 colours, applies the gain/desaturation pass and rewrites the shared registry.
+
 ## Batch 9 · Trails & Twilight animation pass · v0.10.2 · one shipped image, four calls
 
 **4/10 image-generation calls used.** Three of them are art direction only and ship no pixels: a two-view survivor reference (front/side) and single hatchet/pickaxe sprites. At a 13 px in-hand size the generated tools lose their structure, so the survivor and its tools stay authored pixels; the reference drove the new eyes, hair, collar, belt and boot detail.

@@ -16,6 +16,13 @@ npm run build     # Strict TypeScript checks + a root-path production build
 npm run preview   # Serve that build
 ```
 
+## Undergrowth · v0.11.0 · art batch 10
+
+- **The forest grows things that are not resources.** Six generated props dress the ground: mushroom clusters, clover tufts, fern fronds, wildflowers, mossy boulders and pond reeds. Around 330 of them are seeded into every world, denser in the groves and along the trail verges, and absent from the camp, the middle of the pond and the ruts of the paths.
+- **Places, not noise.** A fairy ring of caps sits on a mossy bank, mushroom shelves climb the damp end of every fallen log, boulders lean against both waystones, reed banks ring the pond shore and flower fringes follow the clearing rims — all composed, all deterministic.
+- **Cosmetic by construction.** Props are bottom-centre anchored, y-sorted with the player and the resources, snapped to whole pixels and nudged by a one-pixel sway that stops entirely under reduced motion. They never collide, never appear in the map, and are derived from the save seed, so existing saves gain them with no schema change.
+- **Six sprites from nine calls.** The first fern and first two wildflower sheets were re-rolled because they smeared at sprite scale; the clover tuft was added once the palette was settled. Every sheet was pulled back toward the twilight palette with a gain/desaturation pass so the props sit in the scene instead of on top of it.
+
 ## Animation & combat pass · v0.10.1
 
 - **One rig, every frame.** The survivor is no longer drawn from stitched AI pose cells. A single hand-authored pixel rig supplies the head, arms, legs, boots and coat for all four facings, so eyes, arm length and leg placement are identical in every state. Walking, running, idling, chopping, mining, foraging, building, eating and swinging are interpolated from continuous simulation time rather than eight fixed cells.

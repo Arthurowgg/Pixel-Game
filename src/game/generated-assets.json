@@ -334,6 +334,54 @@
       "source": "generated",
       "sourceAsset": "art/generated/trails-twilight/waystone.png",
       "anchor": [19, 42]
+    },
+    "mushrooms": {
+      "file": "art/objects/mushrooms.png",
+      "width": 18,
+      "height": 14,
+      "source": "generated",
+      "sourceAsset": "art/generated/decor-pass/mushrooms.png",
+      "anchor": [9, 13]
+    },
+    "fern": {
+      "file": "art/objects/fern.png",
+      "width": 22,
+      "height": 18,
+      "source": "generated",
+      "sourceAsset": "art/generated/decor-pass/fern.png",
+      "anchor": [11, 17]
+    },
+    "wildflowers": {
+      "file": "art/objects/wildflowers.png",
+      "width": 18,
+      "height": 14,
+      "source": "generated",
+      "sourceAsset": "art/generated/decor-pass/wildflowers.png",
+      "anchor": [9, 13]
+    },
+    "mossBoulder": {
+      "file": "art/objects/mossBoulder.png",
+      "width": 20,
+      "height": 15,
+      "source": "generated",
+      "sourceAsset": "art/generated/decor-pass/mossBoulder.png",
+      "anchor": [10, 14]
+    },
+    "reeds": {
+      "file": "art/objects/reeds.png",
+      "width": 16,
+      "height": 22,
+      "source": "generated",
+      "sourceAsset": "art/generated/decor-pass/reeds.png",
+      "anchor": [8, 21]
+    },
+    "clover": {
+      "file": "art/objects/clover.png",
+      "width": 20,
+      "height": 13,
+      "source": "generated",
+      "sourceAsset": "art/generated/decor-pass/clover.png",
+      "anchor": [10, 12]
     }
   }
 }

@@ -172,6 +172,8 @@ try {
 
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-sunlight', 'on');
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-ground-texture', 'generated');
+  // Cosmetic undergrowth is derived from the seed, so it dresses a fresh world too.
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-decor-count', /^[3-9]\d{2}$/);
   await expect(page.locator('[data-generated-icon="pack"]').first()).toHaveAttribute(
     'src',
     /art\/ui\/backpack\.png$/,

@@ -278,7 +278,7 @@ export function MainMenu({
       <footer className="main-footer">
         <span className="version">
           <span />
-          v0.10.2 <i> / </i> TRAILS & TWILIGHT
+          v0.11.0 <i> / </i> UNDERGROWTH
         </span>
         <span className="footer-motto">A LITTLE COURAGE GOES A LONG WAY.</span>
         <button onClick={onGuide} className="footer-guide">

@@ -11,6 +11,7 @@ export { loadArt } from './animation';
 import type { Simulation } from './simulation';
 import { addTerrainDetail, ForestAtmosphere, sunlightStrength } from './atmosphere';
 import generatedAssets from './generated-assets.json';
+import { forestDecor, type DecorProp } from './decor';
 import { ForestFeedback } from './feedback';
 
 const pixelEllipse = (
@@ -266,6 +267,32 @@ export class Renderer {
     );
     this.ctx.restore();
   }
+  /** Cosmetic undergrowth: a generated bitmap, pixel-anchored to its ground point. */
+  private decor(prop: DecorProp, time: number) {
+    const asset = generatedAssets.objects[prop.kind],
+      image = artImages[`object-${prop.kind}`];
+    if (!image?.naturalWidth) return;
+    const ctx = this.ctx;
+    // Whole-pixel sway keeps the sprites crisp; nothing moves with motion reduced.
+    const sway = this.settings.reducedMotion
+      ? 0
+      : Math.round(
+          Math.sin(time * 1.25 + prop.phase) *
+            (prop.kind === 'reeds' ? 1.1 : prop.kind === 'fern' ? 0.9 : 0.55),
+        );
+    ctx.save();
+    if (prop.kind === 'mossBoulder') this.shadow(prop.x, prop.y, 9);
+    ctx.translate(Math.round(prop.x) + sway, Math.round(prop.y));
+    if (prop.flip) ctx.scale(-1, 1);
+    ctx.drawImage(
+      image,
+      -Math.round(asset.anchor[0] * prop.scale),
+      -Math.round(asset.anchor[1] * prop.scale),
+      Math.round(asset.width * prop.scale),
+      Math.round(asset.height * prop.scale),
+    );
+    ctx.restore();
+  }
   private survivor(sim: Simulation) {
     const ctx = this.ctx,
       p = sim.state.player,
@@ -415,6 +442,21 @@ export class Renderer {
           decoration.y < this.camera.y + h + 55
         )
           draws.push({ y: decoration.y, draw: () => this.prop(decoration.kind, decoration) });
+    if (s.forestVersion === 2) {
+      const undergrowth = forestDecor(s.seed);
+      this.canvas.dataset.decorCount = String(undergrowth.length);
+      // A player-built station clears the weeds it is standing on.
+      const cleared = [...s.workbenches, ...s.fires, ...s.shelters, CAMP_BENCH];
+      for (const prop of undergrowth)
+        if (
+          prop.x > this.camera.x - 40 &&
+          prop.x < this.camera.x + w + 40 &&
+          prop.y > this.camera.y - 20 &&
+          prop.y < this.camera.y + h + 40 &&
+          !cleared.some((station) => Math.abs(station.x - prop.x) < 26 && Math.abs(station.y - prop.y) < 24)
+        )
+          draws.push({ y: prop.y, draw: () => this.decor(prop, s.time) });
+    }
     for (const bench of s.workbenches)
       draws.push({
         y: bench.y,
