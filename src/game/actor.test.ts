@@ -54,6 +54,9 @@ const base: ActorInput = {
   reducedMotion: false,
 };
 
+const BLADE = new Set(['#9aa89a', '#d8dfd0']);
+const bladeFills = (fills: FillCall[]) => fills.filter((fill) => BLADE.has(fill.color));
+
 const bounds = (fills: FillCall[]) => ({
   minX: Math.min(...fills.map((fill) => fill.x)),
   maxX: Math.max(...fills.map((fill) => fill.x + fill.w)),
@@ -101,14 +104,14 @@ describe('authored survivor rig', () => {
   it('shows a fading tool trail during the strike and not while idle', () => {
     const idle = harness();
     drawActor(idle.ctx, base);
-    const idleBlade = idle.fills.filter((fill) => fill.color === '#c8d2c4').length;
+    const idleBlade = bladeFills(idle.fills).length;
 
     const strike = harness();
     drawActor(strike.ctx, {
       ...base,
       action: { kind: 'chop', item: 'hatchet', progress: 0.42, direction: 'right' },
     });
-    const strikeBlade = strike.fills.filter((fill) => fill.color === '#c8d2c4').length;
+    const strikeBlade = bladeFills(strike.fills).length;
     expect(strikeBlade).toBeGreaterThan(idleBlade);
   });
 
@@ -120,7 +123,7 @@ describe('authored survivor rig', () => {
         direction,
         action: { kind: 'chop', item: 'hatchet', progress: 0.45, direction },
       });
-      const blade = fills.filter((fill) => fill.color === '#c8d2c4');
+      const blade = bladeFills(fills);
       return {
         scales,
         bladeCenter: blade.reduce((sum, fill) => sum + fill.x, 0) / blade.length,

@@ -93,21 +93,23 @@ const HEAD_FRONT = [
   '...SSS...',
 ];
 const HEAD_SIDE = [
-  '..HH.HH..',
-  '.HHHHHHH.',
+  '.H.H.HH..',
   'HHHHHHHH.',
+  'HHhHHHHH.',
   'HHHHHHHHH',
-  'HHhHHHSSS',
-  'HHHHHSEWS',
-  'HHHsHHSSS',
-  '.HHHHHSS.',
-  '..HHHHHS.',
+  'HHHHSSSSS',
+  'HHHHWWSSS',
+  'HHHsWWSSS',
+  '.HHHHSSS.',
+  '..HHHSS..',
+  '...HHH...',
 ];
 const HEAD_BACK = [
-  '..HhHHH..',
-  '.HHHHHHH.',
+  '.H.HHH.H.',
   'HHHHHHHHH',
-  'HHhHHHHHH',
+  'HHhHHHHhH',
+  'HHHHHHHHH',
+  'HHHHHHHHH',
   'HHHHHHHHH',
   'HHHHHHHHH',
   'HHHHHHHHH',
@@ -355,8 +357,8 @@ function drawHead(ctx: Ctx, cy: number, facing: 'front' | 'side' | 'back', tilt:
     E: EYE,
     W: WHITE,
   };
-  px(ctx, -1, y + 9, 3, 2, OUTLINE);
-  px(ctx, -1, y + 9, 2, 1, SKIN_SHADE);
+  px(ctx, -1, y + 10, 3, 2, OUTLINE);
+  px(ctx, -1, y + 10, 2, 1, SKIN_SHADE);
   const rows = facing === 'back' ? HEAD_BACK : facing === 'side' ? HEAD_SIDE : HEAD_FRONT;
   sprite(ctx, rows, x, y, palette);
   if (blink && facing !== 'back') {
@@ -410,7 +412,7 @@ function drawTorso(ctx: Ctx, bodyY: number, lean: number, bow: number, side: boo
     px(ctx, 3 + x, -21 + y, 1, 6, COAT_SHADE);
     px(ctx, -4 + x, -14 + y, 9, 2, BELT);
     px(ctx, 2 + x, -14 + y, 1, 1, BUCKLE);
-    px(ctx, -2 + x, -23 + y, 4, 1, SCARF);
+    px(ctx, 0 + x, -20 + y, 1, 6, COAT_SHADE);
   } else {
     box(ctx, -4 + x, -23 + y, 9, 10, COAT);
     px(ctx, -3 + x, -22 + y, 2, 7, COAT_LIGHT);
@@ -434,38 +436,41 @@ function drawArm(ctx: Ctx, sx: number, sy: number, hx: number, hy: number, far: 
 }
 
 const AXE_SPRITE = [
-  '..KKK..',
-  '.KBBBK.',
-  'KBBBBBK',
-  'KBBBBBK',
-  '.KBBBK.',
-  '..HHH..',
-  '..HHH..',
-  '..HHH..',
-  '..HHH..',
-  '..HHH..',
-  '..HHH..',
-  '..HHH..',
-  '..HHH..',
+  '...KKKKK...',
+  '..KBBBBBK..',
+  '.KBBWBBBBK.',
+  '.KBBBBBBBK.',
+  '.KBBBBBBKK.',
+  '..KBBBBK...',
+  '...KKHHK...',
+  '.....HHH...',
+  '.....HHH...',
+  '.....HHH...',
+  '.....hhH...',
+  '.....HHH...',
+  '.....hhH...',
+  '.....HHH...',
 ];
 const PICK_SPRITE = [
-  'KKK...KKK',
-  'KBBK.KBBK',
-  '.KBBKBBK.',
-  '..KBHBK..',
-  '...HHH...',
-  '...HHH...',
-  '...HHH...',
-  '...HHH...',
-  '...HHH...',
-  '...HHH...',
-  '...HHH...',
-  '...HHH...',
+  'KKK.....KKK',
+  'KBBKKKKKBBK',
+  '.KBBBBBBBK.',
+  '..KKBBBKK..',
+  '....HHH....',
+  '....HHH....',
+  '....hhH....',
+  '....HHH....',
+  '....hhH....',
+  '....HHH....',
+  '....hhH....',
+  '....HHH....',
 ];
 const TOOL_COLORS: Record<string, string> = {
-  K: '#c8d2c4',
-  B: '#8d9d92',
-  H: '#a4763f',
+  K: '#3a3226',
+  B: '#9aa89a',
+  W: '#d8dfd0',
+  H: '#b07a3f',
+  h: '#8a5c2c',
 };
 
 function drawAuthoredTool(ctx: Ctx, item: 'hatchet' | 'pickaxe', dx: number, dy: number) {
@@ -536,8 +541,9 @@ export function drawActor(ctx: Ctx, input: ActorInput) {
       for (const [fx, lift, tint] of feet) {
         const fy = Math.round(lift);
         limb(ctx, -1, hipY, fx * 0.55, hipY + 5 + Math.round(crouch * 0.4), 3, tint);
-        limb(ctx, fx * 0.55, hipY + 5 + Math.round(crouch * 0.4), fx, fy - 2, 2, tint);
-        px(ctx, fx - 2, fy - 2, 5, 2, BOOT);
+        limb(ctx, fx * 0.55, hipY + 5 + Math.round(crouch * 0.4), fx, fy - 3, 2, tint);
+        px(ctx, fx - 2, fy - 3, 5, 2, '#5d4a31');
+        px(ctx, fx - 2, fy - 1, 5, 2, BOOT);
       }
     } else {
       const feet: [number, number, string][] = [
@@ -546,10 +552,12 @@ export function drawActor(ctx: Ctx, input: ActorInput) {
       ];
       for (const [fx, lift, tint] of feet) {
         const fy = -1 - Math.round(lift);
-        limb(ctx, fx, hipY, fx, fy - 2, 3, tint);
-        px(ctx, fx - 2, fy - 2, 5, 2, BOOT);
+        limb(ctx, fx, hipY, fx, fy - 3, 3, tint);
+        px(ctx, fx - 2, fy - 3, 5, 2, OUTLINE);
+        px(ctx, fx - 2, fy - 3, 5, 2, '#5d4a31');
+        px(ctx, fx - 2, fy - 1, 5, 2, BOOT);
       }
-      seam(ctx, 0, hipY, 1, -hipY - 2);
+      seam(ctx, 0, hipY, 1, -hipY - 3);
     }
 
     // ---- Back layer -----------------------------------------------------
@@ -561,6 +569,13 @@ export function drawActor(ctx: Ctx, input: ActorInput) {
     // ---- Torso and head -------------------------------------------------
     drawTorso(ctx, bodyY, lean, Math.round(rig.bow), side);
     drawHead(ctx, headY, facing, Math.round(-rig.lean), blink);
+    // Fur collar sits above the neck outline, exactly like the reference sheet.
+    px(ctx, -4, -23 + bodyY, 9, 2, SCARF);
+    px(ctx, -4, -21 + bodyY, 9, 1, '#bfae86');
+    if (!side) {
+      px(ctx, -4, -22 + bodyY, 1, 1, '#c9b78d');
+      px(ctx, 4, -22 + bodyY, 1, 1, '#c9b78d');
+    }
 
     // ---- Near arm -------------------------------------------------------
     drawArm(ctx, shoulderX, shoulderY + 1, handX, handY, false);

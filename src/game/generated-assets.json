@@ -245,6 +245,13 @@
       "width": 16,
       "height": 16,
       "source": "generated"
+    },
+    "dustPuff": {
+      "file": "art/effects/dust-puff.png",
+      "width": 20,
+      "height": 15,
+      "source": "generated",
+      "sourceAsset": "art/generated/actor-pass/dust-puff.png"
     }
   },
   "scenes": {

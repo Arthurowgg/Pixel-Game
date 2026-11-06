@@ -1,5 +1,18 @@
 # Art polish · batch progress
 
+## Batch 9 · Trails & Twilight animation pass · v0.10.2 · one shipped image, four calls
+
+**4/10 image-generation calls used.** Three of them are art direction only and ship no pixels: a two-view survivor reference (front/side) and single hatchet/pickaxe sprites. At a 13 px in-hand size the generated tools lose their structure, so the survivor and its tools stay authored pixels; the reference drove the new eyes, hair, collar, belt and boot detail.
+
+| AI-generated image            | Runtime integration                                                                    |
+| ----------------------------- | -------------------------------------------------------------------------------------- |
+| Dust puff                     | 20 × 15, `effects.dustPuff`; wolf landings and hits, scaled and faded — no drawn lines |
+| Survivor front/side reference | Art direction only; not shipped                                                        |
+| Hatchet sprite                | Art direction only; informed the authored `AXE_SPRITE`                                 |
+| Pickaxe sprite                | Art direction only; informed the authored `PICK_SPRITE`                                |
+
+Sources: `.art-originals/actor-pass/` (ignored); normalized input: `public/art/generated/actor-pass/`. Run **`scripts/build_actor_assets.py --normalized-only` last**: it keys the flat magenta sheet, crops, area-downsamples, reduces the palette and rewrites the shared registry.
+
 ## Current agreement
 
 After the whole-sheet-generation limitation was explained, the user approved **separate AI-generated item, texture, and UI images**, up to ten per batch, with **animation-sheet generation on hold**.

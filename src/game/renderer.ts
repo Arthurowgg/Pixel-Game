@@ -579,6 +579,27 @@ export class Renderer {
             },
           );
           ctx.restore();
+          // A generated dust puff marks landings and hits instead of drawn lines.
+          const dust = artImages['effect-dustPuff'];
+          if (dust?.naturalWidth && !this.settings.reducedMotion) {
+            const landing = phase === 'recover' && mind ? s.time - mind.startedAt : Infinity;
+            const struck = s.time - (mind?.hitAt ?? -100);
+            const age = Math.min(landing, struck < 0.3 ? struck : Infinity);
+            if (age < 0.36) {
+              const t = clamp(age / 0.36, 0, 1);
+              ctx.save();
+              ctx.globalAlpha = (1 - t) * 0.85;
+              const size = 12 + t * 12;
+              ctx.drawImage(
+                dust,
+                Math.round(wolf.x - size / 2),
+                Math.round(wolf.y - size * 0.68),
+                size,
+                Math.round(size * 0.75),
+              );
+              ctx.restore();
+            }
+          }
           if (wolf.hp < wolfMaxHealth(wolf)) {
             ctx.fillStyle = '#18231e';
             ctx.fillRect(Math.round(wolf.x - 10), Math.round(wolf.y - 30), 20, 3);
