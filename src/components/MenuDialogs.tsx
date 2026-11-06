@@ -147,7 +147,7 @@ export function GuideDialog({ onClose }: { onClose: () => void }) {
                 'tree',
                 '01',
                 'Start with the small things.',
-                'Walk up to pines, boulders, and plants. Equip your axe or pickaxe yourself, then left-click or use E nearby. Three axe swings fell a pine and reveal a portion of pine nuts; two pickaxe strikes break a boulder.',
+                'Walk up to pines, boulders, and plants. Equip your axe or pickaxe yourself, then left-click or use E nearby. Six axe swings fell a pine and reveal a portion of pine nuts; four pickaxe strikes break a boulder. Berries need a held, uninterrupted moment.',
               ],
               [
                 'fire',
@@ -264,7 +264,7 @@ export function GuideDialog({ onClose }: { onClose: () => void }) {
             [
               'paw',
               'Unwelcome company',
-              'Wolf packs emerge at night. Hold your hatchet and swing with Space—two hits make a wolf retreat. Better yet, stay in the firelight or carry a burning torch.',
+              'Wolf packs emerge at night. Hold your hatchet and swing with Space—two hits make a wolf retreat, three or four drop it. Watch the wolf crouch and the ground shadow tighten, then step off that mark. Better yet, stay in the firelight or carry a burning torch.',
             ],
             [
               'moon',

@@ -5,15 +5,8 @@ export { drawMap } from './cartography';
 import { WOLF_FADE, WOLF_ATTACKS, wolfMaxHealth } from './wolves';
 import { CAMP, POND, WORLD, CAMP_BENCH, RESOURCE_HP, clamp, distance, random } from './data';
 import type { Point, Resource, Settings } from './types';
-import {
-  artImages,
-  CLIPS,
-  drawAnimation,
-  drawCarriedTool,
-  drawItem,
-  playerPose,
-  toolActionClip,
-} from './animation';
+import { artImages, CLIPS, drawAnimation, drawItem, playerPose, toolActionClip } from './animation';
+import { drawActor } from './actor';
 export { loadArt } from './animation';
 import type { Simulation } from './simulation';
 import { addTerrainDetail, ForestAtmosphere, sunlightStrength } from './atmosphere';
@@ -288,9 +281,7 @@ export class Renderer {
       this.prop('seatedBench', CAMP_BENCH);
       return;
     }
-    const hand = pose.clip.hands![pose.frame];
-    const hx = hand[0] - pose.clip.anchor[0],
-      hy = hand[1] - pose.clip.anchor[1];
+    const state = sim.state;
     const actionClip = toolActionClip(pose);
     this.canvas.dataset.spriteSheet = actionClip ? CLIPS[actionClip].sheet : pose.clip.sheet;
     this.canvas.dataset.animation = pose.name;
@@ -298,51 +289,30 @@ export class Renderer {
     this.canvas.dataset.heldItem = sim.state.equipped || 'none';
     this.canvas.dataset.facing = pose.direction;
     this.canvas.dataset.gaitDistance = sim.gaitDistance.toFixed(2);
-    const drawHeld = () => {
-      if (!pose.item || sim.action?.kind === 'feed') return;
-      const item = pose.item;
-      ctx.save();
-      ctx.translate(Math.round(p.x), Math.round(p.y + 3));
-      if (pose.flip) ctx.scale(-1, 1);
-      ctx.translate(hx, hy);
-      ctx.rotate(((hand[2] + (item === 'hatchet' || item === 'pickaxe' ? 15 : 0)) * Math.PI) / 180);
-      if (item === 'torch' && sim.torchLit) {
-        drawAnimation(ctx, 'torch-burn', 0, 0, sim.state.time, {
-          reducedMotion: this.settings.reducedMotion,
-        });
-      } else if (item === 'torch') {
-        ctx.fillStyle = '#503f2c';
-        ctx.fillRect(-1, -8, 3, 13);
-        ctx.fillStyle = '#aa8851';
-        ctx.fillRect(-1, -8, 1, 12);
-        ctx.fillStyle = '#8d7950';
-        ctx.fillRect(-2, -11, 5, 5);
-      } else if (item === 'hatchet' || item === 'pickaxe') {
-        drawCarriedTool(ctx, item);
-      } else {
-        const size = ['wood', 'shelter', 'campfire', 'workbench'].includes(item) ? 18 : 14;
-        drawItem(ctx, item, -Math.floor(size / 2), -Math.floor(size * 0.6), size);
-      }
-      // The grip stays in front of the item, not painted onto the item itself.
-      ctx.fillStyle = '#ead4aa';
-      ctx.fillRect(-1, -1, 3, 2);
-      ctx.restore();
-    };
     this.shadow(p.x, p.y, 10);
     if (sim.hitFlash > 0 && this.settings.damageFlash && !this.settings.reducedMotion) ctx.globalAlpha = 0.72;
-    if (actionClip) {
-      // The entire actor + tool is a sliced frame, never a second rotating overlay.
-      drawAnimation(ctx, actionClip, p.x, p.y + 3, pose.elapsed, { flip: pose.flip, frame: pose.frame });
-    } else {
-      if (pose.facing === 'up') drawHeld();
-      drawAnimation(ctx, pose.bodyName, p.x, p.y + 3, pose.elapsed, { flip: pose.flip, frame: pose.frame });
-      if (pose.facing !== 'up') drawHeld();
-    }
+    const action = sim.action
+      ? {
+          kind: sim.action.kind,
+          item: sim.action.kind === 'feed' ? null : sim.action.item,
+          progress: clamp((state.time - sim.action.startedAt) / Math.max(1e-4, sim.action.duration), 0, 1),
+          direction: sim.action.direction,
+        }
+      : null;
+    drawActor(ctx, {
+      x: p.x,
+      y: p.y + 3,
+      time: state.time,
+      gait: sim.gaitDistance,
+      moving: sim.moving,
+      sprinting: sim.sprinting,
+      direction: pose.direction,
+      equipped: sim.campFocus !== null ? null : state.equipped,
+      torchLit: sim.torchLit,
+      action,
+      reducedMotion: this.settings.reducedMotion,
+    });
     ctx.globalAlpha = 1;
-    ctx.fillStyle = '#e4be88';
-    ctx.fillRect(p.x - 2, p.y - 41, 5, 2);
-    ctx.fillRect(p.x - 1, p.y - 39, 3, 1);
-    ctx.fillRect(p.x, p.y - 38, 1, 1);
   }
   draw(sim: Simulation, _now: number) {
     const ctx = this.ctx,
@@ -357,7 +327,15 @@ export class Renderer {
     ctx.fillStyle = '#253b2c';
     ctx.fillRect(0, 0, w, h);
     ctx.save();
-    ctx.translate(-this.camera.x, -this.camera.y);
+    // A short weapon kick shakes the world, never the HUD or the saved camera.
+    const kick =
+      sim.swing > 0 && !this.settings.reducedMotion
+        ? {
+            x: Math.round(Math.sin(s.time * 140) * 1.5),
+            y: Math.round(Math.cos(s.time * 113) * 1.5),
+          }
+        : { x: 0, y: 0 };
+    ctx.translate(-this.camera.x + kick.x, -this.camera.y + kick.y);
     ctx.drawImage(this.ground, 0, 0);
     this.canvas.dataset.sunlight =
       this.settings.atmosphere && sunlightStrength(sim.hour, sim.weatherMix) > 0 ? 'on' : 'off';
@@ -542,34 +520,45 @@ export class Renderer {
                 ? Math.floor((mind?.gait ?? 0) / 4) % 8
                 : 0;
           this.shadow(wolf.x, wolf.y, running && frame >= 4 && frame <= 6 ? 15 : 19);
+          if (phase === 'lunge' && !this.settings.reducedMotion && mind) {
+            const dx = mind.target.x - wolf.x,
+              dy = mind.target.y - wolf.y,
+              gap = Math.max(1, Math.hypot(dx, dy));
+            // Two fading copies of the real run cell carry the motion instead of a line.
+            for (let i = 2; i >= 1; i--) {
+              ctx.save();
+              ctx.globalAlpha = 0.1 * (3 - i);
+              drawAnimation(ctx, 'wolf-run', wolf.x - (dx / gap) * i * 9, wolf.y - (dy / gap) * i * 9, 0, {
+                flip: mind.flip,
+                frame: Math.max(0, frame - i * 2),
+              });
+              ctx.restore();
+            }
+          }
           if (phase === 'windup') {
-            // Ground brackets and a filling warning are readable with motion off.
+            // Pressure builds on the ground itself: a soft shadow tightens around
+            // the landing spot while a crouched wolf leans into the charge. There
+            // is no sight-line or bracket drawn between attacker and target.
+            const charge = Math.min(1, age / attack.windup);
+            const reachX = pounce && mind ? mind.target.x : wolf.x;
+            const reachY = pounce && mind ? mind.target.y : wolf.y;
+            const rx = (pounce ? 16 : 11) * (1.15 - charge * 0.4);
+            pixelEllipse(ctx, reachX, reachY + 2, rx, rx * 0.42, `#1c1712${charge > 0.6 ? '66' : '44'}`, 2);
+            ctx.save();
+            ctx.globalAlpha = 0.35 + charge * 0.45;
             ctx.strokeStyle = pounce ? '#f2b189' : '#edb677';
             ctx.lineWidth = 1;
-            ctx.strokeRect(Math.round(wolf.x - 17), Math.round(wolf.y - 7), 34, 12);
+            ctx.beginPath();
+            ctx.ellipse(reachX, reachY + 2, rx, rx * 0.42, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+            // A compact charge meter stays legible with motion disabled.
             ctx.fillStyle = '#20281c';
-            ctx.fillRect(Math.round(wolf.x - 11), Math.round(wolf.y - 36), 22, 4);
+            ctx.fillRect(Math.round(wolf.x - 11), Math.round(wolf.y - 36), 22, 3);
             ctx.fillStyle = '#edc58c';
-            ctx.fillRect(
-              Math.round(wolf.x - 10),
-              Math.round(wolf.y - 35),
-              Math.round(20 * Math.min(1, age / attack.windup)),
-              2,
-            );
-            ctx.fillRect(Math.round(wolf.x - 1), Math.round(wolf.y - 47), 2, 7);
-            ctx.fillRect(Math.round(wolf.x - 1), Math.round(wolf.y - 38), 2, 2);
-            if (pounce && mind) {
-              // A static landing mark communicates the stronger, longer attack,
-              // including when reduced motion is enabled. It never tracks a dodge.
-              ctx.strokeRect(Math.round(mind.target.x - 12), Math.round(mind.target.y - 7), 24, 14);
-              for (let i = 1; i < 7; i++)
-                ctx.fillRect(
-                  Math.round(wolf.x + ((mind.target.x - wolf.x) * i) / 7),
-                  Math.round(wolf.y + ((mind.target.y - wolf.y) * i) / 7),
-                  1,
-                  1,
-                );
-            }
+            ctx.fillRect(Math.round(wolf.x - 10), Math.round(wolf.y - 35), Math.round(20 * charge), 1);
+            ctx.fillStyle = pounce ? '#f2b189' : '#edb677';
+            ctx.fillRect(Math.round(wolf.x - 1), Math.round(wolf.y - 42), 2, 3);
           }
           ctx.save();
           if (phase === 'hurt' && age < 0.12 && this.settings.damageFlash && !this.settings.reducedMotion)
@@ -609,12 +598,8 @@ export class Renderer {
     if (sim.action?.kind === 'feed' && sim.feedingFire && !sim.action.impacted) {
       // Move the complete generated log icon from the existing hand position to
       // the fire. No new limbs, poses, or animation-sheet pixels are fabricated.
-      const pose = playerPose(sim, this.settings.reducedMotion);
-      const hand = pose.clip.hands![pose.frame];
-      const fromX = sim.seated
-        ? CAMP_BENCH.x + 4
-        : s.player.x + (hand[0] - pose.clip.anchor[0]) * (pose.flip ? -1 : 1);
-      const fromY = sim.seated ? CAMP_BENCH.y - 14 : s.player.y + hand[1] - pose.clip.anchor[1] + 3;
+      const fromX = sim.seated ? CAMP_BENCH.x + 4 : s.player.x + (s.facing < 0 ? -9 : 9);
+      const fromY = sim.seated ? CAMP_BENCH.y - 14 : s.player.y - 11;
       const raw = clamp((s.time - sim.action.startedAt) / sim.action.impactAt, 0, 1);
       const progress = this.settings.reducedMotion ? 0 : raw * raw * (3 - 2 * raw);
       const x = fromX + (sim.feedingFire.x - fromX) * progress;

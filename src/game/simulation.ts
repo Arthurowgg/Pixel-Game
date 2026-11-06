@@ -1020,7 +1020,6 @@ export class Simulation {
       : { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 }[s.direction];
     return this.beginAction('attack', weapon, () => {
       this.swing = 0.28;
-      this.effect('tool-swipe', s.player, s.facing < 0);
       const targets = s.wolves
         .filter((wolf) => {
           if (wolf.hp <= 0) return false;

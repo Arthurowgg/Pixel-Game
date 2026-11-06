@@ -16,6 +16,14 @@ npm run build     # Strict TypeScript checks + a root-path production build
 npm run preview   # Serve that build
 ```
 
+## Animation & combat pass · v0.10.1
+
+- **One rig, every frame.** The survivor is no longer drawn from stitched AI pose cells. A single hand-authored pixel rig supplies the head, arms, legs, boots and coat for all four facings, so eyes, arm length and leg placement are identical in every state. Walking, running, idling, chopping, mining, foraging, building, eating and swinging are interpolated from continuous simulation time rather than eight fixed cells.
+- **The swing finally holds the tool correctly.** The axe and pickaxe are authored in-hand sprites that turn around one grip point, so the blade always leads the hand. Previously the action sheets baked a floating axe head and a hand-copied arc line into the frame; that is gone, and the tool can no longer rotate into the character.
+- **Readable limbs.** Arms share one 2 px width, every leg is drawn from the same hip and boot geometry, and a single 1 px silhouette outline keeps the character in the same art language as the props. Walking adds a two-step bob, knee lift, counter-swinging arms and a subtle hair tilt; idling breathes and blinks; the berries hold crouches, reaches, and returns upright without a pose pop.
+- **Combat without sight-lines.** The old dotted line, ground brackets and baked swipe arc are removed. A charging wolf now crouches over a tightening ground shadow at its landing spot with a compact charge meter; the lunge leaves two fading copies of the real run cell, and a landed swing kicks the camera and flashes the contact spark. Player swings draw a short trail of the actual weapon instead of a drawn line.
+- **No new AI art.** This pass added zero image-generation calls; it is all authored pixels, and every animation sheet, manifest and prop is byte-identical.
+
 ## Trails & Twilight · v0.10 · art batch 8
 
 - **Nights that actually fall.** A smooth daylight curve (dawn 4.8–7.8, dusk 17.4–21.5) drives a darkness mask capped at 0.96 and thinned by cloud, so dusk arrives gradually instead of switching on. A burning pine torch carves a real 90-unit pool of light, campfires light their own ground, and the weather chip now says plain `Warm`, `Cold`, `Rain`, `Fog`, or `Storm`.
@@ -313,7 +321,7 @@ For a full **static-only** rebuild, run `build_inventory_assets.py --normalized-
 ## Checks
 
 ```sh
-npm test               # 294 unit tests
+npm test               # 298 unit tests
 npm run build          # Strict TypeScript + Vite production build
 npm run build:pages    # Build /Pixel-Game/ and verify asset paths
 npm run test:browser   # 72 browser scenarios; start the dev server first
@@ -331,5 +339,7 @@ The loading/workshop regressions additionally exercise delayed bundles and image
 Ember & Instinct regressions exercise staggered pack attacks, dodging, separation, collision/overlap recovery, manual-tool requirements, forgiving aimed contact, runtime-only defeat feedback, one-log contact/cancellation, non-pausing camp focus, E reopening/dismissal, dangerous/critical camp states, preference migration, actual renderer flags and viewport coordinates, real Web Audio gains, settings keyboard/touch navigation, reset/fullscreen failures, and HUD/input restoration. Actor image hashes are checked separately against the previous release; no animation builder is run.
 
 Roots & Refuge adds real gather→craft→place→interact progression, explicit station identity checks, additive save migration, occupancy/cap-safe placement, dynamic stock/search/sorting, real HTML drag/drop and keyboard/touch pinning, whole seated-state replacement, cardinal approach cancellation, leaf visibility/expiry, stronger wolf health, and locked pounce damage/dodging. Narrow-phone coverage includes **320 × 568**, alongside 390 × 844 and 844 × 390 landscape.
+
+The v0.10.1 animation pass adds checks that every facing and action paints inside one body envelope (no runaway arms), that the outline pass runs before the coloured body, that the weapon leaves a fading trail only during a strike, and that the left-facing swing is the identical rig mirrored by one canvas scale, so the blade can never rotate behind the character.
 
 Trails & Twilight adds deterministic coverage for the daylight curve and darkness cap, torch and campfire light radii, 40-unit cell discovery and charted percentages, chart viewport clamping/zoom/pan and landmark pins, six-chop pine and four-strike stone health, timed berry holds with movement cancellation, trail-aware placement spacing, and pure render smoke checks with a stubbed canvas. Every animation sheet, manifest, and previously generated prop is re-verified against its pre-batch hash.

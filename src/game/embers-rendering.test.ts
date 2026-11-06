@@ -123,7 +123,11 @@ describe('real render preferences, not decorative settings', () => {
     mind.startedAt = sim.state.time - 0.25;
     const draw = vi.spyOn(animation, 'drawAnimation').mockImplementation(() => {});
     renderer.draw(sim, 0);
-    expect(ctx.strokeRect).toHaveBeenCalledWith(523, 493, 34, 12);
+    // Ground pressure and a compact charge meter replace the old bracket and
+    // sight-line telegraph; both remain visible with motion and atmosphere off.
+    expect(ctx.ellipse).toHaveBeenCalled();
+    expect(ctx.fillRect).toHaveBeenCalledWith(529, 464, 22, 3);
+    expect(ctx.fillRect).toHaveBeenCalledWith(530, 465, 9, 1);
     expect(
       draw.mock.calls.some(([, name, , , , options]) => name === 'wolf-alert' && options?.frame === 0),
     ).toBe(true);
@@ -340,7 +344,8 @@ describe('whole static camp states and chopping feedback', () => {
     mind.startedAt = sim.state.time - 0.3;
     const draw = vi.spyOn(animation, 'drawAnimation').mockImplementation(() => {});
     renderer.draw(sim, 0);
-    expect(ctx.strokeRect).toHaveBeenCalledWith(488, 493, 24, 14);
+    expect(ctx.ellipse).toHaveBeenCalled();
+    expect(ctx.fillRect).toHaveBeenCalledWith(580, 465, 8, 1);
     expect(ctx.fillRect).toHaveBeenCalledWith(580, 470, 15, 2);
     expect(
       draw.mock.calls.some(([, name, , , , options]) => name === 'wolf-alert' && options?.frame === 0),

@@ -192,7 +192,7 @@ try {
   await page.waitForTimeout(650);
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-frame', '0');
   passed(
-    'Walking uses identical intact head pixels across the selected cells, and idle/portrait playback no longer paints over the face',
+    'The retained source cells still share identical head pixels, while the runtime survivor now comes from the authored rig',
   );
 
   await quit(page);
