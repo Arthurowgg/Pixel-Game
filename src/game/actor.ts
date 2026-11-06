@@ -87,7 +87,7 @@ const HEAD_FRONT = [
   'HHHHHHHHH',
   'HHhHHHhHH',
   '.HSSSSSH.',
-  '.HSEWSEW.',
+  '.HEWSSEW.',
   '.HSSSSSH.',
   '..HSSSH..',
   '...SSS...',
@@ -363,8 +363,8 @@ function drawHead(ctx: Ctx, cy: number, facing: 'front' | 'side' | 'back', tilt:
     // One-pixel lids replace the open eyes without moving the head.
     if (facing === 'side') px(ctx, 2, y + 5, 2, 1, EYE);
     else {
-      px(ctx, -1, y + 5, 2, 1, EYE);
-      px(ctx, 2, y + 5, 2, 1, EYE);
+      px(ctx, -2, y + 5, 2, 1, EYE);
+      px(ctx, 1, y + 5, 2, 1, EYE);
     }
   }
   if (facing === 'side') {
@@ -374,7 +374,8 @@ function drawHead(ctx: Ctx, cy: number, facing: 'front' | 'side' | 'back', tilt:
     px(ctx, 0, y + 4, 1, 2, SKIN_SHADE);
   } else if (facing === 'front') {
     px(ctx, 0, y + 6, 1, 1, SKIN_SHADE);
-    px(ctx, 0, y + 7, 2, 1, '#8c5233');
+    px(ctx, -1, y + 7, 2, 1, '#8c5233');
+    px(ctx, -4, y + 8, 9, 1, SKIN_SHADE);
   }
 }
 
@@ -417,6 +418,7 @@ function drawTorso(ctx: Ctx, bodyY: number, lean: number, bow: number, side: boo
     px(ctx, -4 + x, -22 + y, 1, 7, COAT_SHADE);
     px(ctx, -4 + x, -14 + y, 9, 2, BELT);
     px(ctx, -1 + x, -14 + y, 2, 1, BUCKLE);
+    px(ctx, -4 + x, -18 + y, 9, 1, COAT_SHADE);
     px(ctx, -3 + x, -23 + y, 6, 1, SCARF);
   }
 }
