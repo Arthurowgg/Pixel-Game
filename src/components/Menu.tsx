@@ -278,7 +278,7 @@ export function MainMenu({
       <footer className="main-footer">
         <span className="version">
           <span />
-          v0.12.0 <i> / </i> GENERATED STEPS
+          v0.13.0 <i> / </i> ENDLESS TRAILS
         </span>
         <span className="footer-motto">A LITTLE COURAGE GOES A LONG WAY.</span>
         <button onClick={onGuide} className="footer-guide">

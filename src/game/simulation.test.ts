@@ -190,13 +190,14 @@ describe('survival systems', () => {
     advance(sim, 10);
     expect(sim.state).toEqual(before);
   });
-  it('moves the survivor and prevents movement into water', () => {
+  it('moves the survivor, blocks water, and has no wall at the edge of the map', () => {
     const sim = createSim();
     sim.keys.add('a');
     advance(sim, 0.2);
     expect(sim.state.player.x).toBeLessThan(900);
     expect(sim.collision({ x: 1220, y: 660 })).toBe(true);
-    expect(sim.collision({ x: -1, y: 100 })).toBe(true);
+    // The forest is endless: stepping off the authored valley is allowed.
+    expect(sim.collision({ x: -1, y: 100 })).toBe(false);
   });
   it('sprinting spends stamina and resting replenishes it', () => {
     const sim = createSim();

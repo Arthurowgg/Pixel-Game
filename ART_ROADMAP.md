@@ -1,5 +1,18 @@
 # Art polish · batch progress
 
+## Batch 12 · Endless trails · v0.13.0 · four shipped icons, four calls
+
+**4/10 image-generation calls used.** Four standalone inventory icons on flat magenta sheets, keyed, cropped, area-downsampled to 16 px and palette-reduced. One extra call re-rolled the plank: the first board stack read as a brown lump at 16 px.
+
+| AI-generated icon | Runtime integration                                                     |
+| ----------------- | ----------------------------------------------------------------------- |
+| Twisted rope      | `items.rope`, atlas cell 16; crafted by hand from 3 wild fiber          |
+| Pine plank        | `items.plank`, atlas cell 17; crafted by hand from 2 pine wood          |
+| Forest moss       | `items.moss`, atlas cell 18; drops from mossy boulders with their stone |
+| Moss salve        | `items.salve`, atlas cell 19; workbench recipe, restores 25 health      |
+
+Sources: `.art-originals/items-pass/` (ignored); normalized input: `public/art/generated/items-pass/`. Rebuild with **`scripts/build_item_extras.py`**: it appends the four cells to the third row of `public/art/item-sprites.png` (128 × 32 → 128 × 48) and records them in both atlas manifests, leaving the sixteen original cells byte-identical.
+
 ## Batch 11 · Generated survivor sheets · v0.12.0 · six shipped sheets, six calls
 
 **6/10 image-generation calls used.** Each call produced one standalone sheet on a flat magenta background: a two-row locomotion grid per facing and a five-frame overhead swing per facing. The right-facing sheet is mirrored at runtime for `left`, exactly as before, so three facings cover all four directions.

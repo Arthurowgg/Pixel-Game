@@ -14,7 +14,11 @@ export type ItemId =
   | 'shelter'
   | 'nuts'
   | 'tea'
-  | 'workbench';
+  | 'workbench'
+  | 'rope'
+  | 'plank'
+  | 'moss'
+  | 'salve';
 export type Direction = 'down' | 'right' | 'up' | 'left';
 export type ActionKind =
   'chop' | 'mine' | 'forage' | 'eat' | 'drink' | 'bandage' | 'build' | 'light' | 'feed' | 'refill' | 'attack';

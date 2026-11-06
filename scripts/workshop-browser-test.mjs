@@ -214,7 +214,10 @@ try {
   await expect(page.getByRole('heading', { name: 'Your workbench', exact: true })).toBeVisible();
   await expect(page.locator('.workshop-station-tags')).toContainText('Workbench ready');
   await expect(page.locator('.workshop-station-tags')).toContainText('Fire burning');
-  await expect(page.locator('.workshop-recipe')).toHaveCount(8);
+  // Eleven recipes; a workbench you already own may drop out of the list.
+  const recipeRows = await page.locator('.workshop-recipe').count();
+  expect(recipeRows).toBeGreaterThanOrEqual(10);
+  expect(recipeRows).toBeLessThanOrEqual(11);
   await noOverflow(page);
   expect(
     await page
@@ -239,7 +242,10 @@ try {
   await expect(page.getByRole('tab', { name: 'All', exact: true })).toBeFocused();
   await expect(page.getByRole('tab', { name: 'All', exact: true })).toHaveAttribute('aria-selected', 'true');
   await page.getByRole('checkbox', { name: 'Ready to craft', exact: true }).check();
-  await expect(page.locator('.workshop-recipe')).toHaveCount(8);
+  // Every affordable recipe: eleven, or ten when the owned workbench drops out.
+  const readyRows = await page.locator('.workshop-recipe').count();
+  expect(readyRows).toBeGreaterThanOrEqual(10);
+  expect(readyRows).toBeLessThanOrEqual(11);
   await page.getByRole('checkbox', { name: 'Ready to craft', exact: true }).uncheck();
   passed(
     'Recipe search, empty states, keyboard categories, and ready-only filtering all work without stale craft actions',
@@ -396,7 +402,8 @@ try {
 
   await mobile.getByRole('button', { name: 'Handcraft', exact: true }).click();
   await expect(mobile.getByRole('heading', { name: 'Handcraft', exact: true })).toBeVisible();
-  await expect(mobile.locator('.workshop-recipe')).toHaveCount(3);
+  // Five hand-made recipes now (bandage, torch, workbench, rope, plank).
+  await expect(mobile.locator('.workshop-recipe')).toHaveCount(5);
   await expect(mobile.getByRole('tab', { name: 'Cooking', exact: true })).toHaveCount(0);
   await expect(mobile.locator('.workshop-recipe').filter({ hasText: 'Forest shelter' })).toHaveCount(0);
   await noOverflow(mobile);

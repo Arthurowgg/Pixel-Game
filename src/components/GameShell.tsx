@@ -123,12 +123,18 @@ export function GameShell({
     }
   }, [overlay, ready, sim, input]);
   useEffect(() => {
-    if (view.status !== 'playing' && lastRecorded.current !== view.status) {
-      recordRun(sim.state);
-      clearGame();
-      lastRecorded.current = view.status;
-      open('end');
+    // The simulation, not the rendered view, decides when a run ends: a stale view
+    // frame after "Keep wandering" must never record the run and wipe the save.
+    const status = sim.state.status;
+    if (status === 'playing') {
+      lastRecorded.current = 'playing';
+      return;
     }
+    if (lastRecorded.current === status) return;
+    recordRun(sim.state);
+    clearGame();
+    lastRecorded.current = status;
+    open('end');
   }, [view.status, sim, open]);
   useEffect(() => {
     const canvas = canvasRef.current;

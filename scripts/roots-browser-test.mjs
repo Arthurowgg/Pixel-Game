@@ -104,7 +104,7 @@ try {
   await screenshot(page, 'roots-spawn');
   await page.keyboard.press('c');
   await expect(page.getByRole('heading', { name: 'Handcraft', exact: true })).toBeVisible();
-  await expect(page.locator('.workshop-recipe')).toHaveCount(3);
+  await expect(page.locator('.workshop-recipe')).toHaveCount(5);
   await expect(page.locator('.workshop-recipe').filter({ hasText: 'Forest shelter' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Craft workbench +1', exact: true })).toBeDisabled();
   await screenshot(page, 'roots-handcraft-desktop');
@@ -155,11 +155,11 @@ try {
   await move(page, 0, 15);
   await expect(page.locator('.interaction-prompt')).toContainText('Use workbench');
   await page.keyboard.press('c');
-  await expect(page.locator('.workshop-recipe')).toHaveCount(3);
+  await expect(page.locator('.workshop-recipe')).toHaveCount(5);
   await page.keyboard.press('Escape');
   await page.keyboard.press('e');
   await expect(page.getByRole('heading', { name: 'Your workbench', exact: true })).toBeVisible();
-  await expect(page.locator('.workshop-recipe')).toHaveCount(8);
+  await expect(page.locator('.workshop-recipe')).toHaveCount(11);
   await screenshot(page, 'roots-earned-workbench');
   await menu(page);
   await page.reload({ waitUntil: 'networkidle' });
@@ -175,7 +175,7 @@ try {
   for (const image of await page.locator('.satchel-slot-picture .item-icon').all())
     await expect(image).toBeVisible();
   await page.getByRole('checkbox', { name: 'Show missing items', exact: true }).check();
-  await expect(page.locator('.satchel-slot')).toHaveCount(16);
+  await expect(page.locator('.satchel-slot')).toHaveCount(20);
   await page.getByRole('button', { name: 'Workbench, 0 in backpack', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Hold workbench', exact: true })).toBeDisabled();
   await page.getByRole('checkbox', { name: 'Show missing items', exact: true }).uncheck();

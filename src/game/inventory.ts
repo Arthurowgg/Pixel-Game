@@ -3,7 +3,7 @@ import type { ItemId } from './types';
 
 export type InventoryCategory = 'all' | 'resources' | 'supplies' | 'tools' | 'camp';
 export type InventorySort = 'category' | 'name' | 'quantity';
-const GROUPS = ['TOOL', 'RESOURCE', 'FOOD', 'SUPPLY', 'MEDICINE', 'SURVIVAL', 'CAMP'];
+const GROUPS = ['TOOL', 'RESOURCE', 'MATERIAL', 'FOOD', 'SUPPLY', 'MEDICINE', 'SURVIVAL', 'CAMP'];
 export function inventoryItems(
   inventory: Record<ItemId, number>,
   options: { category: InventoryCategory; sort: InventorySort; query: string; showMissing: boolean },
@@ -11,7 +11,7 @@ export function inventoryItems(
   const query = options.query.trim().toLowerCase();
   const groups = {
     all: GROUPS,
-    resources: ['RESOURCE'],
+    resources: ['RESOURCE', 'MATERIAL'],
     supplies: ['FOOD', 'SUPPLY', 'MEDICINE', 'SURVIVAL'],
     tools: ['TOOL'],
     camp: ['CAMP'],

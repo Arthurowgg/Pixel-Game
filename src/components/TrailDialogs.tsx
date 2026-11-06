@@ -88,6 +88,10 @@ const WHERE: Record<ItemId, string> = {
   campfire: 'Make the kit at your workbench, then place it in an open clearing.',
   workbench: 'Build by hand, place on clear ground, then interact for advanced recipes.',
   shelter: 'Craft the kit at your placed workbench, then build it in an open clearing.',
+  rope: 'Craft by hand from 3 wild fiber. Keep a coil for the work ahead.',
+  plank: 'Craft by hand from 2 pine wood. A board you can build with.',
+  moss: 'Mine a mossy boulder: it gives stone and a handful of moss.',
+  salve: 'Craft at a workbench from 2 moss and 2 fiber. Restores 25 health.',
 };
 
 export function FieldcraftDialog({ onClose }: { onClose: () => void }) {

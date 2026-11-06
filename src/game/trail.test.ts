@@ -65,7 +65,8 @@ describe('four-way movement without invented artwork', () => {
   });
   it('stops gait, footsteps, and distance against a wall instead of running in place', () => {
     const sim = fresh();
-    sim.state.player.x = 16;
+    sim.state.player = { x: 16, y: 500 };
+    sim.state.resources = [{ id: 0, kind: 'tree', x: 6, y: 500, hp: 6, readyAt: 0, scale: 1, variant: 0 }];
     sim.keys.add('a');
     sim.keys.add('shift');
     sim.state.needs.stamina = 30;

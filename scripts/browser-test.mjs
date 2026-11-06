@@ -58,7 +58,7 @@ try {
   await page.getByRole('textbox', { name: 'Find an item', exact: true }).fill('not-a-forest-item');
   await expect(page.getByRole('status')).toContainText('No supplies match');
   await page.getByRole('tab', { name: 'Camp recipes', exact: true }).click();
-  await expect(page.locator('.fieldcraft-recipes > article')).toHaveCount(8);
+  await expect(page.locator('.fieldcraft-recipes > article')).toHaveCount(11);
   await expect(page.getByText('10 pine wood', { exact: true })).toBeVisible();
   await screenshot(page, 'fieldcraft-recipes');
   await page.keyboard.press('ArrowLeft');
@@ -68,7 +68,7 @@ try {
   );
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Fieldcraft', exact: true })).toBeFocused();
-  passed('The new fieldcraft menu filters supplies, explains item use, and shows all eight exact recipes');
+  passed('The new fieldcraft menu filters supplies, explains item use, and shows all eleven exact recipes');
 
   await page.getByRole('button', { name: 'Survival guide', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeVisible();

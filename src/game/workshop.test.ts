@@ -175,7 +175,7 @@ describe('stable faces, connected strides, and cardinal control', () => {
   });
   it('stays still at a boundary until the blocked direction is released', () => {
     const sim = fresh();
-    sim.state.resources = [];
+    sim.state.resources = [{ id: 0, kind: 'tree', x: 6, y: 500, hp: 6, readyAt: 0, scale: 1, variant: 0 }];
     sim.state.player = { x: 16, y: 500 };
     sim.keys.add('w');
     sim.keys.add('a');

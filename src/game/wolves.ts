@@ -1,4 +1,4 @@
-import { CAMP, clamp, distance, WORLD } from './data';
+import { CAMP, distance } from './data';
 import type { Difficulty, GameState, Point, Wolf } from './types';
 
 export type WolfPhase = 'wander' | 'stalk' | 'circle' | 'windup' | 'lunge' | 'recover' | 'retreat' | 'hurt';
@@ -83,8 +83,8 @@ export class WolfPack {
         lastSeenAt: -100,
         lastSeen: { x: wolf.x, y: wolf.y },
         roamTarget: {
-          x: clamp(wolf.x + Math.cos(heading) * 190, 32, WORLD.width - 32),
-          y: clamp(wolf.y + Math.sin(heading) * 190, 40, WORLD.height - 32),
+          x: wolf.x + Math.cos(heading) * 190,
+          y: wolf.y + Math.sin(heading) * 190,
         },
         roamUntil: time + 8 + (wolf.id % 4),
         gait: 0,
@@ -234,8 +234,8 @@ export class WolfPack {
     if (distance(wolf, mind.roamTarget) < 12 || now >= mind.roamUntil) {
       const heading = mind.heading + Math.sin(wolf.id * 1.7 + Math.floor(now / 8)) * 1.1;
       mind.roamTarget = {
-        x: clamp(wolf.x + Math.cos(heading) * 210, 32, WORLD.width - 32),
-        y: clamp(wolf.y + Math.sin(heading) * 210, 40, WORLD.height - 32),
+        x: wolf.x + Math.cos(heading) * 210,
+        y: wolf.y + Math.sin(heading) * 210,
       };
       mind.roamUntil = now + 8 + (wolf.id % 4);
     }

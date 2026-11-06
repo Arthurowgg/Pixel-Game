@@ -41,13 +41,13 @@ describe('handcraft first, a workshop earned', () => {
     expect(blocksCampBench({ x: CAMP_BENCH.x, y: CAMP_BENCH.y - 10 })).toBe(true);
     expect(blocksCampBench(CAMP_BENCH)).toBe(false);
   });
-  it('has exactly three hand-made essentials and gates the other five recipes', () => {
+  it('keeps a small set of hand-made essentials and gates the rest behind the workbench', () => {
     expect(
       handRecipes(RECIPES)
         .map((recipe) => recipe.id)
         .sort(),
-    ).toEqual(['bandage', 'torch', 'workbench']);
-    expect(RECIPES.filter((recipe) => recipe.needsWorkbench)).toHaveLength(5);
+    ).toEqual(['bandage', 'plank', 'rope', 'torch', 'workbench']);
+    expect(RECIPES.filter((recipe) => recipe.needsWorkbench)).toHaveLength(6);
   });
   it('makes the workbench from wood and fiber alone, without needing a station first', () => {
     const sim = fresh();
@@ -432,7 +432,7 @@ describe('a dynamic satchel and registered static art', () => {
     const inventory = createGame('Ash', 'survivor', 42).inventory;
     const base = { category: 'all' as const, sort: 'category' as const, query: '', showMissing: false };
     expect(inventoryItems(inventory, base)).toHaveLength(5);
-    expect(inventoryItems(inventory, { ...base, showMissing: true })).toHaveLength(16);
+    expect(inventoryItems(inventory, { ...base, showMissing: true })).toHaveLength(20);
     expect(inventoryItems(inventory, { ...base, category: 'camp' })).toEqual([]);
     inventory.workbench = 1;
     expect(inventoryItems(inventory, { ...base, category: 'camp' })).toEqual(['workbench']);

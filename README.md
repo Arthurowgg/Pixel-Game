@@ -25,6 +25,13 @@ The repository root is the Vite dev entry, so a Pages site set to **deploy from 
 
 Re-run `npm run publish:pages` and commit the result whenever the bundle changes.
 
+## Endless trails · v0.13.0
+
+- **The forest no longer ends.** The authored valley — camp, trails, pond, waystones — is the home region; everything past it is generated in 512 px chunks from the save seed. A 5 × 5 window of chunks stays resident around the survivor and the rest is dropped, so walking costs the same at 200 units or 20 000.
+- **No invisible walls.** Collision, placement and wolf spawns no longer clamp to the old map rectangle; only water, trunks, boulders and your own buildings block. The camera is free, and the ground outside the valley is the same generated floor texture tiled under the baked home ground.
+- **Generated ground dressing.** Each chunk scatters its own trees, fiber, stone, berries, mushrooms and mossy boulders, plus fern, clover, mushroom and wildflower undergrowth, all deterministic per seed and cached per chunk.
+- **Four new supplies** with generated icons: **twisted rope** (3 fiber), **pine plank** (2 wood), **forest moss** (dropped by mossy boulders alongside their stone) and **moss salve** (2 moss + 2 fiber at a workbench, restores 25 health). The item atlas grew from 16 to 20 cells; the old cells keep their exact pixels.
+
 ## Generated steps · v0.12.0
 
 - **The survivor is a generated sprite again, not a rig.** Three AI-generated sheets (`survivor2-down/right/up`) carry 27 clips: two idle frames, six walk/run frames and a five-frame overhead swing per facing. The procedural rig is gone from the codebase, and the held tool is drawn at the grip arc each swing frame declares.

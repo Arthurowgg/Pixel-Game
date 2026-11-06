@@ -1,3 +1,4 @@
+import { LOAD_RADIUS, chunkKey, chunkOf, chunkResources, isHomeChunk } from './chunks';
 import { WeatherTransition, daylightAt, weatherAt } from './climate';
 import { EXPLORE_RADIUS, exploredPercent, initialExploration, revealAround } from './exploration';
 import {
@@ -188,6 +189,10 @@ export function createGame(
       nuts: 0,
       tea: 0,
       workbench: 0,
+      rope: 0,
+      plank: 0,
+      moss: 0,
+      salve: 0,
     },
     resources: createWorld(seed),
     fires: [{ ...CAMP, id: 0, fuel: 80 }],
@@ -231,6 +236,8 @@ export class Simulation {
   sprinting = false;
   action: PlayerAction | null = null;
   resourceAnimations = new Map<number, ResourceAnimation>();
+  /** Chunk keys currently resident in `state.resources` (the endless forest). */
+  private loadedChunks = new Set<string>();
   effects: WorldEffect[] = [];
   private pendingImpact: (() => void) | null = null;
   wolfPack = new WolfPack();
@@ -271,6 +278,38 @@ export class Simulation {
   private exploredCells: Set<number>;
   private lastExplored: Point;
   private lastExploreAt = -1;
+  /** Endless forest streaming: keep a 5x5 window of generated chunks resident and
+   * drop the rest, so walking costs the same however far the survivor goes. The
+   * authored home valley is never generated, never pruned and always save-backed. */
+  private streamWorld() {
+    // A loaded save already contains chunks from earlier walks: adopt them so they
+    // are never regenerated (which would duplicate props) and can be pruned normally.
+    if (this.loadedChunks.size === 0)
+      for (const resource of this.state.resources) {
+        const chunk = chunkOf(resource);
+        if (!isHomeChunk(chunk.cx, chunk.cy)) this.loadedChunks.add(chunkKey(chunk.cx, chunk.cy));
+      }
+    const { cx, cy } = chunkOf(this.state.player);
+    for (let dy = -LOAD_RADIUS; dy <= LOAD_RADIUS; dy++)
+      for (let dx = -LOAD_RADIUS; dx <= LOAD_RADIUS; dx++) {
+        const key = chunkKey(cx + dx, cy + dy);
+        if (this.loadedChunks.has(key) || isHomeChunk(cx + dx, cy + dy)) continue;
+        this.loadedChunks.add(key);
+        const generated = chunkResources(this.state.seed, cx + dx, cy + dy);
+        if (generated.length) this.state.resources.push(...generated);
+      }
+    const stale = [...this.loadedChunks].filter((key) => {
+      const [chunkX, chunkY] = key.split(',').map(Number);
+      return Math.abs(chunkX - cx) > LOAD_RADIUS + 1 || Math.abs(chunkY - cy) > LOAD_RADIUS + 1;
+    });
+    if (!stale.length) return;
+    const dropped = new Set(stale);
+    this.state.resources = this.state.resources.filter((resource) => {
+      const chunk = chunkOf(resource);
+      return !dropped.has(chunkKey(chunk.cx, chunk.cy));
+    });
+    for (const key of stale) this.loadedChunks.delete(key);
+  }
   constructor(state: GameState) {
     this.state = state;
     this.weatherTransition = WeatherTransition.fromClock(state.weather, state.time);
@@ -761,6 +800,11 @@ export class Simulation {
       const [item, amount] = RESOURCE_REWARD[resource.kind];
       s.inventory[item] += amount;
       s.gathered[item] = (s.gathered[item] || 0) + amount;
+      // Mossy boulders carry a handful of moss along with their stone.
+      if (resource.kind === 'stone' && resource.variant > 0.9) {
+        s.inventory.moss += 1;
+        s.gathered.moss = (s.gathered.moss || 0) + 1;
+      }
       resource.readyAt = s.time + (resource.kind === 'tree' ? 240 : 140);
       this.floating.push({
         x: resource.x,
@@ -848,10 +892,6 @@ export class Simulation {
       !Number.isFinite(p.x) ||
       !Number.isFinite(p.y) ||
       inWater(p, 16) ||
-      p.x < 32 ||
-      p.x > WORLD.width - 32 ||
-      p.y < 45 ||
-      p.y > WORLD.height - 32 ||
       blocksWorkbench(p, s.workbenches, 22) ||
       blocksCampBench(p, 22) ||
       s.resources.some(
@@ -935,8 +975,8 @@ export class Simulation {
     }
     if (item === 'campfire' || item === 'shelter' || item === 'workbench') {
       placement = {
-        x: clamp(s.player.x + (s.facing < 0 ? -35 : 35), 30, WORLD.width - 30),
-        y: clamp(s.player.y + 18, 40, WORLD.height - 30),
+        x: s.player.x + (s.facing < 0 ? -35 : 35),
+        y: s.player.y + 18,
       };
       if (item === 'workbench') placement = aim ? { ...aim } : this.defaultPlacement();
       if (
@@ -953,7 +993,7 @@ export class Simulation {
       ? 'build'
       : item === 'water' || item === 'tea'
         ? 'drink'
-        : item === 'bandage'
+        : item === 'bandage' || item === 'salve'
           ? 'bandage'
           : item === 'torch'
             ? 'light'
@@ -1003,6 +1043,10 @@ export class Simulation {
         n.health = clamp(n.health + 35);
         this.effect('recovery', s.player);
       }
+      if (item === 'salve') {
+        n.health = clamp(n.health + 25);
+        this.effect('recovery', s.player);
+      }
       if (item === 'meal') {
         n.hunger = clamp(n.hunger + 55);
         n.thirst = clamp(n.thirst + 10);
@@ -1018,6 +1062,7 @@ export class Simulation {
         nuts: 'A pocketful of pine nuts. +14 hunger.',
         tea: 'Warm from the inside. +25 thirst. +24 warmth.',
         bandage: 'Patched up. +35 health.',
+        salve: 'Salve worked in. +25 health.',
         meal: 'A warm meal. +55 hunger. +8 health.',
         torch: 'A light in your hands. Your torch burns for 35 seconds. Carry a spare.',
         campfire: 'Your campfire is ready. Keep it fed with wood.',
@@ -1089,10 +1134,8 @@ export class Simulation {
   }
   collision(p: Point) {
     if (
-      p.x < 16 ||
-      p.y < 30 ||
-      p.x > WORLD.width - 16 ||
-      p.y > WORLD.height - 16 ||
+      !Number.isFinite(p.x) ||
+      !Number.isFinite(p.y) ||
       inWater(p, 5) ||
       blocksWorkbench(p, this.state.workbenches) ||
       blocksCampBench(p)
@@ -1110,6 +1153,7 @@ export class Simulation {
     const s = this.state,
       n = s.needs;
     const previousTime = s.time;
+    this.streamWorld();
     const movement = movementVector(this.keys);
     if (this.action?.kind === 'feed' && (movement.x || movement.y || this.target || this.campUnsafe))
       this.leaveCamp();
@@ -1239,16 +1283,8 @@ export class Simulation {
         for (let i = 0; i < count; i++) {
           const angle = this.rng() * Math.PI * 2;
           const spawn = Array.from({ length: 16 }, (_, attempt) => ({
-            x: clamp(
-              s.player.x + Math.cos(angle + attempt * 2.399) * (205 + (attempt % 3) * 18),
-              30,
-              WORLD.width - 30,
-            ),
-            y: clamp(
-              s.player.y + Math.sin(angle + attempt * 2.399) * (205 + (attempt % 3) * 18),
-              30,
-              WORLD.height - 30,
-            ),
+            x: s.player.x + Math.cos(angle + attempt * 2.399) * (205 + (attempt % 3) * 18),
+            y: s.player.y + Math.sin(angle + attempt * 2.399) * (205 + (attempt % 3) * 18),
           })).find(
             (point) =>
               !this.collision(point) &&

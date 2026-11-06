@@ -11,6 +11,7 @@ import type { Simulation } from './simulation';
 import { addTerrainDetail, ForestAtmosphere, sunlightStrength } from './atmosphere';
 import generatedAssets from './generated-assets.json';
 import { forestDecor, type DecorProp } from './decor';
+import { chunkDecor, chunkOf } from './chunks';
 import { ForestFeedback } from './feedback';
 
 const pixelEllipse = (
@@ -32,6 +33,8 @@ export class Renderer {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   ground: HTMLCanvasElement;
+  private floorPattern: CanvasPattern | null = null;
+  private decorCache = new Map<string, DecorProp[]>();
   camera = { x: 0, y: 0 };
   width = 0;
   height = 0;
@@ -357,8 +360,9 @@ export class Renderer {
     const w = this.width,
       h = this.height;
     if (!w || !h) return;
-    this.camera.x = Math.floor(clamp(s.player.x - w / 2, 0, Math.max(0, WORLD.width - w)));
-    this.camera.y = Math.floor(clamp(s.player.y - h / 2 + 12, 0, Math.max(0, WORLD.height - h)));
+    // The forest is endless, so the camera is free: no map edge to clamp against.
+    this.camera.x = Math.floor(s.player.x - w / 2);
+    this.camera.y = Math.floor(s.player.y - h / 2 + 12);
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#253b2c';
     ctx.fillRect(0, 0, w, h);
@@ -372,7 +376,25 @@ export class Renderer {
           }
         : { x: 0, y: 0 };
     ctx.translate(-this.camera.x + kick.x, -this.camera.y + kick.y);
-    ctx.drawImage(this.ground, 0, 0);
+    const texture = artImages['texture-forestFloor'];
+    if (!this.floorPattern && texture?.naturalWidth) this.floorPattern = ctx.createPattern(texture, 'repeat');
+    ctx.fillStyle = '#43553a';
+    ctx.fillRect(Math.floor(this.camera.x) - 4, Math.floor(this.camera.y) - 4, w + 12, h + 12);
+    if (this.floorPattern) {
+      ctx.save();
+      ctx.globalAlpha = 0.28;
+      ctx.fillStyle = this.floorPattern;
+      ctx.fillRect(Math.floor(this.camera.x) - 4, Math.floor(this.camera.y) - 4, w + 12, h + 12);
+      ctx.restore();
+    }
+    // The authored home valley (camp, trails, pond) is painted once and drawn on top.
+    if (
+      this.camera.x < WORLD.width &&
+      this.camera.y < WORLD.height &&
+      this.camera.x + w > 0 &&
+      this.camera.y + h > 0
+    )
+      ctx.drawImage(this.ground, 0, 0);
     this.canvas.dataset.sunlight =
       this.settings.atmosphere && sunlightStrength(sim.hour, sim.weatherMix) > 0 ? 'on' : 'off';
     this.canvas.dataset.atmosphere = String(this.settings.atmosphere);
@@ -466,6 +488,27 @@ export class Renderer {
         )
           draws.push({ y: prop.y, draw: () => this.decor(prop, s.time) });
     }
+    // Endless forest: undergrowth streams in with the chunks around the camera.
+    const cameraChunk = chunkOf({ x: this.camera.x + w / 2, y: this.camera.y + h / 2 });
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const cx = cameraChunk.cx + dx,
+          cy = cameraChunk.cy + dy,
+          key = `${s.seed}:${cx},${cy}`;
+        let props = this.decorCache.get(key);
+        if (!props) {
+          props = chunkDecor(s.seed, cx, cy);
+          this.decorCache.set(key, props);
+        }
+        for (const prop of props)
+          if (
+            prop.x > this.camera.x - 40 &&
+            prop.x < this.camera.x + w + 40 &&
+            prop.y > this.camera.y - 20 &&
+            prop.y < this.camera.y + h + 40
+          )
+            draws.push({ y: prop.y, draw: () => this.decor(prop, s.time) });
+      }
     for (const bench of s.workbenches)
       draws.push({
         y: bench.y,

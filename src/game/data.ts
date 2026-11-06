@@ -112,6 +112,27 @@ export const ITEMS: Record<ItemId, { name: string; description: string; action?:
       action: 'Build shelter',
       category: 'CAMP',
     },
+    rope: {
+      name: 'Twisted rope',
+      description: 'Three strands of wild fiber worked tight. Binding for anything you build.',
+      category: 'MATERIAL',
+    },
+    plank: {
+      name: 'Pine plank',
+      description: 'A board split from clean pine. Half the work of a proper shelter, already done.',
+      category: 'MATERIAL',
+    },
+    moss: {
+      name: 'Forest moss',
+      description: 'Scraped from the mossy boulders. Cool on the skin, and the base of a good salve.',
+      category: 'RESOURCE',
+    },
+    salve: {
+      name: 'Moss salve',
+      description: 'Moss and fiber worked into a pot of green balm. Restores 25 health.',
+      action: 'Apply salve',
+      category: 'MEDICINE',
+    },
   };
 export const RECIPES: Recipe[] = [
   {
@@ -167,6 +188,28 @@ export const RECIPES: Recipe[] = [
     cost: { berries: 3, mushroom: 1 },
     category: 'survival',
     needsFire: true,
+  },
+  {
+    id: 'rope',
+    name: 'Twisted rope',
+    description: 'Three fibers, one strand. Useful binding for the work ahead.',
+    cost: { fiber: 3 },
+    category: 'survival',
+  },
+  {
+    id: 'plank',
+    name: 'Pine plank',
+    description: 'Split a log into a flat board you can build with.',
+    cost: { wood: 2 },
+    category: 'survival',
+  },
+  {
+    id: 'salve',
+    needsWorkbench: true,
+    name: 'Moss salve',
+    description: 'Boulder moss and crushed fiber. Cools a wound and closes it.',
+    cost: { moss: 2, fiber: 2 },
+    category: 'survival',
   },
   {
     id: 'tea',

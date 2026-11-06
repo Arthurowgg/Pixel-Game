@@ -10,7 +10,6 @@ import {
   RECORDS_KEY,
   SAVE_KEY,
   SETTINGS_KEY,
-  WORLD,
 } from './data';
 import type { Direction, GameState, RunRecord, Settings, ResourceKind, Point } from './types';
 
@@ -26,8 +25,9 @@ const object = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 const finite = (v: unknown, min = 0, max = 1e9): v is number =>
   typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
-const point = (v: unknown): boolean =>
-  object(v) && finite(v.x, 0, WORLD.width) && finite(v.y, 0, WORLD.height);
+/** The forest is endless, so positions are only bounded by float sanity, not by the
+ * authored home valley. The home props still live inside WORLD. */
+const point = (v: unknown): boolean => object(v) && finite(v.x, -1e6, 1e6) && finite(v.y, -1e6, 1e6);
 export function isGameState(value: unknown): value is GameState {
   if (
     !object(value) ||
@@ -173,7 +173,16 @@ export function migrateGame(value: unknown): GameState | null {
   if (!object(value) || !object(value.inventory)) return null;
   // Existing v2 saves predate the forager items. Only absent new fields default;
   // explicit invalid values and missing original items must still be rejected.
-  const inventory = { nuts: 0, tea: 0, workbench: 0, ...value.inventory };
+  const inventory = {
+    nuts: 0,
+    tea: 0,
+    workbench: 0,
+    rope: 0,
+    plank: 0,
+    moss: 0,
+    salve: 0,
+    ...value.inventory,
+  };
   // An absent old permanent station is not gifted back: new progression starts
   // with handcraft. Explicitly invalid station data is never replaced.
   const workbenches = Object.hasOwn(value, 'workbenches') ? value.workbenches : [];

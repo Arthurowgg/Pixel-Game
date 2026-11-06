@@ -1,7 +1,7 @@
 {
   "sheet": "art/item-sprites.png",
   "width": 128,
-  "height": 32,
+  "height": 48,
   "items": {
     "hatchet": {
       "x": 0,
@@ -128,6 +128,38 @@
       "h": 16,
       "source": "generated",
       "sourceAsset": "art/ui/workbench-icon.png"
+    },
+    "rope": {
+      "x": 0,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/items-pass/rope.png"
+    },
+    "plank": {
+      "x": 16,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/items-pass/plank.png"
+    },
+    "moss": {
+      "x": 32,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/items-pass/moss.png"
+    },
+    "salve": {
+      "x": 48,
+      "y": 32,
+      "w": 16,
+      "h": 16,
+      "source": "generated",
+      "sourceAsset": "art/generated/items-pass/salve.png"
     }
   }
 }

@@ -17,8 +17,8 @@ describe('forager supplies', () => {
     expect(sim.state.inventory.nuts).toBe(0);
     expect(sim.state.inventory.tea).toBe(0);
     expect(sim.state.hotbar).toEqual(['hatchet', 'pickaxe', 'berries', 'water', 'bandage', 'torch']);
-    expect(Object.keys(ITEMS)).toHaveLength(16);
-    expect(RECIPES).toHaveLength(8);
+    expect(Object.keys(ITEMS)).toHaveLength(20);
+    expect(RECIPES).toHaveLength(11);
   });
   it('awards one portion of pine nuts only when the felled tree lands, never on key spam', () => {
     const sim = fresh();
@@ -176,7 +176,7 @@ describe('generated static assets', () => {
         readFileSync(`public/${entry.sourceAsset}`).equals(readFileSync(`public/art/item-${item}.png`)),
       ).toBe(true);
     }
-    expect(Object.values(ITEM_ATLAS.items).filter((item) => item.source === 'generated')).toHaveLength(16);
+    expect(Object.values(ITEM_ATLAS.items).filter((item) => item.source === 'generated')).toHaveLength(20);
     expect(
       Object.values(ITEM_ATLAS.items).filter((item) => item.source === 'original-pixel-art'),
     ).toHaveLength(0);
