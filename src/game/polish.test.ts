@@ -9,27 +9,26 @@ import { loadSettings } from './storage';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('literal sprite-sheet slicing', () => {
-  it('crosses from the fourth column to the second row at the impact frame', () => {
-    const clip = CLIPS['survivor-axe-right'];
-    expect(frameRect(clip, 3)).toEqual({ x: 192, y: 0, w: 64, h: 80 });
-    expect(frameRect(clip, 4)).toEqual({ x: 0, y: 80, w: 64, h: 80 });
-    expect(frameRect(clip, 7)).toEqual({ x: 192, y: 80, w: 64, h: 80 });
+  it('walks a single generated row and stops at the contact frame', () => {
+    const clip = CLIPS['axe-right'];
+    expect(frameRect(clip, 0)).toEqual({ x: 0, y: 96, w: 48, h: 48 });
+    expect(frameRect(clip, 2)).toEqual({ x: 96, y: 96, w: 48, h: 48 });
+    expect(frameRect(clip, 4)).toEqual({ x: 192, y: 96, w: 48, h: 48 });
   });
   it('clamps bad frame indices without sampling an adjacent clip', () => {
-    const clip = CLIPS['survivor-mine-up'];
+    const clip = CLIPS['mine-up'];
     expect(frameRect(clip, -1)).toEqual(frameRect(clip, 0));
-    expect(frameRect(clip, 100)).toEqual(frameRect(clip, 7));
+    expect(frameRect(clip, 100)).toEqual(frameRect(clip, clip.frames - 1));
     expect(frameRect(CLIPS['walk-up'], 3).y).toBe(CLIPS['walk-up'].y);
   });
-  it('keeps full-body tool frames synchronized with the unchanged gameplay contact time', () => {
+  it('keeps the generated tool frames synchronized with the unchanged contact time', () => {
     for (const mode of ['axe', 'mine'])
       for (const direction of ['right', 'up', 'down']) {
-        const clip = CLIPS[`survivor-${mode}-${direction}`];
-        expect(clip.columns).toBe(4);
-        expect(clip.frames).toBe(8);
+        const clip = CLIPS[`${mode}-${direction}`];
+        expect(clip.frames).toBe(5);
         expect(clip.loop).toBe(false);
         expect(clip.impactFrame! / clip.fps).toBe(1 / 3);
-        expect(clip.hands).toHaveLength(8);
+        expect(clip.hands).toHaveLength(clip.frames);
         for (const [x, y] of clip.hands!) {
           expect(x).toBeGreaterThanOrEqual(0);
           expect(x).toBeLessThan(clip.w);
@@ -43,12 +42,12 @@ describe('literal sprite-sheet slicing', () => {
     expect(toolActionClip(playerPose(sim))).toBeNull();
     sim.state.direction = 'left';
     sim.attack();
-    expect(toolActionClip(playerPose(sim))).toBe('survivor-axe-right');
+    expect(toolActionClip(playerPose(sim))).toBe('axe-right');
     expect(playerPose(sim).flip).toBe(true);
     sim.equip('pickaxe');
     sim.state.time = 1;
     sim.attack();
-    expect(toolActionClip(playerPose(sim))).toBe('survivor-mine-right');
+    expect(toolActionClip(playerPose(sim))).toBe('mine-right');
     sim.equip('berries');
     sim.state.time = 2;
     sim.attack();

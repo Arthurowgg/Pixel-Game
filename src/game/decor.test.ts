@@ -16,8 +16,8 @@ describe('forest undergrowth', () => {
   it('dresses the whole forest without crowding the camp, the pond or the rims', () => {
     for (const seed of SEEDS) {
       const props = forestDecor(seed);
-      expect(props.length).toBeGreaterThan(280);
-      expect(props.length).toBeLessThan(460);
+      expect(props.length).toBeGreaterThan(170);
+      expect(props.length).toBeLessThan(340);
       for (const prop of props) {
         expect(DECOR_KINDS).toContain(prop.kind);
         expect(Number.isInteger(prop.x) && Number.isInteger(prop.y)).toBe(true);
@@ -36,7 +36,6 @@ describe('forest undergrowth', () => {
       expect(kinds).toEqual(new Set(DECOR_KINDS));
       // Reeds belong to the shoreline, so they stay the rarest kind.
       expect(props.filter((prop) => prop.kind === 'reeds').length).toBeGreaterThanOrEqual(12);
-      expect(props.filter((prop) => prop.kind === 'mossBoulder').length).toBeGreaterThanOrEqual(12);
     }
   });
 
@@ -49,8 +48,6 @@ describe('forest undergrowth', () => {
     // Growth hugging the damp end of the fallen logs, and stone by the waystones.
     for (const decoration of FOREST_DECOR.filter((entry) => entry.kind === 'fallenLog'))
       expect(near(decoration, 32, 'mushrooms').length).toBeGreaterThanOrEqual(2);
-    expect(near({ x: 478, y: 366 }, 26, 'mossBoulder').length).toBeGreaterThanOrEqual(1);
-    expect(near({ x: 1008, y: 719 }, 26, 'mossBoulder').length).toBeGreaterThanOrEqual(1);
   });
 
   it('ships five tiny generated props anchored to their ground point', () => {

@@ -1,5 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CAMP, DAY_LENGTH, ITEMS, LEGACY_SAVE_KEY, RESOURCE_HP, SAVE_KEY, SPRING, WORLD } from './data';
+import {
+  CAMP,
+  DAY_LENGTH,
+  ITEMS,
+  LEGACY_SAVE_KEY,
+  RESOURCE_HP,
+  SAVE_KEY,
+  SPRING,
+  WORLD,
+  distance,
+} from './data';
 import { Simulation, createGame, createWorld, inWater, weatherAt } from './simulation';
 import type { ItemId } from './types';
 import { clearGame, isGameState, loadGame, loadSettings, migrateGame, saveGame } from './storage';
@@ -29,9 +39,20 @@ describe('world generation', () => {
     expect(createWorld(123)).toEqual(createWorld(123));
     expect(createWorld(123)).not.toEqual(createWorld(124));
   });
+  it('scatters harvestable mossy boulders that drop the same stone as a rock', () => {
+    const world = createWorld(42);
+    const mossy = world.filter((resource) => resource.kind === 'stone' && resource.variant > 0.9);
+    expect(mossy.length).toBeGreaterThanOrEqual(20);
+    for (const boulder of mossy) {
+      expect(boulder.hp).toBe(RESOURCE_HP.stone);
+      expect(distance(boulder, CAMP)).toBeGreaterThanOrEqual(120);
+    }
+    // Same kind as a rock, so the existing pickaxe reward (stone) applies unchanged.
+    expect(mossy.every((boulder) => boulder.kind === 'stone')).toBe(true);
+  });
   it('keeps all resources inside the forest and outside the pond', () => {
     const world = createWorld(42);
-    expect(world.length).toBeGreaterThan(400);
+    expect(world.length).toBeGreaterThan(330);
     for (const r of world) {
       expect(r.x).toBeGreaterThan(0);
       expect(r.x).toBeLessThan(WORLD.width);

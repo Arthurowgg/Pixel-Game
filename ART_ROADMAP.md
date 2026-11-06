@@ -1,5 +1,20 @@
 # Art polish · batch progress
 
+## Batch 11 · Generated survivor sheets · v0.12.0 · six shipped sheets, six calls
+
+**6/10 image-generation calls used.** Each call produced one standalone sheet on a flat magenta background: a two-row locomotion grid per facing and a five-frame overhead swing per facing. The right-facing sheet is mirrored at runtime for `left`, exactly as before, so three facings cover all four directions.
+
+| AI-generated sheet    | Runtime integration                                          |
+| --------------------- | ------------------------------------------------------------ |
+| Front locomotion grid | `survivor2-down.png`: idle ×2, walk ×6, and the swing row    |
+| Side locomotion grid  | `survivor2-right.png`: the same rows, drawn facing right     |
+| Back locomotion grid  | `survivor2-up.png`: the same rows, seen from behind          |
+| Front swing           | Five empty-handed frames; the tool follows the declared grip |
+| Side swing            | Five frames                                                  |
+| Back swing            | Five frames                                                  |
+
+Sources: `.art-originals/survivor-pass/` (ignored). Rebuild with **`scripts/build_survivor_sheets.py`**: it keys the sheets, drops the magenta, splits the cells on their transparent gutters, normalises every cell to one character height on the shared foot anchor, writes the three PNGs and merges the clip table into both manifests. The legacy `survivor.png` and the old tool sheets stay on disk but are no longer preloaded, because no clip references them.
+
 ## Batch 10 · Undergrowth · v0.11.0 · six shipped images, nine calls
 
 **9/10 image-generation calls used.** Every call produced one standalone prop on a flat magenta sheet; nothing was generated as a grid, a sheet or a rigged limb. Three calls were re-rolls: the first fern read as a dark blob at 22 × 18, and the first two wildflower sheets either smeared or grew a stray outline loop around a blossom. The clover tuft was added after the palette was settled.

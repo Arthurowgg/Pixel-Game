@@ -21,12 +21,14 @@ describe('animation sheets', () => {
       expect(clip.fps).toBeGreaterThan(0);
     }
   });
-  it('has eight frames and a separate grip transform for every directional action', () => {
+  it('slices the generated sheets into complete clips with a grip transform per frame', () => {
+    const frames: Record<string, number> = { idle: 2, walk: 6, run: 6 };
     for (const mode of ['idle', 'walk', 'run', 'axe', 'mine', 'forage', 'use', 'build', 'attack'])
       for (const direction of ['down', 'right', 'up']) {
         const clip = CLIPS[`${mode}-${direction}`];
-        expect(clip.frames).toBe(8);
-        expect(clip.hands).toHaveLength(8);
+        expect(clip.sheet).toBe(`survivor2-${direction}`);
+        expect(clip.frames).toBe(frames[mode] ?? 5);
+        expect(clip.hands).toHaveLength(clip.frames);
         for (const hand of clip.hands!) {
           expect(hand).toHaveLength(3);
           expect(hand.every(Number.isFinite)).toBe(true);
@@ -36,12 +38,12 @@ describe('animation sheets', () => {
   it('loops ambient frames and clamps one-shot actions at their final pose', () => {
     expect(animationFrame(CLIPS['walk-right'], 0)).toBe(0);
     expect(animationFrame(CLIPS['walk-right'], 0.4)).toBe(4);
-    expect(animationFrame(CLIPS['axe-right'], 100)).toBe(7);
+    expect(animationFrame(CLIPS['axe-right'], 100)).toBe(4);
     expect(animationFrame(CLIPS['walk-right'], -1)).toBe(0);
   });
   it('reduces ambient movement while retaining the contact pose for actions', () => {
     expect(animationFrame(CLIPS['pine-sway'], 15, true)).toBe(0);
-    expect(animationFrame(CLIPS['mine-right'], 0.4, true)).toBe(4);
+    expect(animationFrame(CLIPS['mine-right'], 0.4, true)).toBe(2);
   });
   it('selects directional movement, mirrored left-facing poses, and distinct tools', () => {
     const sim = new Simulation(createGame('Robin', 'explorer', 42));

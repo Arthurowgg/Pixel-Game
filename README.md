@@ -25,6 +25,13 @@ The repository root is the Vite dev entry, so a Pages site set to **deploy from 
 
 Re-run `npm run publish:pages` and commit the result whenever the bundle changes.
 
+## Generated steps · v0.12.0
+
+- **The survivor is a generated sprite again, not a rig.** Three AI-generated sheets (`survivor2-down/right/up`) carry 27 clips: two idle frames, six walk/run frames and a five-frame overhead swing per facing. The procedural rig is gone from the codebase, and the held tool is drawn at the grip arc each swing frame declares.
+- **Cells are normalised, not eyeballed.** The builder keys the magenta sheet, splits the grid on its transparent gutters, scales every cell to one character height, stands it on the shared 48 × 48 foot anchor and centres it on the head, so the stride does not bob or slide.
+- **A roomier forest.** Trees drop from 340 to 210 with wider spacing, and the undergrowth pass is roughly 40 % sparser, so the ground, trails and clearings stay readable.
+- **Mossy boulders are mineable.** The decorative moss rock is now a real stone source: 38 of them are seeded through the groves, drawn with the generated moss sprite, and they give ordinary stone when struck with the pickaxe.
+
 ## Undergrowth · v0.11.0 · art batch 10
 
 - **The forest grows things that are not resources.** Six generated props dress the ground: mushroom clusters, clover tufts, fern fronds, wildflowers, mossy boulders and pond reeds. Around 330 of them are seeded into every world, denser in the groves and along the trail verges, and absent from the camp, the middle of the pond and the ruts of the paths.

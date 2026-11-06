@@ -173,7 +173,7 @@ try {
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-sunlight', 'on');
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-ground-texture', 'generated');
   // Cosmetic undergrowth is derived from the seed, so it dresses a fresh world too.
-  await expect(page.locator('.game-canvas')).toHaveAttribute('data-decor-count', /^[3-9]\d{2}$/);
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-decor-count', /^[1-9]\d{2}$/);
   await expect(page.locator('[data-generated-icon="pack"]').first()).toHaveAttribute(
     'src',
     /art\/ui\/backpack\.png$/,
@@ -438,7 +438,7 @@ try {
   });
   await page.keyboard.down('e');
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-animation', 'axe-right');
-  await expect(page.locator('.game-canvas')).toHaveAttribute('data-sprite-sheet', 'survivor-axe-right');
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-sprite-sheet', 'survivor2-right');
   const axeFrames = await page.evaluate(
     () =>
       new Promise((resolve) => {
@@ -455,7 +455,7 @@ try {
         collect();
       }),
   );
-  expect(axeFrames.frames.length).toBeGreaterThan(4);
+  expect(axeFrames.frames.length).toBeGreaterThanOrEqual(3);
   expect(axeFrames.impacts).toBeGreaterThan(0);
   await screenshot(page, 'axe-in-use');
   await page.waitForTimeout(1400);
@@ -464,7 +464,7 @@ try {
   expect((await saved(page)).inventory.wood).toBe(4);
   expect((await saved(page)).inventory.nuts).toBe(1);
   expect((await saved(page)).resources[0].hp).toBe(0);
-  passed('Real eight-frame axe playback fells a tree and awards wood only on the completed strikes');
+  passed('Real generated axe frames play through to contact and award wood only on the completed strikes');
 
   await checkpoint(page, () => {
     const s = JSON.parse(localStorage.getItem('wildpine.save.v2'));
@@ -483,7 +483,7 @@ try {
   await page.keyboard.press('2');
   await page.keyboard.down('e');
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-animation', 'mine-right');
-  await expect(page.locator('.game-canvas')).toHaveAttribute('data-sprite-sheet', 'survivor-mine-right');
+  await expect(page.locator('.game-canvas')).toHaveAttribute('data-sprite-sheet', 'survivor2-right');
   await page.keyboard.up('e');
   await page.keyboard.press('b');
   const pausedFrame = await page.locator('.game-canvas').getAttribute('data-frame');
@@ -617,7 +617,7 @@ try {
       }),
   );
   expect(gaitFrames.length).toBeGreaterThan(1);
-  expect(gaitFrames.every((frame) => [0, 3, 4, 7].includes(frame))).toBe(true);
+  expect(gaitFrames.every((frame) => [0, 1, 2, 3, 4, 5].includes(frame))).toBe(true);
   await page.keyboard.up('w');
   await page.keyboard.up('d');
   await page.keyboard.press('Escape');

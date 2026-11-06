@@ -97,7 +97,7 @@ describe('four-way movement without invented artwork', () => {
     expect(sim.state.direction).toBe('down');
   });
   it('selects only safe source cells at a distance-driven cadence and freezes when paused', () => {
-    expect([0, 9, 18, 27, 36].map((distance) => locomotionFrame(distance))).toEqual([0, 3, 4, 7, 0]);
+    expect([0, 9, 18, 27, 36].map((distance) => locomotionFrame(distance))).toEqual([0, 1, 2, 3, 4]);
     expect(locomotionFrame(28, true)).toBe(0);
     expect(locomotionFrame(NaN)).toBe(0);
     const sim = fresh();
@@ -158,9 +158,9 @@ describe('four-way movement without invented artwork', () => {
         sim.state.time = sim.action!.startedAt + 1 / 3 + 0.00001;
         const pose = playerPose(sim),
           clip = CLIPS[toolActionClip(pose)!];
-        expect(pose.frame).toBe(4);
-        expect(clip.impactFrame).toBe(4);
-        expect(clip.frames).toBe(8);
+        expect(pose.frame).toBe(2);
+        expect(clip.impactFrame).toBe(2);
+        expect(clip.frames).toBe(5);
         expect(pose.flip).toBe(direction.includes('left'));
       }
   });

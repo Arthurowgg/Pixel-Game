@@ -88,12 +88,13 @@ export function createWorld(seed: number): Resource[] {
   add('fiber', 916, 839);
   add('fiber', 966, 852);
   add('mushroom', 919, 678);
+  // A roomier forest: fewer trunks, more open ground to walk and read.
   const counts: [ResourceKind, number][] = [
-    ['tree', 340],
-    ['stone', 58],
-    ['berries', 48],
-    ['fiber', 62],
-    ['mushroom', 30],
+    ['tree', 210],
+    ['stone', 52],
+    ['berries', 44],
+    ['fiber', 54],
+    ['mushroom', 26],
   ];
   for (const [kind, count] of counts) {
     let planted = 0;
@@ -114,7 +115,7 @@ export function createWorld(seed: number): Resource[] {
       if (kind !== 'tree' && kind !== 'stone' && trailGap < 5) continue;
       if (
         result.some(
-          (resource) => distance(resource, point) < (kind === 'tree' ? 31 : kind === 'stone' ? 25 : 20),
+          (resource) => distance(resource, point) < (kind === 'tree' ? 40 : kind === 'stone' ? 28 : 22),
         )
       )
         continue;
@@ -122,6 +123,32 @@ export function createWorld(seed: number): Resource[] {
       if (kind === 'tree') result[result.length - 1].scale = 0.84 + groveDensity(point) * 0.31 + rng() * 0.16;
       planted++;
     }
+  }
+  // Mossy boulders: the decorative rock from the undergrowth pass is now a real
+  // stone source. A high `variant` marks it so the renderer uses the mossy sprite.
+  for (let attempt = 0, placed = 0; attempt < 900 && placed < 38; attempt++) {
+    const grove = FOREST_GROVES[Math.floor(rng() * FOREST_GROVES.length)];
+    const angle = rng() * Math.PI * 2,
+      radius = Math.sqrt(rng()) * grove.radius;
+    const point = boundToForest({
+      x: grove.x + Math.cos(angle) * radius,
+      y: grove.y + Math.sin(angle) * radius,
+    });
+    if (distance(point, CAMP) < 120 || inWater(point, 22)) continue;
+    if (FOREST_DECOR.some((decoration) => distance(point, decoration) < 30)) continue;
+    if (trailDistance(point) < 10) continue;
+    if (result.some((resource) => distance(resource, point) < 26)) continue;
+    result.push({
+      id: result.length,
+      kind: 'stone',
+      x: Math.round(point.x),
+      y: Math.round(point.y),
+      hp: RESOURCE_HP.stone,
+      readyAt: 0,
+      scale: 1,
+      variant: 0.95 + rng() * 0.04,
+    });
+    placed++;
   }
   return result;
 }

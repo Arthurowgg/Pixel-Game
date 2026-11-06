@@ -5,8 +5,7 @@ export { drawMap } from './cartography';
 import { WOLF_FADE, WOLF_ATTACKS, wolfMaxHealth } from './wolves';
 import { CAMP, POND, WORLD, CAMP_BENCH, RESOURCE_HP, clamp, distance, random } from './data';
 import type { Point, Resource, Settings } from './types';
-import { artImages, CLIPS, drawAnimation, drawItem, playerPose, toolActionClip } from './animation';
-import { drawActor } from './actor';
+import { artImages, drawAnimation, drawItem, playerPose } from './animation';
 export { loadArt } from './animation';
 import type { Simulation } from './simulation';
 import { addTerrainDetail, ForestAtmosphere, sunlightStrength } from './atmosphere';
@@ -193,6 +192,14 @@ export class Renderer {
     const reducedMotion = this.settings.reducedMotion;
     const draw = (name: string, time: number, scale = 1) =>
       drawAnimation(ctx, name, x, y, time, { scale, reducedMotion });
+    // Mossy boulders are harvestable stone dressed with the generated moss sprite.
+    if (resource.kind === 'stone' && resource.variant > 0.9) {
+      if (resource.hp > 0) {
+        this.shadow(x, y, 10);
+        this.prop('mossBoulder', { x, y: y + 3 });
+      }
+      return;
+    }
     if (resource.hp <= 0) {
       if (resource.kind === 'tree') {
         if (animation?.kind === 'fell' && age < 0.8) {
@@ -281,7 +288,6 @@ export class Renderer {
             (prop.kind === 'reeds' ? 1.1 : prop.kind === 'fern' ? 0.9 : 0.55),
         );
     ctx.save();
-    if (prop.kind === 'mossBoulder') this.shadow(prop.x, prop.y, 9);
     ctx.translate(Math.round(prop.x) + sway, Math.round(prop.y));
     if (prop.flip) ctx.scale(-1, 1);
     ctx.drawImage(
@@ -309,8 +315,7 @@ export class Renderer {
       return;
     }
     const state = sim.state;
-    const actionClip = toolActionClip(pose);
-    this.canvas.dataset.spriteSheet = actionClip ? CLIPS[actionClip].sheet : pose.clip.sheet;
+    this.canvas.dataset.spriteSheet = pose.clip.sheet;
     this.canvas.dataset.animation = pose.name;
     this.canvas.dataset.frame = String(pose.frame);
     this.canvas.dataset.heldItem = sim.state.equipped || 'none';
@@ -318,27 +323,31 @@ export class Renderer {
     this.canvas.dataset.gaitDistance = sim.gaitDistance.toFixed(2);
     this.shadow(p.x, p.y, 10);
     if (sim.hitFlash > 0 && this.settings.damageFlash && !this.settings.reducedMotion) ctx.globalAlpha = 0.72;
-    const action = sim.action
-      ? {
-          kind: sim.action.kind,
-          item: sim.action.kind === 'feed' ? null : sim.action.item,
-          progress: clamp((state.time - sim.action.startedAt) / Math.max(1e-4, sim.action.duration), 0, 1),
-          direction: sim.action.direction,
-        }
-      : null;
-    drawActor(ctx, {
-      x: p.x,
-      y: p.y + 3,
-      time: state.time,
-      gait: sim.gaitDistance,
-      moving: sim.moving,
-      sprinting: sim.sprinting,
-      direction: pose.direction,
-      equipped: sim.campFocus !== null ? null : state.equipped,
-      torchLit: sim.torchLit,
-      action,
+    // The survivor is drawn from generated frame sheets only: whole cells, no rig.
+    const top = p.y + 3;
+    drawAnimation(ctx, pose.bodyName, p.x, top, pose.elapsed, {
+      frame: pose.frame,
+      flip: pose.flip,
       reducedMotion: this.settings.reducedMotion,
     });
+    const held = sim.campFocus !== null ? null : state.equipped;
+    if (held) {
+      const hands = pose.clip.hands;
+      const hand = hands?.[Math.min(pose.frame, hands.length - 1)] ?? [
+        pose.clip.anchor[0] + 5,
+        pose.clip.anchor[1] - 13,
+        12,
+      ];
+      ctx.save();
+      ctx.translate(
+        Math.round(p.x + (hand[0] - pose.clip.anchor[0]) * (pose.flip ? -1 : 1)),
+        Math.round(top + hand[1] - pose.clip.anchor[1]),
+      );
+      if (pose.flip) ctx.scale(-1, 1);
+      ctx.rotate((hand[2] * Math.PI) / 180);
+      drawItem(ctx, held, -8, -8, 16);
+      ctx.restore();
+    }
     ctx.globalAlpha = 1;
   }
   draw(sim: Simulation, _now: number) {

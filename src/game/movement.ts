@@ -29,9 +29,9 @@ export function movementVector(keys: ReadonlySet<string>): Point {
   return { ...movement };
 }
 
-// Cells 1/5 lift the coat without the supporting boot. Cells 3/7 retain the same
-// complete head/torso registration and connected boots. Select only existing pixels.
-export const STABLE_WALK_FRAMES = [0, 3, 4, 7] as const;
+// The generated walk row holds six complete frames; each one keeps the same head,
+// torso and boot registration, so the whole row is safe to play in order.
+export const STABLE_WALK_FRAMES = [0, 1, 2, 3, 4, 5] as const;
 export function locomotionFrame(distance: number, reducedMotion = false) {
   if (reducedMotion || !Number.isFinite(distance)) return 0;
   return STABLE_WALK_FRAMES[Math.floor(Math.max(0, distance) / 9) % STABLE_WALK_FRAMES.length];

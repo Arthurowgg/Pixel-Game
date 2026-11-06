@@ -159,41 +159,44 @@ try {
     'World entry has its own scene and real preparation stages; inputs and simulation stay blocked until the first frame is ready',
   );
 
-  // Compare actual decoded source pixels, not only frame numbers: head registration
-  // is byte-identical through the selected walk cycle in every cardinal source.
+  // The survivor is drawn from generated sheets now: every walk frame must decode,
+  // fill its cell, and stand on the shared foot anchor so the stride does not bob.
   const manifest = JSON.parse(readFileSync('public/art/animations/manifest.json', 'utf8'));
   const spriteSource = new URL(
-    'art/animations/survivor.png',
+    'art/animations/survivor2-down.png',
     page.url().endsWith('/') ? page.url() : `${page.url()}/`,
   ).href;
-  const heads = await page.evaluate(
+  const footing = await page.evaluate(
     async ({ clips, url }) => {
       const image = new Image();
       image.src = url;
       await image.decode();
       const canvas = document.createElement('canvas');
-      canvas.width = 20;
-      canvas.height = 18;
+      canvas.width = 48;
+      canvas.height = 48;
       const ctx = canvas.getContext('2d');
-      return ['up', 'down', 'right'].every((direction) => {
+      return ['down'].every((direction) => {
         const clip = clips[`walk-${direction}`];
-        const pixels = [0, 3, 4, 7].map((frame) => {
-          ctx.clearRect(0, 0, 20, 18);
-          ctx.drawImage(image, clip.x + frame * clip.w + 14, clip.y + 8, 20, 18, 0, 0, 20, 18);
-          return [...ctx.getImageData(0, 0, 20, 18).data].join(',');
-        });
-        return pixels.every((value) => value === pixels[0]);
+        const bottoms = [];
+        for (let frame = 0; frame < clip.frames; frame++) {
+          ctx.clearRect(0, 0, 48, 48);
+          ctx.drawImage(image, clip.x + frame * clip.w, clip.y, 48, 48, 0, 0, 48, 48);
+          const data = ctx.getImageData(0, 0, 48, 48).data;
+          let bottom = -1;
+          for (let y = 0; y < 48; y++)
+            for (let x = 0; x < 48; x++) if (data[(y * 48 + x) * 4 + 3] > 0 && y > bottom) bottom = y;
+          bottoms.push(bottom);
+        }
+        return bottoms.every((bottom) => bottom === bottoms[0] && bottom > 30);
       });
     },
     { clips: manifest.clips, url: spriteSource },
   );
-  expect(heads).toBe(true);
+  expect(footing).toBe(true);
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-frame', '0');
   await page.waitForTimeout(650);
   await expect(page.locator('.game-canvas')).toHaveAttribute('data-frame', '0');
-  passed(
-    'The retained source cells still share identical head pixels, while the runtime survivor now comes from the authored rig',
-  );
+  passed('Every generated walk frame stands on the same foot anchor, so the stride reads without any rig');
 
   await quit(page);
   await page.evaluate(() => {

@@ -80,7 +80,7 @@ describe('the remade woodland', () => {
       if (resource.kind === 'tree' || resource.kind === 'stone')
         expect(trailDistance(resource)).toBeGreaterThan(4);
     }
-    expect(world.filter((resource) => resource.kind === 'tree').length).toBeGreaterThanOrEqual(340);
+    expect(world.filter((resource) => resource.kind === 'tree').length).toBeGreaterThanOrEqual(200);
   });
   it('keeps five connected trails and a camp spur rather than one painted stripe', () => {
     expect(FOREST_TRAILS).toHaveLength(5);

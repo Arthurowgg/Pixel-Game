@@ -3,7 +3,7 @@ import { FOREST_CLEARINGS, FOREST_DECOR, groveDensity, inClearing, inPond, trail
 
 /** Small props that dress the forest. Purely cosmetic: they never collide, and
  * they are derived from the save seed, so existing saves gain them for free. */
-export type DecorKind = 'mushrooms' | 'clover' | 'fern' | 'wildflowers' | 'mossBoulder' | 'reeds';
+export type DecorKind = 'mushrooms' | 'clover' | 'fern' | 'wildflowers' | 'reeds';
 
 export interface DecorProp {
   x: number;
@@ -16,14 +16,7 @@ export interface DecorProp {
   phase: number;
 }
 
-export const DECOR_KINDS: readonly DecorKind[] = [
-  'mushrooms',
-  'clover',
-  'fern',
-  'wildflowers',
-  'mossBoulder',
-  'reeds',
-];
+export const DECOR_KINDS: readonly DecorKind[] = ['mushrooms', 'clover', 'fern', 'wildflowers', 'reeds'];
 /** Grid pitch in world pixels; roughly one candidate every 58 px square. */
 const CELL = 58;
 const FAIRY_RING = { x: 744, y: 470, radius: 27 };
@@ -33,9 +26,9 @@ const cache = new Map<number, DecorProp[]>();
 const GROWTH: Record<'shore' | 'rim' | 'grove' | 'verge' | 'open', Partial<Record<DecorKind, number>>> = {
   shore: { reeds: 6, fern: 3, clover: 1 },
   rim: { wildflowers: 5, clover: 2, fern: 2, mushrooms: 1 },
-  grove: { fern: 4, clover: 3, mushrooms: 3, mossBoulder: 1, wildflowers: 0.5 },
+  grove: { fern: 4, clover: 3, mushrooms: 3, wildflowers: 0.5 },
   verge: { wildflowers: 4, clover: 2, mushrooms: 2.5, fern: 1.5 },
-  open: { fern: 3, clover: 2, mushrooms: 2, wildflowers: 1.8, mossBoulder: 1.1 },
+  open: { fern: 3, clover: 2, mushrooms: 2, wildflowers: 1.8 },
 };
 
 function choose(context: keyof typeof GROWTH, roll: number): DecorKind {
@@ -89,9 +82,8 @@ export function forestDecor(seed: number): DecorProp[] {
   // Growth hugging the damp end of every fallen log.
   for (const log of FOREST_DECOR.filter((entry) => entry.kind === 'fallenLog'))
     for (let i = 0; i < 3; i++) add('mushrooms', log.x - 26 + i * 15 + rng() * 5, log.y + 7 + rng() * 4);
-  // Boulders leant against the waystones, and a fern on their shaded side.
+  // A fern and a flower tuft on the shaded side of every waystone.
   for (const stone of FOREST_DECOR.filter((entry) => entry.kind === 'waystone')) {
-    add('mossBoulder', stone.x + 21, stone.y + 11);
     add(rng() < 0.5 ? 'fern' : 'wildflowers', stone.x - 23, stone.y + 9);
   }
   // Reed banks on the pond shore, with ferns stepping back into the grass.
@@ -126,14 +118,13 @@ export function forestDecor(seed: number): DecorProp[] {
         camp = distance(point, CAMP),
         shore = inPond(point, 26);
       if (camp < 96 || gap < 6) continue;
-      let chance = 0.34 + grove * 0.36 + (rim ? 0.16 : 0) + (gap < 34 ? 0.14 : 0);
+      let chance = 0.2 + grove * 0.24 + (rim ? 0.12 : 0) + (gap < 34 ? 0.1 : 0);
       if (camp < 150) chance *= 0.45;
       if (shore) chance = 0.88;
       if (rng() > chance) continue;
       const context = shore ? 'shore' : rim ? 'rim' : grove > 0.55 ? 'grove' : gap < 26 ? 'verge' : 'open';
       const kind = choose(context, rng());
-      // A boulder in the ruts of a trail reads as debris, not dressing.
-      add(kind === 'mossBoulder' && gap < 15 ? 'fern' : kind, point.x, point.y, 9);
+      add(kind, point.x, point.y, 9);
     }
   cache.set(seed, props);
   return props;

@@ -72,9 +72,11 @@ export async function loadArt(onProgress?: (progress: LoadProgress) => void, sig
 export function animationFrame(clip: AnimationClip, elapsed: number, reducedMotion = false) {
   const raw = Math.max(0, Math.floor(elapsed * clip.fps));
   if (reducedMotion) {
-    // Gameplay feedback stays readable, but ambient motion and repeated flashes stop.
+    // Gameplay feedback stays readable, but ambient motion and repeated flashes stop:
+    // one-shot clips hold their contact frame instead of animating through it.
     if (clip.loop) return 0;
-    return raw < clip.frames / 2 ? 0 : Math.min(clip.frames - 1, Math.floor(clip.frames / 2));
+    const contact = clip.impactFrame ?? Math.floor(clip.frames / 2);
+    return raw < contact ? 0 : Math.min(clip.frames - 1, contact);
   }
   return clip.loop ? raw % clip.frames : Math.min(clip.frames - 1, raw);
 }
@@ -104,8 +106,8 @@ export function drawCarriedTool(ctx: CanvasRenderingContext2D, item: 'hatchet' |
 }
 export function toolActionClip(pose: ReturnType<typeof playerPose>) {
   if (pose.item !== 'hatchet' && pose.item !== 'pickaxe') return null;
-  const name = `survivor-${pose.name}`;
-  return CLIPS[name] ? name : null;
+  if (!/^(axe|mine|attack|use|build|forage)-/.test(pose.name)) return null;
+  return CLIPS[pose.name] ? pose.name : null;
 }
 export function drawAnimation(
   ctx: CanvasRenderingContext2D,
