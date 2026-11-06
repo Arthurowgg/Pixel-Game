@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  pages: write
 
 concurrency:
   group: pages-${{ github.event.pull_request.number || 'production' }}
@@ -46,8 +47,10 @@ jobs:
 
   deploy:
     name: Publish to GitHub Pages
-    # The existing github-pages environment only permits main. Keep that safeguard.
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    # Pushes only (never a pull_request), on either branch the github-pages
+    # environment allows. The site is published from this job's artifact, so a
+    # branch deploy always serves the tested dist/ build instead of raw source.
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -57,6 +60,23 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # The Pages site was previously set to "deploy from a branch", which published
+      # the repository root — including the Vite dev index.html — so the bundle never
+      # loaded. Pin the site to artifact builds before deploying; the call is idempotent.
+      - name: Ensure Pages publishes this artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS -o /tmp/pages.json -w '%{http_code}\n' -X PUT \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/pages" \
+            -d '{"build_type":"workflow"}' | tee /tmp/status
+          code=$(cat /tmp/status)
+          if [ "$code" != "204" ] && [ "$code" != "200" ]; then
+            echo "::warning::Pages source update returned HTTP $code"
+          fi
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Deploy the tested site
