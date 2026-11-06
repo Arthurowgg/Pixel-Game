@@ -16,6 +16,15 @@ npm run build     # Strict TypeScript checks + a root-path production build
 npm run preview   # Serve that build
 ```
 
+### Publishing to GitHub Pages
+
+The repository root is the Vite dev entry, so a Pages site set to **deploy from a branch** publishes that entry and the game waits on its arrival screen. Two things keep the live site working:
+
+- **Actions build.** Pushing to `main` or the current work branch tests, builds with the `/Pixel-Game/` base, verifies every published path, and deploys the artifact (this requires Settings → Pages → Source: **GitHub Actions**).
+- **Static fallback.** `npm run publish:pages` builds a second copy with the base `/Pixel-Game/public/` and writes `public/play/index.html` plus `public/pages-assets/`. That copy reuses the art already committed in `public/art`, and the root `index.html` redirects `*.github.io` visitors to it. It works under the default branch publishing, with no settings change.
+
+Re-run `npm run publish:pages` and commit the result whenever the bundle changes.
+
 ## Undergrowth · v0.11.0 · art batch 10
 
 - **The forest grows things that are not resources.** Six generated props dress the ground: mushroom clusters, clover tufts, fern fronds, wildflowers, mossy boulders and pond reeds. Around 330 of them are seeded into every world, denser in the groves and along the trail verges, and absent from the camp, the middle of the pond and the ruts of the paths.

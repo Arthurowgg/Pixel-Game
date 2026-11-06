@@ -11,7 +11,8 @@
     "test:browser": "node scripts/browser-test.mjs && node scripts/workshop-browser-test.mjs && node scripts/embers-browser-test.mjs && node scripts/roots-browser-test.mjs",
     "format": "prettier --write src scripts/*.mjs .github index.html vite.config.ts tsconfig.json package.json README.md ART_ROADMAP.md public/art/animations/README.md public/art/ui/README.md",
     "build:pages": "tsc -b && vite build --base=/Pixel-Game/ && node scripts/check-pages-build.mjs",
-    "preview:pages": "vite preview --host 0.0.0.0 --base=/Pixel-Game/"
+    "preview:pages": "vite preview --host 0.0.0.0 --base=/Pixel-Game/",
+    "publish:pages": "node scripts/publish-pages-fallback.mjs"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.2.8",

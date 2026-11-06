@@ -65,6 +65,14 @@
         <noscript>Enable JavaScript to enter the forest. Your saved camp stays in this browser.</noscript>
       </section>
     </div>
+    <script>
+      // GitHub Pages publishes this branch as static files ("deploy from a branch"),
+      // so this dev entry is the page people land on. Hand them the published build.
+      if (location.hostname.endsWith('github.io')) {
+        const prefix = location.pathname.replace(/[^/]*$/, '');
+        location.replace(`${prefix}public/play/index.html`);
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
